@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -24,9 +25,60 @@ def contracts():
     return load_schemas()
 
 
-def test_json_schemas_are_valid_draft_2020_12(contracts) -> None:
+def test_phase0_contract_schemas_are_executable(contracts) -> None:
     schemas, _ = contracts
     assert set(schemas) == {"locator", "objects", "relations"}
+
+    connection = sqlite3.connect(":memory:")
+    connection.executescript(
+        (ROOT / "schemas" / "sqlite-projection-v1.sql").read_text(encoding="utf-8")
+    )
+
+    table_names = {
+        row[0]
+        for row in connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+        )
+    }
+    assert {
+        "objects",
+        "relations",
+        "segments",
+        "tags",
+        "object_tags",
+        "fts_segments",
+        "parse_errors",
+        "scan_state",
+        "index_metadata",
+        "schema_metadata",
+    } <= table_names
+
+    relation_primary_key = [
+        row[1]
+        for row in sorted(
+            (row for row in connection.execute("PRAGMA table_info(relations)") if row[5]),
+            key=lambda row: row[5],
+        )
+    ]
+    assert relation_primary_key == [
+        "from_id",
+        "to_id",
+        "to_section_id",
+        "relation_type",
+        "locator",
+    ]
+
+    unique_object_indexes = [
+        row[1]
+        for row in connection.execute("PRAGMA index_list(objects)")
+        if row[2]
+    ]
+    assert any(
+        [row[2] for row in connection.execute(f"PRAGMA index_info('{index_name}')")]
+        == ["path"]
+        for index_name in unique_object_indexes
+    )
+    assert connection.execute("PRAGMA user_version").fetchone() == (1,)
 
 
 def test_all_valid_object_fixtures_match_schema(contracts) -> None:

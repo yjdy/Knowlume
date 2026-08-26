@@ -19,24 +19,25 @@ Claim is not an object in v1.
 
 ## Identity and schema version
 
-- Every object has `schema_version: 1`.
-- IDs are permanent prefixed ULIDs: `src_`, `note_`, `snip_`, or `ai_` plus a 26-character Crockford ULID.
+- Every object declares a contract version and a permanent typed ID. Exact field names, version values, prefixes, and patterns are defined only in [`objects.schema.json`](../schemas/objects.schema.json).
 - File and heading renames never change object IDs.
 - Duplicate IDs are contract errors and block strict lint and publishing.
 - A schema change that cannot read existing files requires an explicit migration.
 
+Creation examples are maintained in the [`templates/`](../templates/) directory. Valid object examples are the Markdown files under [`tests/fixtures/valid/`](../tests/fixtures/valid/); rejected contract shapes are under [`tests/fixtures/invalid/`](../tests/fixtures/invalid/).
+
 ## State dimensions
 
-State dimensions are independent:
+State dimensions are independent. Applicability, allowed values, and conditional requirements are defined by [`objects.schema.json`](../schemas/objects.schema.json).
 
 | Field | Applies to | Meaning |
 |---|---|---|
-| `record_status` | every object | `active`, `archived`, or `superseded` |
-| `workflow_stage` | Source only | `inbox`, `reading`, `processed`, or `integrated` |
-| `maturity` | Note only | `seed`, `developing`, `mature`, or `evergreen` |
+| object record state | every object | whether the durable record is current, archived, or replaced |
+| source workflow state | Source only | progress from capture toward integration |
+| note maturity | Note only | stability and reuse maturity of human knowledge |
 | `review_status` | AI review surfaces | review state, never a substitute for object kind |
 
-Source archival is `record_status: archived`; `archived` is not a workflow stage. `integrated` means that a source has contributed to concept or synthesis knowledge.
+Archival is an object-record concern, not a Source workflow step. Integration means that a Source has contributed to concept or synthesis knowledge. The accepted rationale is recorded in [`decisions/0002-record-status-and-workflow-stage.md`](decisions/0002-record-status-and-workflow-stage.md).
 
 ## Note types
 
@@ -53,19 +54,12 @@ Current state lives in the current Markdown file. Ordinary history lives in Git;
 
 Human notes separate four surfaces using permanent section markers:
 
-```markdown
-<!-- section_id: sec_original_facts -->
-## 原文事实
+- original facts;
+- human interpretation;
+- AI inference;
+- view evolution.
 
-<!-- section_id: sec_my_interpretation -->
-## 我的理解
-
-<!-- section_id: sec_ai_inference -->
-## AI 推论
-
-<!-- section_id: sec_view_evolution -->
-## 观点演化
-```
+The canonical marker syntax is demonstrated by the four [`Note templates`](../templates/notes/) and the valid [`literature-note fixture`](../tests/fixtures/valid/literature-note.md). Marker validation and accepted IDs belong to the executable contracts and tests.
 
 `section_id` survives heading and file renames. A fact binds a Source ID and a source-type-specific locator. Interpretations may lack a locator but must remain distinguishable from facts. AI inference remains explicitly marked even when embedded in a reviewed note.
 
@@ -73,16 +67,11 @@ Source-specific locator fields and preservation semantics are authoritative in [
 
 ## Relations
 
-V1 relation types are:
-
-```text
-cites, derived_from, summarizes, synthesizes,
-supports, contradicts, related_to, snippet_from, supersedes
-```
+The complete relation vocabulary, required fields, target ID formats, and optional locator shape are defined only in [`relations.schema.json`](../schemas/relations.schema.json). See the [`relation template`](../templates/relations.yaml), [`valid relation fixture`](../tests/fixtures/valid/relations.yaml), and invalid [`Claim`](../tests/fixtures/invalid/claim-relation.yaml) and [`missing-section`](../tests/fixtures/invalid/missing-section-relation.yaml) fixtures.
 
 A relation points to an object using `to_id`, or to a stable section using `to_id + to_section_id`. V1 does not support Claim targets. Heading text and generated index segment IDs are not stable relation targets.
 
-Relations may include a source locator, reason, and creator. Markdown/Wikilinks provide navigation; typed relation blocks provide semantics; SQLite only stores their projection.
+Markdown/Wikilinks provide navigation; typed relation blocks provide semantics; SQLite only stores their projection.
 
 ## Merge and supersede
 

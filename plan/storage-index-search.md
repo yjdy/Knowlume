@@ -22,7 +22,7 @@ Human/agent attribution cannot be inferred reliably from prose alone. When requi
 
 ## SQLite projection
 
-The first projection contains these logical surfaces:
+The executable projection contract is [`schemas/sqlite-projection-v1.sql`](../schemas/sqlite-projection-v1.sql). It is the authority for table columns, primary and unique keys, foreign keys, indexes, and the FTS5 surface. The first projection contains these logical surfaces:
 
 | Surface | Purpose |
 |---|---|
@@ -32,6 +32,8 @@ The first projection contains these logical surfaces:
 | `tags` / `object_tags` | normalized tag membership |
 | `fts_segments` | title, text, tags, object ID, provenance type, visibility |
 | metadata tables | schema/parser/tokenizer versions, scan state, parse errors, index timestamps |
+
+Object paths are unique. Relation identity is the composite of source object, target object, optional stable target section, relation type, and normalized locator. Tag membership is unique per object/tag pair, and segment ordering is unique within an object, section, and provenance type. Locator values stored in SQLite are normalized serialized projections of the locator contracts in [`schemas/locator.schema.json`](../schemas/locator.schema.json); files remain authoritative.
 
 Technical metadata is never the sole source of business facts.
 

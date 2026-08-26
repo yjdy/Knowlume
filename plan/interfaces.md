@@ -40,6 +40,15 @@ Implementation batches and phase ownership belong to [`roadmap.md`](roadmap.md).
 
 Explicit source types are accepted, while URL/identifier recognition may infer paper, web, book, or OSS. `--type` overrides inference.
 
+| Input identity | Inferred source type |
+|---|---|
+| arXiv identifier/URL or DOI | `paper` |
+| GitHub or GitLab repository URL | `oss` |
+| ISBN | `book` |
+| Other ordinary URL | `web` |
+
+If an input matches more than one category or cannot be identified confidently, capture stops with a typed ambiguity diagnostic. It does not guess.
+
 ```text
 normalize -> duplicate check -> metadata -> adapter sync
           -> source card(active/inbox) -> index
@@ -62,10 +71,17 @@ Repeated capture is idempotent for the same canonical identity. Ambiguous type o
 ## Maintain
 
 - `lint` validates schemas, IDs, references, stable sections, locators, AI review, snippet provenance, visibility dependencies, and projection consistency.
-- `lint --strict` promotes warnings to errors for CI and publishing.
+- Normal lint output grades findings as `ERROR`, `WARN`, or `INFO`. `ERROR` means a violated contract or unsafe state; `WARN` means accepted maintenance debt or incomplete provenance; `INFO` is advisory.
+- `lint --strict` treats every `WARN` as an error for CI, pre-commit, and publishing. In v1, a missing locator for some private facts may be a warning, but public publishing applies the stricter policy.
 - `lint --changed` limits file selection using Git but still checks affected references.
 - `doctor` checks the runtime environment, not knowledge quality.
-- `review` reports maintenance debt and never changes knowledge automatically.
+- `review` reports maintenance debt and never changes knowledge automatically. Its six v1 categories are:
+  1. inbox sources left unprocessed for a configured period;
+  2. processed sources without a literature note or synthesis;
+  3. developing notes not updated for a configured period;
+  4. potential duplicate concepts;
+  5. unreviewed AI artifacts;
+  6. public notes that reference a superseded note.
 
 ## Machine-readable output
 
@@ -83,6 +99,8 @@ V1 uses FastAPI, Jinja2, and HTMX over the same application services as the CLI.
 4. Search;
 5. AI Review;
 6. Publish.
+
+The Sources page filters by source type, `record_status`, `workflow_stage`, tags, updated time, and linked notes. The Notes page filters by `note_type`, `maturity`, `visibility`, `record_status`, and source. Search presents the shared FTS results with segment previews. AI Review supports inspecting, accepting, rejecting, and promoting AI artifacts. Publish shows public objects, readiness, failed audit findings, and the preview entry point.
 
 The first Web slice is read-only. Mutating actions are added only after atomic writes, conflict detection, CSRF protection, and audit behavior exist.
 

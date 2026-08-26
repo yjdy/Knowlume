@@ -6,6 +6,8 @@
 
 Source cards are durable metadata and access routes, not copies of full source content. Their executable field contract is [`../schemas/objects.schema.json`](../schemas/objects.schema.json); locator validation is [`../schemas/locator.schema.json`](../schemas/locator.schema.json).
 
+Use the [`Source template`](../templates/source-card.md) for creation. Maintained examples are the valid [`paper`](../tests/fixtures/valid/paper-source.md), [`web`](../tests/fixtures/valid/web-source.md), [`book`](../tests/fixtures/valid/book-source.md), and [`OSS`](../tests/fixtures/valid/oss-source.md) fixtures.
+
 ## Common source rules
 
 - A Source has a stable ID, canonical identity, capture metadata, visibility, record status, and workflow stage.
@@ -18,31 +20,31 @@ Source cards are durable metadata and access routes, not copies of full source c
 
 Zotero normally stores metadata and PDF attachments. Knowlume stores the source card, canonical URL or DOI, Zotero library/item/attachment identifiers, tags, and reading state.
 
-Paper locators may use page, printed page label, section, figure, or table. At least one location field is required. Facts should prefer the locator visible to a human reader rather than an internal PDF byte offset.
+Paper facts should prefer a location visible to a human reader rather than an internal PDF byte offset. Exact locator fields and requirements belong to [`locator.schema.json`](../schemas/locator.schema.json); a valid locator is exercised in the [`relation fixture`](../tests/fixtures/valid/relations.yaml).
 
 ## Web
 
 Web source cards preserve the canonical URL and capture time. A Zotero snapshot or PDF is preferred when the cited page may change.
 
-Web locators identify a heading path, paragraph, or snapshot content hash and must bind to `captured_at` or a content hash. A live URL alone is not a stable locator.
+Web locators must bind the cited position to a captured or immutable representation; a live URL alone is insufficient. The exact alternatives are defined in the locator schema. [`web-locator-missing-snapshot.yaml`](../tests/fixtures/invalid/web-locator-missing-snapshot.yaml) demonstrates a rejected locator.
 
 ## Book
 
 Books are identified through ISBN, DOI, Zotero key, or another stable bibliographic reference. PDF/EPUB files remain in the reference manager by default; Knowlume stores source cards and linked notes.
 
-Book locators use edition/ISBN plus chapter, page, or reader location. Edition must be recorded whenever pagination differs across editions.
+Book locators must distinguish editions whenever pagination differs. Exact identity and position fields are defined in the locator schema.
 
 ## Open-source project
 
-Knowlume does not retain complete repositories as durable knowledge. A source card records repository identity, canonical URL, default branch, immutable commit or tag resolution, license, description, and tags.
+Knowlume does not retain complete repositories as durable knowledge. The OSS Source and Snippet fields are defined in [`objects.schema.json`](../schemas/objects.schema.json), with maintained examples in the [`OSS Source`](../tests/fixtures/valid/oss-source.md) and [`Snippet`](../tests/fixtures/valid/snippet.md) fixtures.
 
-Temporary reading uses shallow/partial clone or sparse checkout under `.cache/repos/`. Important code may be retained as a Snippet with repository, full commit, repository-relative path, line range or symbol, license, and modification notes.
+Temporary reading uses shallow/partial clone or sparse checkout under `.cache/repos/`. Important code may be retained as a Snippet when it satisfies the executable provenance contract.
 
 An OSS locator is invalid without an immutable commit. Branch names may be displayed but cannot replace the commit.
 
 ## Attachment durability
 
-`zotero_key` alone is not a backup. Where an attachment is important, the source card records the Zotero library identifier, item key, attachment key, filename/media type when needed, and optional SHA-256 content hash.
+A single external item key is not a backup. Where an attachment is important, the Source retains the recovery identifiers and optional integrity evidence required by the object schema.
 
 Backup and recovery must cover both:
 

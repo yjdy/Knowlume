@@ -8,19 +8,20 @@ Each phase begins only after the previous phase's executable gate passes. Detail
 
 ## Current state
 
-Phase 0 contract assets exist: versioned schemas, templates, valid/invalid fixtures, AGENTS rules, and executable tests. The current gate is green with 12 Phase 0 tests. Production parser and domain implementation are the next work item.
+Phase 0 contract assets exist: versioned JSON Schemas, executable SQLite projection DDL, templates, valid/invalid fixtures, AGENTS rules, and executable tests. The current gate is green with 12 Phase 0 tests. Production parser and domain implementation are the next work item.
 
 ## Phase 0: contracts and boundaries
 
 Deliverables:
 
 - object, locator, relation, provenance, and visibility contracts;
+- rebuildable SQLite projection tables, keys, indexes, metadata, and FTS5 surface;
 - stable ID and section syntax;
 - templates and positive/negative fixtures;
 - repository and automation rules;
 - executable schema and referential-integrity tests.
 
-Gate: independent tools can read the same contract fixtures, invalid state/locator/relation cases fail, and no production implementation defines a conflicting rule.
+Gate: independent tools can read the same contract fixtures, invalid state/locator/relation cases fail, the SQLite projection DDL executes with its frozen keys and FTS5 surface, and no production implementation defines a conflicting rule.
 
 ## Phase 1A: parser, domain, and file scanner
 
