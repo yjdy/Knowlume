@@ -1,0 +1,12 @@
+schema_version: 1
+relations:
+  - from_id: "src_<ULID>"
+    to_id: "note_<ULID>"
+    to_section_id: sec_original_facts
+    relation_type: supports
+    locator:
+      locator_version: 1
+      source_type: paper
+      page: 1
+    reason: "<why this relation exists>"
+    created_by: human

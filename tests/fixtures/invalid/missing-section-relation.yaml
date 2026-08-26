@@ -1,0 +1,7 @@
+schema_version: 1
+relations:
+  - from_id: src_01JSTAG7N9Q3V5X8Y2Z4A6B8C0
+    to_id: note_01JSTAG7N9Q3V5X8Y2Z4A6B8D0
+    to_section_id: sec_does_not_exist
+    relation_type: supports
+    created_by: human

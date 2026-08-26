@@ -1,0 +1,17 @@
+DESIGN_PLAN.md
+tmp/
+.venv/
+.cache/
+derived/
+public-staging/
+knowledge/ai/tmp/
+kb.sqlite
+kb.sqlite-*
+logs/
+.obsidian/cache/
+.obsidian/workspace*
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.py[cod]

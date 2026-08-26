@@ -1,0 +1,6 @@
+schema_version: 1
+relations:
+  - from_id: src_01JSTAG7N9Q3V5X8Y2Z4A6B8C0
+    to_id: claim_01JSTAG7N9Q3V5X8Y2Z4A6B8G0
+    relation_type: supports
+    created_by: human

@@ -1,0 +1,21 @@
+---
+schema_version: 1
+id: "ai_<ULID>"
+kind: ai_artifact
+artifact_type: summary
+title: "<title>"
+visibility: private
+record_status: active
+review_status: unreviewed
+created: "<YYYY-MM-DD>"
+source_ids: []
+generated_by: "<tool or agent>"
+model: "<model identifier>"
+prompt_ref: null
+reviewed_by: null
+reviewed_at: null
+---
+
+# <title>
+
+<Unreviewed AI content.>

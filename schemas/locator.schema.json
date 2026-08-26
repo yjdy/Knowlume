@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/locator.schema.json",
+  "title": "Knowlume source locator",
+  "oneOf": [
+    { "$ref": "#/$defs/paper" },
+    { "$ref": "#/$defs/web" },
+    { "$ref": "#/$defs/book" },
+    { "$ref": "#/$defs/oss" }
+  ],
+  "$defs": {
+    "paper": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locator_version", "source_type"],
+      "properties": {
+        "locator_version": { "const": 1 },
+        "source_type": { "const": "paper" },
+        "page": { "type": "integer", "minimum": 1 },
+        "page_label": { "type": "string", "minLength": 1 },
+        "section": { "type": "string", "minLength": 1 },
+        "figure": { "type": "string", "minLength": 1 },
+        "table": { "type": "string", "minLength": 1 }
+      },
+      "anyOf": [
+        { "required": ["page"] },
+        { "required": ["page_label"] },
+        { "required": ["section"] },
+        { "required": ["figure"] },
+        { "required": ["table"] }
+      ]
+    },
+    "web": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locator_version", "source_type"],
+      "properties": {
+        "locator_version": { "const": 1 },
+        "source_type": { "const": "web" },
+        "captured_at": { "type": "string", "format": "date-time" },
+        "heading_path": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "paragraph": { "type": "integer", "minimum": 1 },
+        "content_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            { "required": ["captured_at"] },
+            { "required": ["content_hash"] }
+          ]
+        },
+        {
+          "anyOf": [
+            { "required": ["heading_path"] },
+            { "required": ["paragraph"] },
+            { "required": ["content_hash"] }
+          ]
+        }
+      ]
+    },
+    "book": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locator_version", "source_type"],
+      "properties": {
+        "locator_version": { "const": 1 },
+        "source_type": { "const": "book" },
+        "edition": { "type": "string", "minLength": 1 },
+        "isbn": { "type": "string", "minLength": 10 },
+        "chapter": { "type": "string", "minLength": 1 },
+        "page": { "type": "integer", "minimum": 1 },
+        "location": { "type": "string", "minLength": 1 }
+      },
+      "anyOf": [
+        { "required": ["chapter"] },
+        { "required": ["page"] },
+        { "required": ["location"] }
+      ]
+    },
+    "oss": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locator_version", "source_type", "commit", "path"],
+      "properties": {
+        "locator_version": { "const": 1 },
+        "source_type": { "const": "oss" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$" },
+        "path": { "type": "string", "minLength": 1, "pattern": "^(?![A-Za-z]:[\\\\/])(?![\\\\/]).+" },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 },
+        "symbol": { "type": "string", "minLength": 1 }
+      },
+      "anyOf": [
+        { "required": ["start_line", "end_line"] },
+        { "required": ["symbol"] }
+      ]
+    }
+  }
+}

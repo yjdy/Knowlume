@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/relations.schema.json",
+  "title": "Knowlume relation collection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "relations"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "relations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/relation" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "objectId": {
+      "type": "string",
+      "pattern": "^(src|note|snip|ai)_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "sectionId": {
+      "type": "string",
+      "pattern": "^sec_[a-z0-9][a-z0-9_-]{2,63}$"
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_id", "to_id", "relation_type", "created_by"],
+      "properties": {
+        "from_id": { "$ref": "#/$defs/objectId" },
+        "to_id": { "$ref": "#/$defs/objectId" },
+        "to_section_id": { "$ref": "#/$defs/sectionId" },
+        "relation_type": {
+          "enum": [
+            "cites",
+            "derived_from",
+            "summarizes",
+            "synthesizes",
+            "supports",
+            "contradicts",
+            "related_to",
+            "snippet_from",
+            "supersedes"
+          ]
+        },
+        "locator": { "$ref": "https://knowlume.dev/schemas/locator.schema.json" },
+        "reason": { "type": "string", "minLength": 1 },
+        "created_by": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

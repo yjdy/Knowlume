@@ -1,0 +1,6 @@
+schema_version: 1
+relations:
+  - from_id: note_01JSTAG7N9Q3V5X8Y2Z4A6B8D1
+    to_id: src_01JSTAG7N9Q3V5X8Y2Z4A6B8C0
+    relation_type: cites
+    created_by: human
