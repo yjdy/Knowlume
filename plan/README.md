@@ -24,10 +24,14 @@
 | [`interfaces.md`](interfaces.md) | Active | CLI、机器输出、工作流和管理页面。 |
 | [`security-publishing.md`](security-publishing.md) | Active | 信任边界、AI 隔离、隐私和公共发布。 |
 | [`roadmap.md`](roadmap.md) | Active | 阶段、范围、非目标和验收门。 |
+| [`decisions/0001-files-as-source-of-truth.md`](decisions/0001-files-as-source-of-truth.md) | Accepted ADR | 文件作为长期事实源。 |
+| [`decisions/0002-record-status-and-workflow-stage.md`](decisions/0002-record-status-and-workflow-stage.md) | Accepted ADR | 对象状态与来源工作流分离。 |
+| [`decisions/0003-locator-and-stable-sections.md`](decisions/0003-locator-and-stable-sections.md) | Accepted ADR | 来源专属 locator 与稳定 section。 |
+| [`decisions/0004-no-claim-relations-in-v1.md`](decisions/0004-no-claim-relations-in-v1.md) | Accepted ADR | 第一版不引入 Claim 级关系。 |
 | [`archive/design-baseline-v0.1.md`](archive/design-baseline-v0.1.md) | Frozen | `DESIGN_PLAN.md` v0.1 的逐字节历史副本。 |
 
 ## Planned active documents
 
-后续将在 `decisions/` 中创建关键架构决策记录。活动设计文档已经按主题拆分完成。
+活动设计文档已经按主题拆分完成，四个初始关键决策已记录为 Accepted ADR。
 
 拆解期间，任何现行规则只能有一个权威位置；其他文档应通过链接引用，避免复制后产生分歧。

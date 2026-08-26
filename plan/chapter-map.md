@@ -5,12 +5,12 @@
 | 原章节 | 主要目标 | README/AGENTS 摘要 | 状态 |
 |---|---|---|---|
 | 1. 项目定位 | `architecture.md` | README 项目简介 | Detailed complete |
-| 2. 设计原则 | `architecture.md`、未来 `decisions/` | README 核心原则；AGENTS 操作边界 | Detailed complete |
+| 2. 设计原则 | `architecture.md`、`decisions/0001-files-as-source-of-truth.md` | README 核心原则；AGENTS 操作边界 | Detailed complete |
 | 3. 总体架构 | `architecture.md` | README 简化架构图 | Detailed complete |
 | 4. 仓库和目录布局 | `architecture.md` | README 入口；AGENTS 目录规则 | Detailed complete |
 | 5. 统一数据模型 | `data-model.md` | AGENTS 核心字段规则 | Detailed complete |
 | 6. 来源类型和保存策略 | `sources-and-adapters.md` | README 支持的来源类型 | Detailed complete |
-| 7. 关系模型和知识演化 | `data-model.md`、未来 `decisions/` | AGENTS 关系目标规则 | Detailed complete |
+| 7. 关系模型和知识演化 | `data-model.md`、`decisions/0003-locator-and-stable-sections.md`、`decisions/0004-no-claim-relations-in-v1.md` | AGENTS 关系目标规则 | Detailed complete |
 | 8. SQLite 可重建索引 | `storage-index-search.md` | README 核心架构原则 | Detailed complete |
 | 9. 三层搜索和 Codex 接入 | `storage-index-search.md`、`interfaces.md` | README 能力摘要 | Detailed complete |
 | 10. `kb` CLI 设计 | `interfaces.md` | README 快速开始；AGENTS 验证命令 | Detailed complete |
