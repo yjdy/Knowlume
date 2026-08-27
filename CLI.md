@@ -1,0 +1,128 @@
+# Knowlume CLI inventory and delivery ledger
+
+本文档记录所有已规划 `kb` 命令的用途、交付阶段、实现方案、当前状态和验证证据，用于每次 CLI 变更后的对比与验收。
+
+> Last synchronized: 2026-08-27  
+> Contract baseline: Contract v2 / machine interface v1  
+> Current delivery state: Phase 0R complete; no production `kb` package exists
+
+## Authority and update rules
+
+- 命令语义和参数边界以 [`plan/interfaces.md`](plan/interfaces.md) 为准。
+- 阶段归属和 gate 以 [`plan/roadmap.md`](plan/roadmap.md) 为准。
+- JSON 输出和迁移报告以 [`schemas/interfaces/`](schemas/interfaces/README.md) 为准。
+- 本文档只负责库存、实现计划、状态和证据，不建立另一套业务规则。
+- 新增、删除、重命名命令，或改变阶段、状态、JSON 支持情况时，必须在同一变更中更新本文档。
+- 一个命令只有在实现完成、命令级测试通过且完整仓库测试通过后，才能标记为 `Verified`。
+
+状态只使用以下值：
+
+| Status | Meaning |
+|---|---|
+| `Planned` | 已规划，尚无可执行实现 |
+| `In progress` | 已开始实现，但尚未满足阶段 gate |
+| `Implemented` | 功能已实现，验证证据尚不完整 |
+| `Verified` | 命令级测试和完整仓库测试均通过 |
+| `Deferred` | 已明确后置，当前阶段不实现 |
+
+## Phase 1 — Vault and core
+
+| ID | Command | Description | Implementation plan | Status | Verification |
+|---|---|---|---|---|---|
+| `init` | `kb init PATH` | 初始化独立 vault、便携配置和必要目录 | Vault port、路径边界、原子配置写入 | `Planned` | — |
+| `scan` | `kb scan` | 扫描并解析 v2 对象、Note body 和 relation shards | Vault discovery、parser、semantic validation、scanner | `Planned` | — |
+| `status` | `kb status` | 汇总对象、工作流、健康和可用能力状态 | Scanner 结果上的只读 application service | `Planned` | — |
+| `lint` | `kb lint [--strict\|--changed]` | 报告契约、引用、provenance、关系和安全问题 | 类型化 findings；Git changed-file adapter 后置接入 | `Planned` | — |
+| `note.new` | `kb note new --type idea\|literature\|concept\|synthesis` | 从 v2 模板创建 Note | Domain factory、稳定 ID/section、冲突安全写入 | `Planned` | — |
+| `note.show` | `kb note show ID` | 按稳定 ID 显示规范化 Note | Object lookup、body parser、人类/JSON renderer | `Planned` | — |
+| `note.evolve` | `kb note evolve ID --to concept` | 将 Idea 原位演化为 Concept | 保留对象/section ID，追加 `type_history`，原子写入 | `Planned` | — |
+| `relation.add` | `kb relation add FROM_ID TO_ID --type TYPE` | 向来源对象分片增加关系 | 关系矩阵、canonical identity、分片所有权、事务写入 | `Planned` | — |
+| `relation.remove` | `kb relation remove FROM_ID TO_ID --type TYPE` | 从来源对象分片删除关系 | 精确 canonical key 匹配、冲突检测、事务写入 | `Planned` | — |
+| `relation.list` | `kb relation list ID` | 列出对象的正向关系 | 读取所属 shard；反向关系由扫描结果派生 | `Planned` | — |
+| `migrate` | `kb migrate --from 1 --to 2 [--dry-run\|--apply]` | 生成迁移报告并在无阻塞项时应用 v1→v2 | 默认 dry-run、版本化报告、禁止猜测、可恢复多文件事务 | `Planned` | — |
+
+## Phase 2A — Paper and Zotero
+
+| ID | Command | Description | Implementation plan | Status | Verification |
+|---|---|---|---|---|---|
+| `add.paper` | `kb add paper INPUT` | 通过 DOI、arXiv 或显式标识捕获论文 | canonicalization、重复检测、Zotero adapter、Source factory | `Planned` | — |
+| `inbox` | `kb inbox` | 列出等待处理的 Source | 按 `workflow_stage=inbox` 查询 durable files | `Planned` | — |
+| `process` | `kb process SOURCE_ID` | 推进来源的阅读和整合工作流 | Source workflow service、合法状态转换、冲突安全写入 | `Planned` | — |
+| `source.list` | `kb source list` | 筛选和列出 Sources | Scanner-backed query 与稳定排序 | `Planned` | — |
+| `source.show` | `kb source show ID` | 显示 Source card 和恢复信息 | Source lookup、人类/JSON renderer | `Planned` | — |
+| `source.open` | `kb source open ID` | 通过 adapter 打开原始材料 | Zotero recovery route、typed unavailable error | `Planned` | — |
+| `source.sync` | `kb source sync ID` | 从 Zotero 同步可更新元数据 | Adapter mapping、字段所有权、差异预览、冲突检测 | `Planned` | — |
+
+## Phase 2B — Web, Book, and OSS
+
+| ID | Command | Description | Implementation plan | Status | Verification |
+|---|---|---|---|---|---|
+| `add.web` | `kb add web URL` | 捕获网页及可恢复快照身份 | URL canonicalization、snapshot provider、hash/locator validation | `Planned` | — |
+| `add.book` | `kb add book INPUT` | 通过 ISBN、DOI 或 bibliographic identity 捕获书籍 | 版本/edition 识别、Zotero mapping、重复检测 | `Planned` | — |
+| `add.repo` | `kb add repo URL` | 捕获 GitHub/GitLab 项目元数据 | host/repo normalization、immutable commit、license evidence | `Planned` | — |
+| `snippet.add` | `kb snippet add` | 保存固定 commit 的受审代码片段 | OSS Source、relative path、inclusive range、license/publication review | `Planned` | — |
+
+## Phase 3 — Projection and search
+
+| ID | Command | Description | Implementation plan | Status | Verification |
+|---|---|---|---|---|---|
+| `grep` | `kb grep QUERY` | 不依赖索引搜索 durable files | FileSearchBackend、稳定结果定位 | `Planned` | — |
+| `search` | `kb search QUERY` | 使用 SQLite FTS 和受控过滤搜索 | Projection reader、FTS ranking、provenance/visibility filters | `Planned` | — |
+| `get` | `kb get ID` | 按稳定 ID 返回对象和可追溯内容 | Object lookup、normalized machine/human output | `Planned` | — |
+| `context` | `kb context QUERY` | 按显式 trusted-local/public-safe scope 组装上下文 | SearchBackend、dependency/provenance filters、citations | `Planned` | — |
+| `index.build` | `kb index build` | 增量更新 SQLite projection | checksums、change set、transactional projection commit | `Planned` | — |
+| `index.rebuild` | `kb index rebuild` | 从 durable files 确定性重建索引 | v2 DDL、deterministic scan、atomic database replacement | `Planned` | — |
+| `index.status` | `kb index status` | 报告 projection 版本、新鲜度和错误 | index metadata、scan state、parse errors | `Planned` | — |
+
+## Phase 4 — Read-only Web
+
+| ID | Command | Description | Implementation plan | Status | Verification |
+|---|---|---|---|---|---|
+| `serve` | `kb serve` | 启动 loopback 只读管理界面 | FastAPI/Jinja2/HTMX，共用 application services 和安全边界 | `Planned` | — |
+
+## Phase 5 — Automation and AI
+
+| ID | Command | Description | Implementation plan | Status | Verification |
+|---|---|---|---|---|---|
+| `ai.list` | `kb ai list` | 列出待审核及已处理 AI Artifacts | Artifact query、默认私有过滤 | `Planned` | — |
+| `ai.review` | `kb ai review ID` | 记录接受或拒绝的人工审核 | reviewer/time/action provenance、冲突安全写入 | `Planned` | — |
+| `ai.promote` | `kb ai promote ID` | 将已审核 Artifact 晋升到普通 Note | promoted state、Note block、`promoted_from` 私有审计关系事务 | `Planned` | — |
+| `doctor` | `kb doctor` | 检查运行时和外部 adapter 能力 | Python/Git/SQLite/Zotero/vault capability probes | `Planned` | — |
+
+## Phase 6A — Evolution and history
+
+| ID | Command | Description | Implementation plan | Status | Verification |
+|---|---|---|---|---|---|
+| `related` | `kb related ID` | 显示规范化关联对象 | Relation scan/index、canonical symmetric relations | `Planned` | — |
+| `backlinks` | `kb backlinks ID` | 显示指向对象或稳定 section 的关系 | Derived inverse relation query | `Planned` | — |
+| `history` | `kb history ID` | 按稳定 ID 投影 Git 历史 | Git adapter、rename-aware object resolution、actor metadata | `Planned` | — |
+| `note.merge` | `kb note merge SOURCE_ID --into TARGET_ID` | 合并重复 Note 并保留历史对象 | 多文件事务、关系重定向、source supersession | `Planned` | — |
+| `note.supersede` | `kb note supersede OLD_ID --by NEW_ID` | 用新 Note 替代旧 Note | 同 kind 校验、`supersedes` relation、旧对象保留 | `Planned` | — |
+| `tidy` | `kb tidy [--dry-run\|--apply]` | 规范结构，不改变知识语义 | deterministic formatter、差异预览、默认 dry-run | `Planned` | — |
+| `organize` | `kb organize` | 提出重复、关系和综合建议 | suggestion-only analysis，不直接修改 durable knowledge | `Planned` | — |
+| `review` | `kb review` | 报告阅读债务和维护建议 | health rules、稳定 finding codes、只读输出 | `Planned` | — |
+
+## Phase 6B — Secure publishing
+
+| ID | Command | Description | Implementation plan | Status | Verification |
+|---|---|---|---|---|---|
+| `publish.audit` | `kb publish audit` | 审计公共 allowlist 的完整依赖闭包 | dependency classification、fail-closed findings、manifest | `Planned` | — |
+| `publish.build` | `kb publish build` | 构建隔离且原子的 public staging | audited manifest allowlist、atomic staging replacement | `Planned` | — |
+| `publish.preview` | `kb publish preview` | 预览最近通过审计的公共构建 | staging-only publisher/preview adapter | `Planned` | — |
+
+## Comparison and verification procedure
+
+每次 CLI 相关变更按以下顺序更新和验证：
+
+1. 对照 `plan/interfaces.md` 检查命令名称、参数和机器输出契约。
+2. 对照 `plan/roadmap.md` 检查阶段和 gate，不在本文档独立调整阶段。
+3. 更新对应行的 implementation plan、status 和 verification；保留稳定 ID，重命名时在变更记录说明。
+4. 实现存在后，对比 `kb --help` 与各级 `--help`，确保没有未登记的命令或缺失的已规划命令。
+5. 运行命令级测试和完整仓库测试；在 verification 中记录测试文件、CI job 或发布版本，不记录只能人工复述的成功声明。
+6. 运行内部文档链接检查，确认本文档与权威文档仍可互相解析。
+
+## Change log
+
+| Date | Change | Comparison result |
+|---|---|---|
+| 2026-08-27 | 建立 Contract v2 CLI 全量库存与交付状态账本 | 与 active interfaces/roadmap 对齐；所有命令尚为 `Planned` |

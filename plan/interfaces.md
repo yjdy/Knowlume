@@ -11,11 +11,18 @@ All interfaces call shared application services. Phase 0R defines these contract
 kb init PATH
 kb status                         kb scan
 kb add [paper|web|book|repo]      kb source [list|show|open|sync]
+kb inbox                          kb process SOURCE_ID
 kb note new --type idea|literature|concept|synthesis
 kb note show ID                   kb note evolve ID --to concept
 kb relation [add|remove|list]     kb snippet add
 kb grep QUERY                     kb search QUERY
 kb get ID                         kb context QUERY
+kb related ID                     kb backlinks ID
+kb history ID
+kb note merge SOURCE_ID --into TARGET_ID
+kb note supersede OLD_ID --by NEW_ID
+kb tidy [--dry-run|--apply]       kb organize
+kb review
 kb index [build|rebuild|status]   kb lint [--strict|--changed]
 kb ai [list|review|promote]       kb publish [audit|build|preview]
 kb migrate --from 1 --to 2 [--dry-run|--apply]

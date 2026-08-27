@@ -29,13 +29,13 @@ Phase 0R is complete: Contract v1 is archived and executable for history/migrati
 | Commands/capability | Phase | Required gate evidence |
 |---|---:|---|
 | contract/schema validation | 0R | versioned positive/negative fixtures and documentation links pass |
-| `init`, `scan`, `status`, `lint`, `note new/evolve`, `relation add/remove/list`, `migrate` | 1 | vault, parser, identity, atomicity, conflict, recovery, and migration tests |
-| `add paper`, `source list/show/open/sync`, inbox/process | 2A | canonical and idempotent Zotero slice |
+| `init`, `scan`, `status`, `lint`, `note new/show/evolve`, `relation add/remove/list`, `migrate` | 1 | vault, parser, identity, atomicity, conflict, recovery, and migration tests |
+| `add paper`, `source list/show/open/sync`, `inbox`, `process` | 2A | canonical and idempotent Zotero slice |
 | `add web/book/repo`, `snippet add` | 2B | snapshot, edition, commit/range/license checks |
 | `grep`, `search`, `index`, `get`, `context` | 3 | deterministic projection and result-to-file explanation |
 | `serve` read views | 4 | shared-service parity and local-service security |
 | `ai list/review/promote`, automation JSON, `doctor` | 5 | promotion audit and explicit-scope tests |
-| related/backlinks/history, merge/supersede, tidy/organize/review | 6A | identity and history preservation |
+| `related`, `backlinks`, `history`, `note merge/supersede`, `tidy`, `organize`, `review` | 6A | identity and history preservation |
 | `publish audit/build/preview` | 6B | complete closure and adversarial staging tests |
 
 This matrix is the only delivery-batch authority.

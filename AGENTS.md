@@ -80,6 +80,8 @@ uv run --no-sync pytest -p no:cacheprovider
 
 The suite includes internal documentation-link checks. Do not claim a command, compatibility target, phase gate, or feature works unless execution or repository evidence supports it.
 
+Keep [`CLI.md`](CLI.md) synchronized in the same change whenever a CLI command is added, removed, renamed, reassigned to a phase, implemented, or newly verified. Treat it as a delivery ledger, not as a replacement for the interface and roadmap authorities. Mark a command `Verified` only with command-level automated evidence and a passing complete repository suite.
+
 ## Git hygiene
 
 - Do not stage, commit, push, rewrite history, or delete branches unless explicitly requested.

@@ -45,6 +45,7 @@ Phase 7   Semantic, MCP, graph, multi-agent   Deferred
 | [templates/v2/](templates/v2/README.md) | 新内容模板 |
 | [tests/fixtures/](tests/fixtures/) | v1 历史、v2 正反和迁移样本 |
 | [plan/](plan/README.md) | 活动设计、ADR、迁移规范、路线图与历史归档 |
+| [CLI.md](CLI.md) | 全部规划命令、实现方案、交付状态和验证证据 |
 | [AGENTS.md](AGENTS.md) | 仓库工作与安全规则 |
 
 根目录旧 `DESIGN_PLAN.md` 已退役；历史副本保存在 [plan/archive/design-baseline-v0.1.md](plan/archive/design-baseline-v0.1.md)。
