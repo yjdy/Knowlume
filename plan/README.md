@@ -4,8 +4,9 @@
 
 ## Current baseline
 
-Phase 0R is complete. Phase 1 production implementation has passed local and distribution gates;
-the final cross-platform CI evidence is pending before the phase status can change to Complete.
+Phase 0R and Phase 1 are complete. Phase 1 passed local, distribution, isolated-install, and
+Windows/macOS/Linux Python 3.13–3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913)
+and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates.
 
 The cross-platform Python package and release-engineering foundation is implemented independently of the feature phases. It exposes only verified release diagnostics until Phase 1 commands satisfy their gates.
 

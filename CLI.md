@@ -4,7 +4,7 @@
 
 > Last synchronized: 2026-08-28
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: All registered Phase 1 commands implemented and verified; final phase gate pending
+> Current delivery state: Phase 1 Complete; all registered Phase 1 commands are verified
 
 ## Authority and update rules
 
@@ -142,6 +142,7 @@
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-08-28 | Phase 1 跨平台最终门禁完成 | [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 覆盖 Windows/Linux/macOS × Python 3.13/3.14，所有 Phase 1 命令保持 `Verified` |
 | 2026-08-27 | 建立跨平台 package 与 release foundation，新增 `--version`、`doctor --json`、`update-check` | 三个入口已实现；Phase 1–6 业务命令状态不变 |
 | 2026-08-27 | 实现 `kb init PATH` 与根级 `--vault PATH` 契约 | `init` 命令级测试、Vault 边界测试与完整套件通过 |
 | 2026-08-27 | 实现确定性 `scan`、scanner-backed `status` 与 `lint` | v2 正反 fixtures、关系/基数/引用、CLI 行为与完整套件通过 |

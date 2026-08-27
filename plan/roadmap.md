@@ -7,10 +7,10 @@ Each phase starts only after the preceding executable gate is green. Thematic do
 
 ## Current state
 
-Phase 0R is complete. Phase 1 implementation and local/distribution verification are complete, while
-the final Windows/macOS/Linux Python 3.13–3.14 CI gate is pending on a revision that contains the
-changes. Phase 1 is therefore not yet marked complete. Database, capture/search, and Web work remain
-in their later phases.
+Phase 0R and Phase 1 are complete. Phase 1 passed local, distribution, isolated-install, and
+Windows/macOS/Linux Python 3.13–3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913)
+and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates. Database,
+capture/search, and Web work remain in their later phases; publication gates remain closed.
 
 ## Release track
 

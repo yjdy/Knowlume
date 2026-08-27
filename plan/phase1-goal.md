@@ -1,6 +1,7 @@
 # Phase 1 execution goal: Vault and core
 
-> Status: Ready for execution — do not execute until explicitly requested
+> Status: Complete — all M0–M10 gates passed on 2026-08-28
+> Evidence: [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856)
 > Intended branch: `Phase1`
 > Document role: implementation goal and milestone checklist, not a new contract authority
 

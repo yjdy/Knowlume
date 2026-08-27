@@ -6,15 +6,16 @@ Knowlume 是一个 local-first 的个人知识系统：以可读、可迁移的 
 
 ## Current status
 
-Phase 0R（Contract v2）已完成。Phase 1 的 vault、parser/scanner、safe writes、Note、relation
-和显式迁移实现已通过本地 Windows 与隔离安装验证；最终的 Windows/macOS/Linux CI gate
-尚待包含这些变更的远端运行，因此当前不声明 Phase 1 Complete。Capture、search 和 Web
-功能仍按路线图逐阶段实现。
+Phase 0R（Contract v2）与 Phase 1 均已完成。Vault、parser/scanner、safe writes、Note、relation
+和显式迁移已通过本地、隔离安装，以及 Windows/macOS/Linux × Python 3.13/3.14 的
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) 与
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 门禁。Capture、search
+和 Web 功能仍按路线图逐阶段实现，所有发布开关保持关闭。
 
 ```text
 Phase 0R  Contract v2                         Complete
 Release   Python package foundation           Implemented
-Phase 1   Vault, domain, parser, safe writes  Final CI gate pending
+Phase 1   Vault, domain, parser, safe writes  Complete
 Phase 2A  Paper + Zotero                      Planned
 Phase 2B  Web, Book, OSS                      Planned
 Phase 3   SQLite projection and search        Planned
