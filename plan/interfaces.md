@@ -3,12 +3,14 @@
 > Status: Active — Contract v2
 > Authoritative for: user-facing commands, machine output, vault discovery, and management surfaces
 
-All interfaces call shared application services. A production package skeleton now provides release diagnostics only; Phase 1 application commands, migration behavior, and the Web service remain unimplemented.
+All interfaces call shared application services. Phase 1 Vault, scanner, Note, relation, and explicit
+v1-to-v2 migration commands are implemented; the Web service remains unimplemented.
 
 ## Command surface and ownership
 
 ```text
 kb --version
+kb [--vault PATH] COMMAND
 kb doctor [--json]
 kb update-check [--pre] [--json]
 kb init PATH
@@ -16,9 +18,11 @@ kb status                         kb scan
 kb add INPUT [--type paper|web|book|repo] [--json]
 kb source [list|show|open|sync]
 kb inbox                          kb process SOURCE_ID
-kb note new --type idea|literature|concept|synthesis
+kb note new --type idea|literature|concept|synthesis [--source SOURCE_ID]
 kb note show ID                   kb note evolve ID --to concept
-kb relation [add|remove|list]     kb snippet add
+kb relation add FROM_ID TO_ID --type TYPE [--section SECTION_ID]
+kb relation remove FROM_ID TO_ID --type TYPE [--section SECTION_ID]
+kb relation list ID              kb snippet add
 kb grep QUERY                     kb search QUERY
 kb get ID                         kb context QUERY
 kb related ID                     kb backlinks ID
@@ -46,6 +50,11 @@ Resolution order is:
 
 Multiple candidates or conflicting configuration produce a typed ambiguity error. A configured vault is independent from the program repository.
 
+`--vault` is a root option and precedes the command. `kb init PATH` uses only its positional target;
+combining it with root `--vault` is `VAULT_ARGUMENT_CONFLICT` (exit 2). Other Vault commands do not
+implicitly create a missing candidate. Configuration, discovery, conflict, recovery, and unsafe-path
+diagnostics are frozen by [ADR-0011](decisions/0011-phase1-vault-and-transaction-contracts.md).
+
 ## Capture and mutation behavior
 
 The only public capture surface is `kb add INPUT [--type paper|web|book|repo] [--json]`. It is released in Phase 2B only after all four capture paths pass their gates. Phase 2A delivers the internal paper/Zotero capture service without exposing a partial parent command. CLI type `repo` maps to durable `source_type: oss`.
@@ -64,6 +73,14 @@ Unavailable or ambiguous DOI metadata requires `--type`; it is never guessed. Un
 The capture flow is `normalize -> recognize -> metadata resolve -> canonical identity -> duplicate check -> Source construction -> adapter snapshot/sync -> atomic write -> scan`. Once the Phase 3 projection exists, a successful capture also requests an index refresh, but index availability is never a Phase 2B write prerequisite. `--type` does not bypass metadata, canonicalization, schema, snapshot, license, or safety checks. Any ambiguity or failure leaves no Source card, relation, or partial update. Repeated capture of the same canonical identity succeeds with the existing Source ID and `created: false`.
 
 Note evolution from Idea to Concept preserves the Note and section IDs and appends `type_history`. Relation operations write only the shard owned by the source object. Migration defaults to dry-run and refuses apply while required decisions or blocking findings remain.
+
+Relation `--section` identifies a stable section on the stored target. `related_to` is stored once in
+canonical object-ID order, and incoming navigation is derived by scanning rather than persisted as a
+backlink. Add and remove compare the complete canonical key; omitting `--section` cannot remove a
+section-targeted relation.
+
+`note new --type literature` requires `--source SOURCE_ID` and atomically creates the required
+`summarizes` relation. `--source` is rejected for the other Note types; no Source is guessed.
 
 ## Machine interface v1
 
@@ -93,6 +110,11 @@ The principal `kb add` diagnostics are fixed as:
 | `ADD_WRITE_CONFLICT` | 4 | durable state changed before the atomic write |
 
 The [migration report v1 schema](../schemas/interfaces/migration-report-v1.schema.json) distinguishes automatic changes, required human decisions, blocking findings, and prohibited inference.
+
+Phase 1 scanner and lint services use the versioned
+[`finding-v1`](../schemas/interfaces/finding-v1.schema.json) shape. Phase 1 commands remain
+human-readable unless their syntax explicitly includes `--json`; `migrate` emits migration-report
+v1. Any later JSON option requires an explicit result schema inside CLI envelope v1 before release.
 
 `kb --version` reports package and independent contract/projection/parser versions without resolving a vault. `kb doctor` currently validates the Python runtime and bundled release assets; later phases extend it with vault and adapter capability probes without changing its command identity.
 

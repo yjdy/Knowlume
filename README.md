@@ -6,12 +6,15 @@ Knowlume 是一个 local-first 的个人知识系统：以可读、可迁移的 
 
 ## Current status
 
-Phase 0R（Contract v2）已完成，Phase 1 是下一阶段。跨平台 Python package 与发布工程骨架已经建立，目前 `kb` 只提供版本、安装健康检查和显式更新检查；vault、笔记、迁移、capture、search 和 Web 功能仍按路线图逐阶段实现。
+Phase 0R（Contract v2）已完成。Phase 1 的 vault、parser/scanner、safe writes、Note、relation
+和显式迁移实现已通过本地 Windows 与隔离安装验证；最终的 Windows/macOS/Linux CI gate
+尚待包含这些变更的远端运行，因此当前不声明 Phase 1 Complete。Capture、search 和 Web
+功能仍按路线图逐阶段实现。
 
 ```text
 Phase 0R  Contract v2                         Complete
 Release   Python package foundation           Implemented
-Phase 1   Vault, domain, parser, safe writes  Next
+Phase 1   Vault, domain, parser, safe writes  Final CI gate pending
 Phase 2A  Paper + Zotero                      Planned
 Phase 2B  Web, Book, OSS                      Planned
 Phase 3   SQLite projection and search        Planned
@@ -62,10 +65,12 @@ uv venv --python 3.14 .venv
 uv sync --all-extras
 ```
 
-当前可执行的发布诊断：
+当前可执行的 Phase 1 命令可从完整账本查看；以下命令可快速检查安装和初始化独立 vault：
 
 ```powershell
 uv run --no-sync kb --version
+uv run --no-sync kb init PATH
+uv run --no-sync kb --vault PATH scan
 uv run --no-sync kb update-check
 ```
 

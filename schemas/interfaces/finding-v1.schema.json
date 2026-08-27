@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/finding-v1.schema.json",
+  "title": "Knowlume scanner and lint finding v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["finding_version", "code", "severity", "category", "message"],
+  "properties": {
+    "finding_version": { "const": 1 },
+    "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+    "severity": { "enum": ["info", "warning", "error"] },
+    "category": { "enum": ["configuration", "parse", "contract", "reference", "relation", "conflict", "recovery", "migration", "security"] },
+    "message": { "type": "string", "minLength": 1 },
+    "path": { "$ref": "#/$defs/relativePath" },
+    "object_id": { "type": "string", "pattern": "^(src|note|snip|ai)_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "section_id": { "type": "string", "pattern": "^sec_[a-z0-9][a-z0-9_-]{2,63}$" },
+    "details": { "type": "object" }
+  },
+  "$defs": {
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+    }
+  }
+}

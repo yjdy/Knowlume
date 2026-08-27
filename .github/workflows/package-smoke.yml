@@ -2,6 +2,8 @@ name: Package smoke
 
 on:
   workflow_dispatch:
+  push:
+    branches: [Phase1]
   pull_request:
     paths:
       - "pyproject.toml"
@@ -10,6 +12,8 @@ on:
       - "schemas/**"
       - "templates/**"
       - "scripts/verify_distribution.py"
+      - "scripts/verify_installed_phase1.py"
+      - "scripts/verify_install_lifecycle.py"
       - ".github/workflows/package-smoke.yml"
 
 permissions:
@@ -60,3 +64,13 @@ jobs:
           WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )
           python -m pip install pipx
           python -m pipx run --spec "$WHEEL" kb --version
+      - name: Smoke test Phase 1 commands
+        shell: bash
+        run: |
+          WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )
+          python scripts/verify_installed_phase1.py "$WHEEL"
+      - name: Verify package lifecycle preserves Vaults
+        shell: bash
+        run: |
+          WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )
+          python scripts/verify_install_lifecycle.py "$WHEEL"

@@ -13,6 +13,7 @@ The original design was audited and split into active thematic documents. The fr
 | Phases, scope, commands, acceptance | [`roadmap.md`](roadmap.md) | Complete |
 | Contract v1 migration | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | Complete |
 | Post-baseline package distribution | [`distribution.md`](distribution.md) | Complete |
+| Phase 1 Vault configuration and transaction protocol | [`decisions/0011-phase1-vault-and-transaction-contracts.md`](decisions/0011-phase1-vault-and-transaction-contracts.md) | Complete |
 
 ## Completion checks
 

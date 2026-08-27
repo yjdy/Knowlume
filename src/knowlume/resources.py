@@ -37,6 +37,7 @@ REQUIRED_ASSETS = (
     "schemas/interfaces/update-check-result-v1.schema.json",
     "templates/v1/notes/literature.md",
     "templates/v2/notes/idea.md",
+    "templates/config/v1/knowlume.toml",
 )
 
 

@@ -1,0 +1,10 @@
+config_version = 1
+object_contract_version = 2
+
+[vault]
+sources = "../sources"
+notes = "notes"
+snippets = "snippets"
+ai_artifacts = "ai/artifacts"
+relations = "relations"
+state = ".knowlume"

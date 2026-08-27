@@ -4,6 +4,7 @@ from importlib.metadata import PackageNotFoundError, version
 from typing import TypedDict
 
 from knowlume.constants import (
+    CONFIGURATION_VERSION,
     DISTRIBUTION_NAME,
     INTERFACE_VERSION,
     LOCATOR_VERSION,
@@ -11,6 +12,7 @@ from knowlume.constants import (
     PARSER_VERSION,
     PROJECTION_VERSION,
     RELATION_SCHEMA_VERSION,
+    TRANSACTION_VERSION,
 )
 
 
@@ -22,6 +24,8 @@ class VersionReport(TypedDict):
     interface: int
     projection: int
     parser: int
+    configuration: int
+    transaction: int
 
 
 def package_version() -> str:
@@ -40,6 +44,8 @@ def version_report() -> VersionReport:
         "interface": INTERFACE_VERSION,
         "projection": PROJECTION_VERSION,
         "parser": PARSER_VERSION,
+        "configuration": CONFIGURATION_VERSION,
+        "transaction": TRANSACTION_VERSION,
     }
 
 
@@ -49,5 +55,6 @@ def format_version_report() -> str:
         f"Knowlume {report['package']} "
         f"(object={report['object_contract']}, locator={report['locator']}, "
         f"relation={report['relation_schema']}, interface={report['interface']}, "
-        f"projection={report['projection']}, parser={report['parser']})"
+        f"projection={report['projection']}, parser={report['parser']}, "
+        f"configuration={report['configuration']}, transaction={report['transaction']})"
     )

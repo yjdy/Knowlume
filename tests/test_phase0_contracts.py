@@ -148,9 +148,7 @@ def test_v2_valid_relation_shards_and_cardinality(
 
 
 @pytest.mark.parametrize("filename", ["idea-mature.md", "idea-evergreen.md"])
-def test_v2_invalid_object_schema_fixtures(
-    v2_contracts: ContractBundle, filename: str
-) -> None:
+def test_v2_invalid_object_schema_fixtures(v2_contracts: ContractBundle, filename: str) -> None:
     schemas, registry = v2_contracts
     frontmatter, _ = load_markdown(V2_FIXTURES / "invalid" / filename)
     assert validation_errors(frontmatter, schemas["objects"], registry), filename
@@ -160,9 +158,7 @@ def test_v2_invalid_object_schema_fixtures(
     "filename",
     ["web-locator-missing-snapshot.yaml", "book-page-missing-edition.yaml"],
 )
-def test_v2_invalid_locator_fixtures(
-    v2_contracts: ContractBundle, filename: str
-) -> None:
+def test_v2_invalid_locator_fixtures(v2_contracts: ContractBundle, filename: str) -> None:
     schemas, registry = v2_contracts
     data = load_yaml(V2_FIXTURES / "invalid" / filename)
     assert validation_errors(data, schemas["locator"], registry), filename
@@ -177,9 +173,7 @@ def test_v2_invalid_locator_fixtures(
         "fact-missing-citation.md",
     ],
 )
-def test_v2_invalid_body_fixtures(
-    v2_contracts: ContractBundle, filename: str
-) -> None:
+def test_v2_invalid_body_fixtures(v2_contracts: ContractBundle, filename: str) -> None:
     schemas, registry = v2_contracts
     path = V2_FIXTURES / "invalid" / filename
     body, parse_errors = parse_v2_note_body(path)
@@ -230,8 +224,7 @@ def test_v2_semantically_invalid_relation_fixtures(
     assert validation_errors(document, schemas["relations"], registry) == []
     sections = {
         object_id: {
-            section["section_id"]
-            for section in parse_v2_note_body(object_path)[0]["sections"]
+            section["section_id"] for section in parse_v2_note_body(object_path)[0]["sections"]
         }
         for object_id, object_path in _valid_note_paths().items()
     }
@@ -250,12 +243,9 @@ def test_v2_invalid_relation_cardinality_fixtures(
     v2_objects: ObjectMap, note_type: str, expected_error: str
 ) -> None:
     relation_documents = [
-        load_yaml(path)
-        for path in sorted((V2_FIXTURES / "valid" / "relations").glob("*.yaml"))
+        load_yaml(path) for path in sorted((V2_FIXTURES / "valid" / "relations").glob("*.yaml"))
     ]
-    invalid_path = next(
-        (V2_FIXTURES / "invalid" / "cardinality" / note_type).glob("*.yaml")
-    )
+    invalid_path = next((V2_FIXTURES / "invalid" / "cardinality" / note_type).glob("*.yaml"))
     invalid_document = load_yaml(invalid_path)
     relation_documents = [
         document
@@ -294,10 +284,7 @@ def test_projection_contracts_are_executable() -> None:
     v2 = sqlite3.connect(":memory:")
     v2.executescript((V2_SCHEMA_DIR / "sqlite-projection-v2.sql").read_text(encoding="utf-8"))
     assert v2.execute("PRAGMA user_version").fetchone() == (2,)
-    tables = {
-        row[0]
-        for row in v2.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
-    }
+    tables = {row[0] for row in v2.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
     required_tables = {
         "objects",
         "type_transitions",
@@ -443,9 +430,7 @@ def test_projection_contracts_are_executable() -> None:
         "SELECT segment_id, object_id, section_id, provenance_role "
         "FROM fts_segments WHERE fts_segments MATCH 'fact'"
     )
-    assert v2.execute(
-        fts_query
-    ).fetchone() == ("seg_test", "note_test", "sec_fact", "fact")
+    assert v2.execute(fts_query).fetchone() == ("seg_test", "note_test", "sec_fact", "fact")
 
 
 def test_interface_and_migration_report_contracts(
@@ -455,6 +440,7 @@ def test_interface_and_migration_report_contracts(
     assert set(schemas) == {
         "add-result-v1",
         "cli-envelope-v1",
+        "finding-v1",
         "migration-report-v1",
         "update-check-result-v1",
     }

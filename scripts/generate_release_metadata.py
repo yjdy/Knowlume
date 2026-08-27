@@ -29,8 +29,7 @@ def main() -> int:
         if path.suffix == ".whl" or path.name.endswith(".tar.gz")
     )
     checksums = [
-        f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}"
-        for path in artifacts
+        f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}" for path in artifacts
     ]
     (args.dist / "SHA256SUMS.txt").write_text("\n".join(checksums) + "\n", encoding="utf-8")
 

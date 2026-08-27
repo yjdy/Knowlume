@@ -6,3 +6,4 @@ Interface contracts have independent versions from durable object and projection
 - `add-result-v1.schema.json`: successful `kb add --json` data, including effective type, canonical identity, Source ID, and created/existing outcome.
 - `migration-report-v1.schema.json`: dry-run/apply planning report for contract migration.
 - `update-check-result-v1.schema.json`: explicit package update discovery result returned inside the CLI envelope.
+- `finding-v1.schema.json`: stable scanner/lint diagnostic shape; paths are Vault-relative.

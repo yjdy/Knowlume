@@ -3,7 +3,9 @@
 > Status: Active specification  
 > Applies to: durable object, body, relation, and locator contracts
 
-Migration is dry-run by default and never guesses semantic intent. The future `kb migrate --from 1 --to 2` command emits a versioned migration report. Apply is prohibited while blocking findings or required decisions remain.
+Migration is dry-run by default and never guesses semantic intent. The implemented
+`kb migrate --from 1 --to 2` command emits a versioned migration report. Apply is prohibited while
+blocking findings or required decisions remain and uses the recoverable transaction protocol.
 
 ## Mechanical conversions
 

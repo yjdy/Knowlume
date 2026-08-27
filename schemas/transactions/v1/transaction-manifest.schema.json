@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/transactions/v1/transaction-manifest.schema.json",
+  "title": "Knowlume recoverable transaction manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["transaction_version", "transaction_id", "operation", "state", "created_at", "updated_at", "entries"],
+  "properties": {
+    "transaction_version": { "const": 1 },
+    "transaction_id": { "type": "string", "pattern": "^txn_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "operation": { "enum": ["relation-update", "migration"] },
+    "state": { "enum": ["preparing", "prepared", "committing", "rolling_back", "committed", "rolled_back"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "checksum": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "expected_checksum", "replacement_checksum", "staged_path", "backup_path", "state"],
+      "properties": {
+        "path": { "$ref": "#/$defs/relativePath" },
+        "expected_checksum": { "oneOf": [{ "$ref": "#/$defs/checksum" }, { "type": "null" }] },
+        "replacement_checksum": { "$ref": "#/$defs/checksum" },
+        "staged_path": { "$ref": "#/$defs/relativePath" },
+        "backup_path": { "$ref": "#/$defs/relativePath" },
+        "state": { "enum": ["pending", "backed_up", "replaced", "restored"] }
+      }
+    }
+  }
+}

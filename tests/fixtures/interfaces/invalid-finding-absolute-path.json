@@ -1,0 +1,8 @@
+{
+  "finding_version": 1,
+  "code": "PARSE_FAILED",
+  "severity": "error",
+  "category": "parse",
+  "message": "The document could not be parsed.",
+  "path": "C:/Users/example/private-note.md"
+}

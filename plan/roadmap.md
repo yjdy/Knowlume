@@ -7,7 +7,10 @@ Each phase starts only after the preceding executable gate is green. Thematic do
 
 ## Current state
 
-Phase 0R is complete and Phase 1 is next. A production Python package and release-engineering foundation exists, but it exposes only package version, installation diagnostics, and explicit update discovery. No vault/domain command, migration program, database, capture/search implementation, or Web service exists yet.
+Phase 0R is complete. Phase 1 implementation and local/distribution verification are complete, while
+the final Windows/macOS/Linux Python 3.13–3.14 CI gate is pending on a revision that contains the
+changes. Phase 1 is therefore not yet marked complete. Database, capture/search, and Web work remain
+in their later phases.
 
 ## Release track
 
