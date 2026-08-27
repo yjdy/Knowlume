@@ -1,0 +1,16 @@
+{
+  "report_version": 1,
+  "from_contract": 1,
+  "to_contract": 2,
+  "mode": "dry-run",
+  "apply_allowed": false,
+  "findings": [
+    {
+      "kind": "blocker",
+      "code": "AI_ARTIFACT_AUDIT_MISSING",
+      "message": "ai_assisted is true but no reviewed Artifact audit chain exists.",
+      "status": "unresolved",
+      "object_id": "note_01JSTAG7N9Q3V5X8Y2Z4A6B8D4"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://knowlume.dev/schemas/objects.schema.json",
+  "$id": "https://knowlume.dev/schemas/v1/objects.schema.json",
   "title": "Knowlume object frontmatter",
   "oneOf": [
     { "$ref": "#/$defs/source" },

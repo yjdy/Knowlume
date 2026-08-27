@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://knowlume.dev/schemas/relations.schema.json",
+  "$id": "https://knowlume.dev/schemas/v1/relations.schema.json",
   "title": "Knowlume relation collection",
   "type": "object",
   "additionalProperties": false,
@@ -43,7 +43,7 @@
             "supersedes"
           ]
         },
-        "locator": { "$ref": "https://knowlume.dev/schemas/locator.schema.json" },
+        "locator": { "$ref": "https://knowlume.dev/schemas/v1/locator.schema.json" },
         "reason": { "type": "string", "minLength": 1 },
         "created_by": { "type": "string", "minLength": 1 }
       }

@@ -1,106 +1,68 @@
 # Data model
 
 > Status: Active  
-> Baseline: contract version 1  
-> Authoritative for: durable object semantics, identity, lifecycle, provenance, sections, and relations
+> Baseline: Contract v2
+> Authoritative for: object semantics, identity, Note bodies, lifecycle, provenance, and relations
 
-The executable field contract is [`../schemas/objects.schema.json`](../schemas/objects.schema.json). Locator and relation shapes are defined by [`../schemas/locator.schema.json`](../schemas/locator.schema.json) and [`../schemas/relations.schema.json`](../schemas/relations.schema.json). This document explains semantics and must not redefine incompatible enums.
+Executable contracts are under [`../schemas/v2/`](../schemas/v2/README.md). Contract v1 is historical and readable only for migration.
 
-## Object types
+## Objects and identity
 
 | Kind | Responsibility |
 |---|---|
-| `source` | Stable source card and route back to original material |
-| `note` | Human-maintained knowledge |
-| `snippet` | Small, licensed extract from an OSS source fixed to a commit |
-| `ai_artifact` | AI-produced material that has not been promoted into human knowledge |
+| Source | durable metadata and route to original material |
+| Note | human-maintained knowledge with at least one human section |
+| Snippet | reviewed OSS extract fixed to an immutable commit |
+| AI Artifact | private AI output before or after explicit review |
 
-Claim is not an object in v1.
+Every object has a permanent typed ID. File, title, heading, and Note type changes preserve IDs. Duplicate IDs block strict lint, migration apply, and publishing. Claim is not a v2 object.
 
-## Identity and schema version
+## Note types and maturity
 
-- Every object declares a contract version and a permanent typed ID. Exact field names, version values, prefixes, and patterns are defined only in [`objects.schema.json`](../schemas/objects.schema.json).
-- File and heading renames never change object IDs.
-- Duplicate IDs are contract errors and block strict lint and publishing.
-- A schema change that cannot read existing files requires an explicit migration.
-
-Creation examples are maintained in the [`templates/`](../templates/) directory. Valid object examples are the Markdown files under [`tests/fixtures/valid/`](../tests/fixtures/valid/); rejected contract shapes are under [`tests/fixtures/invalid/`](../tests/fixtures/invalid/).
-
-## State dimensions
-
-State dimensions are independent. Applicability, allowed values, and conditional requirements are defined by [`objects.schema.json`](../schemas/objects.schema.json).
-
-| Field | Applies to | Meaning |
+| Type | Meaning | Semantic requirement |
 |---|---|---|
-| object record state | every object | whether the durable record is current, archived, or replaced |
-| source workflow state | Source only | progress from capture toward integration |
-| note maturity | Note only | stability and reuse maturity of human knowledge |
-| `review_status` | AI review surfaces | review state, never a substitute for object kind |
+| `idea` | source-free idea, question, hypothesis, or experience | maturity is seed/developing only |
+| `literature` | reading note centered on original material | at least one `summarizes` Source |
+| `concept` | structured understanding of a concept | may be source-free |
+| `synthesis` | conclusions across Sources or Notes | mature/public requires at least two `synthesizes` targets |
 
-Archival is an object-record concern, not a Source workflow step. Integration means that a Source has contributed to concept or synthesis knowledge. The accepted rationale is recorded in [`decisions/0002-record-status-and-workflow-stage.md`](decisions/0002-record-status-and-workflow-stage.md).
+Maturity is `seed`, `developing`, `mature`, or `evergreen`. Evergreen is not a Note type. Idea may evolve in place to Concept; the Note ID and section IDs remain stable, and frontmatter `type_history` records the transition actor and time.
 
-## Note types
+## Role-based Note bodies
 
-| `note_type` | Purpose |
-|---|---|
-| `literature` | Reading notes centered on one source |
-| `concept` | Evolving understanding of one concept |
-| `synthesis` | Conclusions synthesized across sources or notes |
-| `evergreen` | Stable, reusable knowledge that may become publishable |
+Contract v2 sections use:
 
-Current state lives in the current Markdown file. Ordinary history lives in Git; files are not copied into `note-v1.md`, `note-v2.md`, and similar manual versions.
+```markdown
+<!-- knowlume:section id=sec_core_idea role=human -->
+## Core idea
+```
 
-## Stable sections and provenance
+Roles are `human`, `fact`, `ai`, and `evolution`. Every Note contains at least one human section; other roles are optional. Section IDs are unique within a Note and survive heading, path, and Note-type changes.
 
-Human notes separate four surfaces using permanent section markers:
+A Fact block carries adjacent citation metadata with one or more Source IDs and source-specific locators. Every non-heading block in a fact section must have metadata. Uncited prose belongs in a human section and is never silently reclassified.
 
-- original facts;
-- human interpretation;
-- AI inference;
-- view evolution.
+An AI block carries an adjacent Artifact ID. The Artifact must be promoted and retain model, input references, reviewer, and review time. Accepted-but-unpromoted or unreviewed AI remains outside ordinary Notes.
 
-The canonical marker syntax is demonstrated by the four [`Note templates`](../templates/notes/) and the valid [`literature-note fixture`](../tests/fixtures/valid/literature-note.md). Marker validation and accepted IDs belong to the executable contracts and tests.
-
-`section_id` survives heading and file renames. A fact binds a Source ID and a source-type-specific locator. Interpretations may lack a locator but must remain distinguishable from facts. AI inference remains explicitly marked even when embedded in a reviewed note.
-
-Source-specific locator fields and preservation semantics are authoritative in [`sources-and-adapters.md`](sources-and-adapters.md); JSON validation is authoritative in the locator schema.
+Source-free human content may be searched and published as opinion or interpretation. It never appears in the Facts surface, and machine output reports human provenance with an empty citation list.
 
 ## Relations
 
-The complete relation vocabulary, required fields, target ID formats, and optional locator shape are defined only in [`relations.schema.json`](../schemas/relations.schema.json). See the [`relation template`](../templates/relations.yaml), [`valid relation fixture`](../tests/fixtures/valid/relations.yaml), and invalid [`Claim`](../tests/fixtures/invalid/claim-relation.yaml) and [`missing-section`](../tests/fixtures/invalid/missing-section-relation.yaml) fixtures.
+Relations are stored at `relations/<from_id>.yaml`; inverse navigation is derived. Note frontmatter does not duplicate source, related-note, or supersession links.
 
-A relation points to an object using `to_id`, or to a stable section using `to_id + to_section_id`. V1 does not support Claim targets. Heading text and generated index segment IDs are not stable relation targets.
+| Relation | Valid direction |
+|---|---|
+| `cites` | Note -> Source |
+| `summarizes` | Literature Note -> Source |
+| `synthesizes` | Synthesis Note -> Source/Note |
+| `supports` / `contradicts` | Source/Note -> Note or stable Note section |
+| `related_to` | Note <-> Note, stored once in canonical ID order |
+| `snippet_from` | Snippet -> OSS Source |
+| `derived_from` | Note/AI Artifact -> Source/Note |
+| `promoted_from` | Note -> AI Artifact |
+| `supersedes` | new object -> old object of the same kind |
 
-Markdown/Wikilinks provide navigation; typed relation blocks provide semantics; SQLite only stores their projection.
+Canonical relation identity excludes reason, time, and actor. AI may propose a relation only as a private `relation_candidate` Artifact; trusted relation writes require human review or a deterministic system action.
 
-## Merge and supersede
+## Evolution and contract versions
 
-- `summarizes` describes a note-to-source meaning; it is not a merge.
-- `synthesizes` records conclusions derived across several sources or notes.
-- Merge keeps source objects and marks them superseded instead of deleting them.
-- Supersede means a new object replaces an old object without requiring body duplication.
-- Search and publishing must surface or audit links to superseded objects.
-
-## AI Artifact lifecycle
-
-AI output begins as a private artifact:
-
-```text
-AI Artifact -> Human Review -> Accept or Reject -> Promote -> Note
-```
-
-Unpromoted artifacts are excluded from default search/context, fact sections, and public publishing. Promotion preserves the source artifact ID, reviewer, review time, model identity, and source references so that provenance is not lost.
-
-Enforcement of AI and visibility boundaries is defined in [`security-publishing.md`](security-publishing.md).
-
-## Contract evolution
-
-Schema modifications follow this order:
-
-1. record the decision and migration impact;
-2. update JSON Schema;
-3. update templates;
-4. add valid and invalid fixtures;
-5. update executable contract tests;
-6. implement parser/domain changes;
-7. provide a migration for existing files when required.
+Merge and supersession preserve old objects instead of deleting them. Search and publishing surface or audit superseded dependencies. Contract v1 fixed sections and duplicated frontmatter links are migration inputs only; the active mapping and blockers are defined in [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md).

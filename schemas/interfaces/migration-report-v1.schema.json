@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/migration-report-v1.schema.json",
+  "title": "Knowlume migration report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["report_version", "from_contract", "to_contract", "mode", "apply_allowed", "findings"],
+  "properties": {
+    "report_version": { "const": 1 },
+    "from_contract": { "const": 1 },
+    "to_contract": { "const": 2 },
+    "mode": { "enum": ["dry-run", "apply"] },
+    "apply_allowed": { "type": "boolean" },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "code", "message", "status"],
+      "properties": {
+        "kind": { "enum": ["change", "decision", "blocker"] },
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "message": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["proposed", "resolved", "unresolved"] },
+        "path": { "type": "string" },
+        "object_id": { "type": "string" },
+        "details": { "type": "object" }
+      }
+    }
+  }
+}

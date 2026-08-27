@@ -1,23 +1,16 @@
-# Knowlume schema contracts
+# Knowlume executable contracts
 
-Phase 0 freezes contract version `1` in three executable JSON Schemas and one executable SQLite projection:
+Machine-enforced fields and constraints are versioned. Contract v2 is the production target; Contract v1 is retained only for validation and migration.
 
-- `objects.schema.json`: Source, Note, Snippet, and AI Artifact frontmatter.
-- `locator.schema.json`: paper, web, book, and OSS source locators.
-- `relations.schema.json`: typed relations targeting objects or stable sections.
-- [`sqlite-projection-v1.sql`](sqlite-projection-v1.sql): rebuildable tables, keys, indexes, metadata, and FTS5 surface.
+| Area | Active contract | Historical contract |
+|---|---|---|
+| Objects and frontmatter | [`v2/objects.schema.json`](v2/objects.schema.json) | [`v1/objects.schema.json`](v1/objects.schema.json) |
+| Note bodies | [`v2/note-body.schema.json`](v2/note-body.schema.json) | Fixed-section syntax in v1 fixtures |
+| Source locators | [`v2/locator.schema.json`](v2/locator.schema.json) | [`v1/locator.schema.json`](v1/locator.schema.json) |
+| Relation shards | [`v2/relations.schema.json`](v2/relations.schema.json) | [`v1/relations.schema.json`](v1/relations.schema.json) |
+| SQLite projection | [`v2/sqlite-projection-v2.sql`](v2/sqlite-projection-v2.sql) | [`v1/sqlite-projection-v1.sql`](v1/sqlite-projection-v1.sql) |
+| CLI and migration reports | [`interfaces/`](interfaces/README.md) | Not defined in v1 |
 
-The JSON Schemas use Draft 2020-12. Markdown fixtures are validated by extracting YAML frontmatter. The SQL contract is executable against SQLite with FTS5 enabled. Contract changes require a versioned migration and matching updates to templates, fixtures, and acceptance tests.
+Active creation templates live under [`../templates/v2/`](../templates/v2/README.md). Maintained v2 examples and rejected cases live under [`../tests/fixtures/v2/`](../tests/fixtures/v2/). The migration policy is [`../plan/migrations/v1-to-v2.md`](../plan/migrations/v1-to-v2.md).
 
-## Templates and executable examples
-
-| Contract | Creation template | Valid examples | Invalid examples |
-|---|---|---|---|
-| Source object | [`source-card.md`](../templates/source-card.md) | [`paper`](../tests/fixtures/valid/paper-source.md), [`web`](../tests/fixtures/valid/web-source.md), [`book`](../tests/fixtures/valid/book-source.md), [`OSS`](../tests/fixtures/valid/oss-source.md) | [`overloaded status`](../tests/fixtures/invalid/overloaded-status-source.md) |
-| Note object and stable sections | [`templates/notes/`](../templates/notes/) | [`literature note`](../tests/fixtures/valid/literature-note.md), [`public note`](../tests/fixtures/valid/public-note.md) | Referencing failures are covered by relation fixtures |
-| Snippet object | [`snippet.md`](../templates/snippet.md) | [`snippet fixture`](../tests/fixtures/valid/snippet.md) | Contract failures belong under `tests/fixtures/invalid/` |
-| AI Artifact | [`ai-artifact.md`](../templates/ai-artifact.md) | [`AI fixture`](../tests/fixtures/valid/ai-artifact.md) | Visibility/review failures belong under `tests/fixtures/invalid/` |
-| Relation | [`relations.yaml`](../templates/relations.yaml) | [`relations fixture`](../tests/fixtures/valid/relations.yaml) | [`Claim target`](../tests/fixtures/invalid/claim-relation.yaml), [`missing section`](../tests/fixtures/invalid/missing-section-relation.yaml), [`public-to-private`](../tests/fixtures/invalid/public-private-relation.yaml) |
-| Locator | Embedded by the relation template | Paper locator in the valid relation fixture | [`web locator without snapshot identity`](../tests/fixtures/invalid/web-locator-missing-snapshot.yaml) |
-
-These linked files are the maintained examples. Design documents should link here instead of embedding field-complete YAML or JSON copies.
+Backward-incompatible durable changes require a new contract version, migration impact, templates, positive and negative fixtures, and executable acceptance tests.

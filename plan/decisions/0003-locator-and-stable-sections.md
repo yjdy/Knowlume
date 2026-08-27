@@ -14,7 +14,7 @@ Each source type has a versioned, machine-validatable locator schema. Mutable so
 
 Note sections that can be referenced by relations receive permanent `section_id` markers. Object-level relations use an object ID; section-level relations use the object ID plus stable section ID. Titles, filenames, heading text, and generated segment IDs are not durable relation identities.
 
-The executable locator contract is [`../../schemas/locator.schema.json`](../../schemas/locator.schema.json), and relation shape is [`../../schemas/relations.schema.json`](../../schemas/relations.schema.json). Source-specific semantics live in [`../sources-and-adapters.md`](../sources-and-adapters.md).
+The current executable locator contract is [Contract v2 locator](../../schemas/v2/locator.schema.json), and relation shape is [Contract v2 relations](../../schemas/v2/relations.schema.json). Source-specific semantics live in [`../sources-and-adapters.md`](../sources-and-adapters.md).
 
 ## Consequences
 

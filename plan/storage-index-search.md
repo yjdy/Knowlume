@@ -1,79 +1,46 @@
 # Storage, index, and search
 
-> Status: Active  
-> Baseline: v0.1  
+> Status: Active — Contract v2
 > Authoritative for: durable storage, Git history, SQLite projection, indexing, and search behavior
 
 ## Durable and derived state
 
-Tracked Markdown/YAML, schemas, templates, configuration, and code are durable. `kb.sqlite`, caches, temporary clones, derived output, logs, AI temporary output, and public staging are not durable knowledge.
+The configured vault's Markdown/YAML objects and relation shards are durable facts. Schemas, templates, migrations, tests, configuration, and source code are durable repository assets. SQLite, caches, temporary clones, logs, AI scratch output, and public staging are disposable.
 
 ```text
-Markdown/YAML -> parser -> normalized projection -> SQLite
+vault Markdown/YAML -> parser -> normalized projection -> SQLite
 ```
 
-Deleting SQLite must never delete knowledge. A full rebuild must reproduce the same normalized objects, relations, sections, tags, visibility, and searchable text for the same contract/parser version.
+Deleting SQLite must not delete knowledge. Given the same durable files and schema/parser/tokenizer versions, rebuilding produces the same normalized projection.
+
+## Vault and writes
+
+Program code and the personal vault are separate. Vault discovery follows the order defined in [interfaces](interfaces.md). Tracked Source cards and configuration never store machine-specific absolute paths.
+
+Single-file writes use an expected checksum, a temporary file in the destination directory, flush, and atomic replacement. Multi-file operations use a vault lock, transaction manifest, and same-filesystem staging. Interrupted transactions must be detectable and recoverable or reversible. Phase 1 implements and tests equivalent observable behavior on Windows and Linux. Knowlume does not automatically commit, push, pull, or rewrite Git history.
 
 ## Git history
 
-Git records changes to durable files. `kb history <id>` resolves an object by stable ID and projects relevant commits even when the file was renamed.
+`kb history <id>` will resolve an object by stable ID across file renames. Identity and actor information cannot be inferred from prose or a filename; operations that need attribution record structured actor metadata.
 
-Human/agent attribution cannot be inferred reliably from prose alone. When required, commits use structured trailers or equivalent metadata. Sensitive material removed from the current tree may remain in Git history; incident handling and history rewriting are explicit administrative operations.
+## SQLite projection v2
 
-## SQLite projection
+The executable authority is [sqlite-projection-v2.sql](../schemas/v2/sqlite-projection-v2.sql). It projects object kind/subtype, maturity and review state, type transitions, relation shards and normalized locators, stable sections and roles, ordered segments, visibility/record/supersession state, and scan/version metadata.
 
-The executable projection contract is [`schemas/sqlite-projection-v1.sql`](../schemas/sqlite-projection-v1.sql). It is the authority for table columns, primary and unique keys, foreign keys, indexes, and the FTS5 surface. The first projection contains these logical surfaces:
+Fact citations use a separate table so one content segment can retain multiple Source/locator pairs. Every FTS row carries enough identity to return deterministically to its segment, section, object, and provenance role. Files remain authoritative; row IDs and row order do not.
 
-| Surface | Purpose |
-|---|---|
-| `objects` | ID, kind/subtype, path, title, visibility, record/workflow state, timestamps, checksum |
-| `relations` | source/target IDs, optional stable target section, type, locator, reason |
-| `segments` | object and stable section IDs, provenance type, heading, text, source locator |
-| `tags` / `object_tags` | normalized tag membership |
-| `fts_segments` | title, text, tags, object ID, provenance type, visibility |
-| metadata tables | schema/parser/tokenizer versions, scan state, parse errors, index timestamps |
+Rebuilds are deterministic and transactional. Parse failures are reported and cannot silently erase durable knowledge. Concurrent file changes are detected before a projection is committed.
 
-Object paths are unique. Relation identity is the composite of source object, target object, optional stable target section, relation type, and normalized locator. Tag membership is unique per object/tag pair, and segment ordering is unique within an object, section, and provenance type. Locator values stored in SQLite are normalized serialized projections of the locator contracts in [`schemas/locator.schema.json`](../schemas/locator.schema.json); files remain authoritative.
+## Search surfaces
 
-Technical metadata is never the sole source of business facts.
+- File search is the index-independent diagnostic baseline.
+- FTS search supports filters for object subtype, maturity/review state, visibility, record/supersession state, tags, and provenance role.
+- Results are classified as Facts, Human Ideas/Interpretations, AI Inference, Evolution, or Snippets.
+- Source-free human content remains searchable and may be public, but is represented as human opinion with empty citations, never as fact.
+- AI content is excluded from trusted/default surfaces unless its promotion and caller scope permit it.
 
-## Build and rebuild
-
-- `index build` incrementally handles additions, edits, renames, and deletions.
-- `index rebuild` writes a new database transactionally and replaces the previous projection only after success.
-- Checksums use normalized file bytes and a declared algorithm.
-- Rebuild order is deterministic.
-- Parse failures do not silently remove the last known object; they are reported and strict operations fail closed.
-- Concurrent file changes are detected using checksum/mtime validation before committing an index transaction.
-
-Rebuild acceptance compares normalized projection content, not SQLite row order or internal row IDs.
-
-## Search levels
-
-### L1: file search
-
-`kb grep QUERY` scans the durable files directly. It requires no index and is the debugging baseline when projection results are questioned.
-
-### L2: SQLite FTS5
-
-`kb search QUERY` returns object ID/title, matching stable section, snippet/highlight, score, and superseded indication. Filters include object type, source type, tags, visibility, record/workflow state, and provenance section.
-
-Machine consumers use the versioned JSON contract defined in [`interfaces.md`](interfaces.md).
-
-### Chinese and English
-
-SQLite's default tokenization is not a sufficient Chinese search specification. V1 uses a deterministic Python normalization/tokenization step and records its version in index metadata. A representative bilingual corpus must measure recall before choosing trigram or a specialized tokenizer.
-
-### L3: semantic search
-
-V1 defines a `SearchBackend` port but does not implement embeddings or a vector database. Semantic/hybrid search is a later adapter and must preserve the same visibility, AI-review, and provenance filters as file and FTS search.
+Chinese and English normalization/tokenization is deterministic and versioned in index metadata. Semantic or hybrid search is deferred and must preserve the same visibility, provenance, AI-review, and supersession filters.
 
 ## Context assembly
 
-`kb context` composes results into Sources, Facts, My Notes, and Relevant Snippets. Context assembly does not bypass search or visibility policy. Trusted local/private and public-safe modes are explicit caller scopes, not inferred from output destination.
-
-Security policy for context and publishing is authoritative in [`security-publishing.md`](security-publishing.md).
-
-## Operational checks
-
-`kb lint` verifies content contracts and projection consistency. `kb doctor` verifies runtime capabilities such as Python, Git, SQLite FTS5, Zotero access, vault configuration, and optional publishing tools. These responsibilities remain separate.
+Context assembly returns traceable sections and citations under an explicit trusted-local or public-safe scope. It does not infer scope from a caller name or output destination and cannot bypass [publishing policy](security-publishing.md).

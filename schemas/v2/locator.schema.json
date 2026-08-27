@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/v2/locator.schema.json",
+  "title": "Knowlume Contract v2 source locator",
+  "oneOf": [
+    { "$ref": "#/$defs/paper" },
+    { "$ref": "#/$defs/web" },
+    { "$ref": "#/$defs/book" },
+    { "$ref": "#/$defs/oss" }
+  ],
+  "$defs": {
+    "snapshotRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "identifier", "captured_at", "content_hash"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "identifier": { "type": "string", "minLength": 1 },
+        "captured_at": { "type": "string", "format": "date-time" },
+        "content_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "paper": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locator_version", "source_type"],
+      "properties": {
+        "locator_version": { "const": 2 },
+        "source_type": { "const": "paper" },
+        "page": { "type": "integer", "minimum": 1 },
+        "page_label": { "type": "string", "minLength": 1 },
+        "section": { "type": "string", "minLength": 1 },
+        "figure": { "type": "string", "minLength": 1 },
+        "table": { "type": "string", "minLength": 1 }
+      },
+      "anyOf": [{ "required": ["page"] }, { "required": ["page_label"] }, { "required": ["section"] }, { "required": ["figure"] }, { "required": ["table"] }]
+    },
+    "web": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locator_version", "source_type", "snapshot_ref"],
+      "properties": {
+        "locator_version": { "const": 2 },
+        "source_type": { "const": "web" },
+        "snapshot_ref": { "$ref": "#/$defs/snapshotRef" },
+        "heading_path": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        "paragraph": { "type": "integer", "minimum": 1 }
+      },
+      "anyOf": [{ "required": ["heading_path"] }, { "required": ["paragraph"] }]
+    },
+    "book": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locator_version", "source_type"],
+      "properties": {
+        "locator_version": { "const": 2 },
+        "source_type": { "const": "book" },
+        "edition": { "type": "string", "minLength": 1 },
+        "isbn": { "type": "string", "minLength": 10 },
+        "chapter": { "type": "string", "minLength": 1 },
+        "page": { "type": "integer", "minimum": 1 },
+        "location": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        { "anyOf": [{ "required": ["chapter"] }, { "required": ["page"] }, { "required": ["location"] }] },
+        { "if": { "required": ["page"] }, "then": { "anyOf": [{ "required": ["edition"] }, { "required": ["isbn"] }] } }
+      ]
+    },
+    "oss": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locator_version", "source_type", "repository_host", "repository_path", "commit", "path"],
+      "properties": {
+        "locator_version": { "const": 2 },
+        "source_type": { "const": "oss" },
+        "repository_host": { "type": "string", "minLength": 1 },
+        "repository_path": { "type": "string", "pattern": "^[^/\\s]+(?:/[^/\\s]+)+$" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$" },
+        "path": { "type": "string", "minLength": 1, "pattern": "^(?![A-Za-z]:[\\\\/])(?![\\\\/]).+" },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 },
+        "symbol": { "type": "string", "minLength": 1 }
+      },
+      "anyOf": [{ "required": ["start_line", "end_line"] }, { "required": ["symbol"] }]
+    }
+  }
+}

@@ -1,87 +1,54 @@
 # Security, privacy, and publishing
 
-> Status: Active  
-> Baseline: v0.1  
-> Authoritative for: trust boundaries, AI isolation, visibility enforcement, and public publishing
+> Status: Active — Contract v2
+> Authoritative for: trust boundaries, AI promotion, dependency classes, and public publishing
 
 ## Default posture
 
-- Every new object is private unless a human explicitly changes its visibility.
-- Unreviewed AI remains private and outside facts, default search/context, and publishing.
-- Local paths, raw attachments, credentials, private images, caches, and temporary files are never publishable inputs.
-- Security checks fail closed for public output.
+New objects are private unless a human explicitly changes visibility. `private` is an application policy, not encryption or protection from an already configured Git remote. Local paths, credentials, raw private attachments, caches, and temporary output are never publishable inputs. Public-safe operations fail closed.
 
-Object field semantics belong to [`data-model.md`](data-model.md); this document defines enforcement.
+## Human, fact, and AI content
 
-## Context scopes
+- Source-free `role=human` content may be searched and published as an opinion, idea, question, or interpretation. Machine output records `provenance_role: human` and empty citations.
+- Public `role=fact` blocks require complete citations and public-eligible Sources and locators.
+- AI output starts as a private AI Artifact. Ordinary Note content may reference it only after explicit human promotion records the model, reviewer, review time, and audit relation.
+- Promotion never converts unsupported prose into fact; fact rules still apply.
 
-Context consumers select an explicit scope:
+## Dependency classes
 
-| Scope | Permitted material |
-|---|---|
-| trusted local/private | private and public reviewed human knowledge; AI only when explicitly requested |
-| public-safe | public allowlist closure only; no private dependency or unpromoted AI |
+Relations are classified for publishing:
 
-`kb context` does not guess scope from terminal, caller name, or output path. A public-safe request cannot be widened by a search result or adapter.
+- **Content dependencies** must be included in and pass the complete public closure.
+- **Navigation relations** are rendered only when the target is also public.
+- **Private audit relations**, including `promoted_from`, remain in the private vault and are represented in a public manifest only by the minimum required disclosure and integrity hashes.
 
-## AI isolation
-
-AI writes begin as `ai_artifact`. Promotion is an explicit human-reviewed use case that records artifact ID, reviewer, review time, source IDs, model identifier, and resulting Note ID.
-
-AI assistance does not convert unsupported prose into fact. A promoted fact still needs a valid Source ID and locator. Rejected artifacts remain traceable but excluded from ordinary retrieval.
-
-Future external LLM integrations require an allow policy specifying which objects and sections may leave the machine. Sending data is denied unless the active scope authorizes every transitive dependency.
+This classification prevents a private AI Artifact from being copied to staging merely because a promoted block has an audit trail.
 
 ## Publish pipeline
 
 ```text
 explicit public allowlist
-        -> dependency closure
-        -> audit
-        -> atomic public-staging build
+        -> content dependency closure
+        -> fail-closed audit
+        -> isolated atomic staging
         -> preview
         -> publisher adapter
 ```
 
-Knowlume never gives the complete private vault to Quartz and relies on downstream filtering.
+Publishing is blocked by private content dependencies, unresolved references, missing stable sections, unreviewed AI, uncited facts, ineligible Sources, unresolved supersession, path escape, unapproved attachments or snippets, and blocking rights findings. A failed build leaves the previous successful staging intact. Only manifest-listed files enter staging, and publishers receive staging plus its manifest rather than the private vault.
 
-## Audit rules
+## Context and external models
 
-Publishing is blocked by:
-
-- direct or transitive public-to-private object, section, image, or attachment dependencies;
-- broken/unresolved links or missing stable sections;
-- unpromoted AI artifacts or unreviewed AI content;
-- superseded dependencies without an accepted resolution;
-- absolute local paths, path traversal, symlink/junction escape, or temporary files;
-- raw PDF/EPUB material outside an explicit reviewed attachment policy;
-- OSS snippets without immutable commit, path/range, license, and publication approval;
-- unresolved copyright, license, attribution, or redistribution findings marked blocking.
-
-The audit produces a versioned manifest containing included object IDs, dependency edges, source hashes, exclusions, warnings, blocking findings, and tool/contract versions.
-
-## Staging guarantees
-
-- Staging is rebuilt into a temporary directory and atomically promoted after audit success.
-- Previous successful staging remains intact when a build fails.
-- Only manifest-listed files may appear in staging.
-- Generated output is not copied back into durable knowledge.
-- Publisher adapters receive staging plus its manifest, never repository-wide access.
+Callers choose an explicit trusted-local or public-safe scope. Search results and adapters cannot widen it. Private objects or attachments may leave the machine only when an explicit release policy authorizes every selected item and transitive content dependency.
 
 ## Local Web security
 
-The Web service binds to loopback by default. Mutations require CSRF protection and conflict-safe writes. Markdown rendering is sanitized. File-open and adapter calls use structured arguments and validated roots rather than shell-composed paths.
+The service binds to loopback by default. Host and Origin use allowlists; permissive CORS is forbidden. Markdown is sanitized, security response headers are enabled, mutations require CSRF protection and conflict-safe writes, and path operations reject traversal and symlink/junction escape.
 
-Any future non-loopback mode requires authentication, authorization, secure transport, and a separate threat review.
+## Logging, Git, and deletion
 
-## Logging and errors
-
-Logs omit full private bodies and attachment contents by default. Diagnostics may include object IDs, safe relative paths, hashes, error categories, and redacted external identifiers. Error reports must not convert private content into telemetry.
-
-## Git and deletion
-
-Changing an object from public to private does not erase earlier Git history or already published copies. Sensitive-data incidents require an explicit response covering Git history, backups, staging, published sites, and external caches.
+Logs omit private bodies and attachment contents. Visibility changes do not erase Git history or previous publications. Sensitive-data response must explicitly cover history, backups, staging, published sites, and external caches.
 
 ## Legal boundary
 
-Automated checks provide evidence and risk classification, not legal advice. Human confirmation remains mandatory when rights are unclear.
+Automated checks provide evidence and risk classification, not legal advice. Unclear rights require human confirmation.

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/v2/note-body.schema.json",
+  "title": "Knowlume Contract v2 normalized Note body",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "note_id", "sections"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "note_id": { "type": "string", "pattern": "^note_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "contains": { "properties": { "role": { "const": "human" } }, "required": ["role"] },
+      "items": { "oneOf": [{ "$ref": "#/$defs/humanSection" }, { "$ref": "#/$defs/factSection" }, { "$ref": "#/$defs/aiSection" }, { "$ref": "#/$defs/evolutionSection" }] }
+    }
+  },
+  "$defs": {
+    "sectionId": { "type": "string", "pattern": "^sec_[a-z0-9][a-z0-9_-]{2,63}$" },
+    "baseSectionProperties": {
+      "type": "object",
+      "properties": {
+        "section_id": { "$ref": "#/$defs/sectionId" },
+        "heading": { "type": "string", "minLength": 1 }
+      }
+    },
+    "textBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "text"],
+      "properties": { "kind": { "const": "text" }, "text": { "type": "string", "minLength": 1 } }
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "locator"],
+      "properties": {
+        "source_id": { "type": "string", "pattern": "^src_[0-9A-HJKMNP-TV-Z]{26}$" },
+        "locator": { "$ref": "https://knowlume.dev/schemas/v2/locator.schema.json" }
+      }
+    },
+    "factBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "text", "citations"],
+      "properties": {
+        "kind": { "const": "fact" },
+        "text": { "type": "string", "minLength": 1 },
+        "citations": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/citation" }, "uniqueItems": true }
+      }
+    },
+    "aiBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "text", "artifact_id"],
+      "properties": {
+        "kind": { "const": "ai" },
+        "text": { "type": "string", "minLength": 1 },
+        "artifact_id": { "type": "string", "pattern": "^ai_[0-9A-HJKMNP-TV-Z]{26}$" }
+      }
+    },
+    "humanSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["section_id", "role", "heading", "blocks"],
+      "properties": { "section_id": { "$ref": "#/$defs/sectionId" }, "role": { "const": "human" }, "heading": { "type": "string", "minLength": 1 }, "blocks": { "type": "array", "items": { "$ref": "#/$defs/textBlock" } } }
+    },
+    "factSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["section_id", "role", "heading", "blocks"],
+      "properties": { "section_id": { "$ref": "#/$defs/sectionId" }, "role": { "const": "fact" }, "heading": { "type": "string", "minLength": 1 }, "blocks": { "type": "array", "items": { "$ref": "#/$defs/factBlock" } } }
+    },
+    "aiSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["section_id", "role", "heading", "blocks"],
+      "properties": { "section_id": { "$ref": "#/$defs/sectionId" }, "role": { "const": "ai" }, "heading": { "type": "string", "minLength": 1 }, "blocks": { "type": "array", "items": { "$ref": "#/$defs/aiBlock" } } }
+    },
+    "evolutionSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["section_id", "role", "heading", "blocks"],
+      "properties": { "section_id": { "$ref": "#/$defs/sectionId" }, "role": { "const": "evolution" }, "heading": { "type": "string", "minLength": 1 }, "blocks": { "type": "array", "items": { "$ref": "#/$defs/textBlock" } } }
+    }
+  }
+}

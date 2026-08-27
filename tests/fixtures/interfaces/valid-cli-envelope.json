@@ -1,0 +1,9 @@
+{
+  "interface_version": 1,
+  "command": "note.new",
+  "success": true,
+  "exit_code": 0,
+  "data": {"id": "note_01JSTAG7N9Q3V5X8Y2Z4A6B8D0"},
+  "warnings": [],
+  "errors": []
+}

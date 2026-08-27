@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/v2/objects.schema.json",
+  "title": "Knowlume Contract v2 object frontmatter",
+  "oneOf": [
+    { "$ref": "#/$defs/source" },
+    { "$ref": "#/$defs/note" },
+    { "$ref": "#/$defs/snippet" },
+    { "$ref": "#/$defs/aiArtifact" }
+  ],
+  "$defs": {
+    "schemaVersion": { "type": "integer", "const": 2 },
+    "sourceId": { "type": "string", "pattern": "^src_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "noteId": { "type": "string", "pattern": "^note_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "snippetId": { "type": "string", "pattern": "^snip_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "aiId": { "type": "string", "pattern": "^ai_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "objectId": { "type": "string", "pattern": "^(src|note|snip|ai)_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "sectionId": { "type": "string", "pattern": "^sec_[a-z0-9][a-z0-9_-]{2,63}$" },
+    "visibility": { "enum": ["private", "public"] },
+    "recordStatus": { "enum": ["active", "archived", "superseded"] },
+    "workflowStage": { "enum": ["inbox", "reading", "processed", "integrated"] },
+    "date": { "type": "string", "format": "date" },
+    "dateTime": { "type": "string", "format": "date-time" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$" },
+      "uniqueItems": true,
+      "default": []
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["human", "system"] },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "inputRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object_id"],
+      "properties": {
+        "object_id": { "$ref": "#/$defs/objectId" },
+        "section_id": { "$ref": "#/$defs/sectionId" }
+      }
+    },
+    "snapshotRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "identifier", "captured_at", "content_hash"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "identifier": { "type": "string", "minLength": 1 },
+        "captured_at": { "$ref": "#/$defs/dateTime" },
+        "content_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "kind", "source_type", "title", "visibility", "record_status", "workflow_stage", "created", "updated", "tags"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schemaVersion" },
+        "id": { "$ref": "#/$defs/sourceId" },
+        "kind": { "const": "source" },
+        "source_type": { "enum": ["paper", "web", "book", "oss"] },
+        "title": { "type": "string", "minLength": 1 },
+        "visibility": { "$ref": "#/$defs/visibility" },
+        "record_status": { "$ref": "#/$defs/recordStatus" },
+        "workflow_stage": { "$ref": "#/$defs/workflowStage" },
+        "created": { "$ref": "#/$defs/date" },
+        "updated": { "$ref": "#/$defs/date" },
+        "captured_at": { "$ref": "#/$defs/dateTime" },
+        "canonical_url": { "type": "string", "format": "uri" },
+        "snapshot_ref": { "$ref": "#/$defs/snapshotRef" },
+        "zotero_library_id": { "type": "string", "minLength": 1 },
+        "zotero_key": { "type": "string", "pattern": "^[A-Z0-9]{8}$" },
+        "attachment_key": { "type": "string", "pattern": "^[A-Z0-9]{8}$" },
+        "isbn": { "type": "string", "minLength": 10 },
+        "doi": { "type": "string", "minLength": 3 },
+        "repository_host": { "type": "string", "minLength": 1 },
+        "repository_path": { "type": "string", "pattern": "^[^/\\s]+(?:/[^/\\s]+)+$" },
+        "default_branch": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$" },
+        "license": { "type": "string", "minLength": 1 },
+        "year": { "type": "integer", "minimum": 1000, "maximum": 9999 },
+        "authors": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        "tags": { "$ref": "#/$defs/tags" }
+      },
+      "allOf": [
+        { "if": { "properties": { "source_type": { "const": "paper" } } }, "then": { "anyOf": [{ "required": ["canonical_url"] }, { "required": ["doi"] }, { "required": ["zotero_key"] }] } },
+        { "if": { "properties": { "source_type": { "const": "web" } } }, "then": { "required": ["canonical_url", "captured_at"] } },
+        { "if": { "properties": { "source_type": { "const": "book" } } }, "then": { "anyOf": [{ "required": ["isbn"] }, { "required": ["doi"] }, { "required": ["zotero_key"] }, { "required": ["canonical_url"] }] } },
+        { "if": { "properties": { "source_type": { "const": "oss" } } }, "then": { "required": ["canonical_url", "repository_host", "repository_path", "commit", "license"] } }
+      ]
+    },
+    "typeTransition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "changed_at", "actor"],
+      "properties": {
+        "from": { "const": "idea" },
+        "to": { "const": "concept" },
+        "changed_at": { "$ref": "#/$defs/dateTime" },
+        "actor": { "$ref": "#/$defs/actor" }
+      }
+    },
+    "note": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "kind", "note_type", "title", "visibility", "record_status", "maturity", "created", "updated", "tags", "type_history"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schemaVersion" },
+        "id": { "$ref": "#/$defs/noteId" },
+        "kind": { "const": "note" },
+        "note_type": { "enum": ["idea", "literature", "concept", "synthesis"] },
+        "title": { "type": "string", "minLength": 1 },
+        "visibility": { "$ref": "#/$defs/visibility" },
+        "record_status": { "$ref": "#/$defs/recordStatus" },
+        "maturity": { "enum": ["seed", "developing", "mature", "evergreen"] },
+        "created": { "$ref": "#/$defs/date" },
+        "updated": { "$ref": "#/$defs/date" },
+        "tags": { "$ref": "#/$defs/tags" },
+        "type_history": { "type": "array", "items": { "$ref": "#/$defs/typeTransition" } }
+      },
+      "allOf": [
+        { "if": { "properties": { "note_type": { "const": "idea" } } }, "then": { "properties": { "maturity": { "enum": ["seed", "developing"] }, "type_history": { "maxItems": 0 } } } },
+        { "if": { "properties": { "note_type": { "const": "concept" } } }, "then": { "properties": { "type_history": { "maxItems": 1 } } } },
+        { "if": { "properties": { "note_type": { "enum": ["literature", "synthesis"] } } }, "then": { "properties": { "type_history": { "maxItems": 0 } } } }
+      ]
+    },
+    "snippet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "kind", "title", "source_id", "repository_host", "repository_path", "commit", "path", "start_line", "end_line", "license", "publication_approved", "visibility", "record_status", "created", "updated", "tags"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schemaVersion" },
+        "id": { "$ref": "#/$defs/snippetId" },
+        "kind": { "const": "snippet" },
+        "title": { "type": "string", "minLength": 1 },
+        "source_id": { "$ref": "#/$defs/sourceId" },
+        "repository_host": { "type": "string", "minLength": 1 },
+        "repository_path": { "type": "string", "pattern": "^[^/\\s]+(?:/[^/\\s]+)+$" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$" },
+        "path": { "type": "string", "minLength": 1, "pattern": "^(?![A-Za-z]:[\\\\/])(?![\\\\/]).+" },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 },
+        "license": { "type": "string", "minLength": 1 },
+        "publication_approved": { "type": "boolean" },
+        "visibility": { "$ref": "#/$defs/visibility" },
+        "record_status": { "$ref": "#/$defs/recordStatus" },
+        "created": { "$ref": "#/$defs/date" },
+        "updated": { "$ref": "#/$defs/date" },
+        "tags": { "$ref": "#/$defs/tags" }
+      }
+    },
+    "aiArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "id", "kind", "artifact_type", "title", "visibility", "record_status", "review_status", "created", "input_refs", "generated_by", "model", "prompt_ref", "reviewed_by", "reviewed_at"],
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/schemaVersion" },
+        "id": { "$ref": "#/$defs/aiId" },
+        "kind": { "const": "ai_artifact" },
+        "artifact_type": { "enum": ["summary", "extraction", "relation_candidate", "draft"] },
+        "title": { "type": "string", "minLength": 1 },
+        "visibility": { "const": "private" },
+        "record_status": { "$ref": "#/$defs/recordStatus" },
+        "review_status": { "enum": ["unreviewed", "accepted", "rejected", "promoted"] },
+        "created": { "$ref": "#/$defs/date" },
+        "input_refs": { "type": "array", "items": { "$ref": "#/$defs/inputRef" }, "uniqueItems": true },
+        "generated_by": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "prompt_ref": { "type": ["string", "null"], "pattern": "^(?![A-Za-z]:[\\\\/])(?![\\\\/]).+" },
+        "reviewed_by": { "type": ["string", "null"] },
+        "reviewed_at": { "oneOf": [{ "$ref": "#/$defs/dateTime" }, { "type": "null" }] }
+      },
+      "allOf": [
+        { "if": { "properties": { "review_status": { "const": "unreviewed" } } }, "then": { "properties": { "reviewed_by": { "type": "null" }, "reviewed_at": { "type": "null" } } } },
+        { "if": { "properties": { "review_status": { "enum": ["accepted", "rejected", "promoted"] } } }, "then": { "properties": { "reviewed_by": { "type": "string", "minLength": 1 }, "reviewed_at": { "$ref": "#/$defs/dateTime" } } } }
+      ]
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/v2/relations.schema.json",
+  "title": "Knowlume Contract v2 relation shard",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "from_id", "relations"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "from_id": { "$ref": "#/$defs/objectId" },
+    "relations": { "type": "array", "items": { "$ref": "#/$defs/relation" }, "uniqueItems": true }
+  },
+  "$defs": {
+    "objectId": { "type": "string", "pattern": "^(src|note|snip|ai)_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "sectionId": { "type": "string", "pattern": "^sec_[a-z0-9][a-z0-9_-]{2,63}$" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["human", "system"] },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["to_id", "relation_type", "created_at", "actor"],
+      "properties": {
+        "to_id": { "$ref": "#/$defs/objectId" },
+        "to_section_id": { "$ref": "#/$defs/sectionId" },
+        "relation_type": { "enum": ["cites", "derived_from", "summarizes", "synthesizes", "supports", "contradicts", "related_to", "snippet_from", "promoted_from", "supersedes"] },
+        "locator": { "$ref": "https://knowlume.dev/schemas/v2/locator.schema.json" },
+        "reason": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "actor": { "$ref": "#/$defs/actor" }
+      }
+    }
+  }
+}

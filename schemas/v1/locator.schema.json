@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://knowlume.dev/schemas/locator.schema.json",
+  "$id": "https://knowlume.dev/schemas/v1/locator.schema.json",
   "title": "Knowlume source locator",
   "oneOf": [
     { "$ref": "#/$defs/paper" },

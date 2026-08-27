@@ -1,86 +1,56 @@
 # Sources and adapters
 
-> Status: Active  
-> Baseline: v0.1  
-> Authoritative for: source preservation, source-specific locators, and external software boundaries
+> Status: Active — Contract v2
+> Authoritative for: source preservation, source-specific locators, and external-system boundaries
 
-Source cards are durable metadata and access routes, not copies of full source content. Their executable field contract is [`../schemas/objects.schema.json`](../schemas/objects.schema.json); locator validation is [`../schemas/locator.schema.json`](../schemas/locator.schema.json).
+Source cards retain durable identity, metadata, and recovery references; they do not duplicate complete source content. Executable fields are defined by the [v2 object schema](../schemas/v2/objects.schema.json), and precise positions by the [v2 locator schema](../schemas/v2/locator.schema.json). New content uses the [v2 source template](../templates/v2/source-card.md).
 
-Use the [`Source template`](../templates/source-card.md) for creation. Maintained examples are the valid [`paper`](../tests/fixtures/valid/paper-source.md), [`web`](../tests/fixtures/valid/web-source.md), [`book`](../tests/fixtures/valid/book-source.md), and [`OSS`](../tests/fixtures/valid/oss-source.md) fixtures.
+## Common rules
 
-## Common source rules
-
-- A Source has a stable ID, canonical identity, capture metadata, visibility, record status, and workflow stage.
-- Machine-specific absolute paths are forbidden in tracked source cards.
-- External attachments are resolved through adapter identifiers.
-- Canonicalization and duplicate detection occur before creating a source card.
-- Source material that can change must preserve a capture time, immutable version, or content hash.
+- Source IDs remain stable when metadata or access routes change.
+- Tracked cards contain no machine-specific absolute paths, credentials, or private attachment bodies.
+- Canonicalization and duplicate detection happen before creation.
+- Mutable material requires a recoverable snapshot or immutable version plus integrity evidence.
+- Adapter identifiers may locate external attachments, but an unavailable adapter never changes source identity.
 
 ## Paper
 
-Zotero normally stores metadata and PDF attachments. Knowlume stores the source card, canonical URL or DOI, Zotero library/item/attachment identifiers, tags, and reading state.
-
-Paper facts should prefer a location visible to a human reader rather than an internal PDF byte offset. Exact locator fields and requirements belong to [`locator.schema.json`](../schemas/locator.schema.json); a valid locator is exercised in the [`relation fixture`](../tests/fixtures/valid/relations.yaml).
+Paper sources support DOI, arXiv, Zotero, and ordinary bibliographic identity. Facts cite a human-verifiable page, section, figure, table, or equivalent locator. Zotero identifiers are recovery routes, not domain identity.
 
 ## Web
 
-Web source cards preserve the canonical URL and capture time. A Zotero snapshot or PDF is preferred when the cited page may change.
-
-Web locators must bind the cited position to a captured or immutable representation; a live URL alone is insufficient. The exact alternatives are defined in the locator schema. [`web-locator-missing-snapshot.yaml`](../tests/fixtures/invalid/web-locator-missing-snapshot.yaml) demonstrates a rejected locator.
+A live URL and `captured_at` alone cannot support a durable fact. A web snapshot reference contains a provider, opaque identifier, capture time, and content hash; adapters interpret the provider-specific identifier. Public facts require both an eligible public Source and a recoverable snapshot reference.
 
 ## Book
 
-Books are identified through ISBN, DOI, Zotero key, or another stable bibliographic reference. PDF/EPUB files remain in the reference manager by default; Knowlume stores source cards and linked notes.
+Books use ISBN, DOI, Zotero, or another stable bibliographic identity. Any locator that uses page numbers must also identify the edition or ISBN so pagination is unambiguous.
 
-Book locators must distinguish editions whenever pagination differs. Exact identity and position fields are defined in the locator schema.
+## Open-source software
 
-## Open-source project
+An OSS source identifies the host, full repository path, and immutable commit. Repository paths may contain nested GitLab groups. Branch names are display metadata and never replace a commit.
 
-Knowlume does not retain complete repositories as durable knowledge. The OSS Source and Snippet fields are defined in [`objects.schema.json`](../schemas/objects.schema.json), with maintained examples in the [`OSS Source`](../tests/fixtures/valid/oss-source.md) and [`Snippet`](../tests/fixtures/valid/snippet.md) fixtures.
-
-Temporary reading uses shallow/partial clone or sparse checkout under `.cache/repos/`. Important code may be retained as a Snippet when it satisfies the executable provenance contract.
-
-An OSS locator is invalid without an immutable commit. Branch names may be displayed but cannot replace the commit.
+Temporary clones belong in disposable cache storage. Durable excerpts are Snippets with a Source, immutable commit, relative path, valid inclusive line range, license evidence, and explicit publication approval.
 
 ## Attachment durability
 
-A single external item key is not a backup. Where an attachment is important, the Source retains the recovery identifiers and optional integrity evidence required by the object schema.
+Recovery covers both the tracked Knowlume vault and external attachment storage such as Zotero. Important attachments should retain adapter identifiers and integrity evidence. Missing attachments produce a typed availability finding without rewriting the Source.
 
-Backup and recovery must cover both:
-
-1. the tracked Knowlume repository;
-2. Zotero data and attachment storage.
-
-Knowlume must report an unavailable attachment without rewriting its stable source identity.
-
-## Adapter contracts
+## Adapter boundaries
 
 ### Zotero
 
-- Use a supported Zotero Local API or local service; never read `zotero.sqlite` directly.
-- Resolve item metadata and attachments from library/item keys.
-- Map external metadata into domain values without leaking Zotero schema into domain code.
-- `source open` returns an openable attachment result or a typed unavailable error.
+- Use a supported API or local service; never access `zotero.sqlite` directly.
+- Resolve metadata and attachments from library/item identifiers.
+- Translate adapter data into domain values without leaking Zotero internals into the domain layer.
 
 ### Obsidian
 
-- Obsidian is a human Markdown editor, not a database.
-- Ordinary Markdown links and Wikilinks are navigation surfaces.
-- Object and section IDs carry identity; filenames and headings carry readability.
-- Core behavior must not depend on `.obsidian` private state.
+Obsidian is a Markdown editor. Stable object and section IDs carry identity; filenames, headings, links, and Wikilinks are presentation and navigation surfaces. Core behavior cannot depend on private `.obsidian` state.
 
-### Git
+### Git and Quartz
 
-Git adapter behavior is defined with storage history in [`storage-index-search.md`](storage-index-search.md). The adapter exposes status, diff, history, and changed-file information through a port.
-
-### Quartz
-
-Quartz consumes only audited `public-staging`. It never receives the private knowledge tree as its input. Publishing rules are defined in [`security-publishing.md`](security-publishing.md).
-
-### Future native components
-
-Future editors, reference managers, or publishers implement stable ports such as `SourceStore`, `NoteStore`, `ReferenceManager`, `SearchBackend`, and `Publisher`. Replacing an adapter must not require a durable data-model migration.
+Git history behavior is defined in [storage, index, and search](storage-index-search.md). Quartz receives only the audited staging tree described in [security and publishing](security-publishing.md), never the private vault.
 
 ## Legal boundary
 
-Automated checks report license, copyright, redistribution, and attribution evidence and risks. They do not provide legal advice. Uncertain publication or excerpt rights require human review.
+Automated checks collect license, copyright, redistribution, and attribution evidence. They do not provide legal advice; uncertain rights require human review.

@@ -1,4 +1,4 @@
-# ADR-0004: Do not introduce Claim-level relations in v1
+# ADR-0004: Do not introduce Claim-level relations
 
 - Status: Accepted
 - Date: 2026-08-26
@@ -10,9 +10,9 @@ The early relation vocabulary mentioned Claim targets, but the object model had 
 
 ## Decision
 
-V1 does not define a Claim object or Claim-level relation. Typed relations point to complete objects or stable Note sections. Facts remain provenance-marked content inside stable sections rather than independently addressable entities.
+The active contract does not define a Claim object or Claim-level relation. Typed relations point to complete objects or stable Note sections. Facts remain provenance-marked content inside stable sections rather than independently addressable entities.
 
-The active relation semantics are defined in [`../data-model.md`](../data-model.md), and the executable contract rejects Claim IDs in [`../../schemas/relations.schema.json`](../../schemas/relations.schema.json).
+The active relation semantics are defined in [`../data-model.md`](../data-model.md), and the executable contract rejects Claim IDs in [Contract v2 relations](../../schemas/v2/relations.schema.json).
 
 ## Consequences
 
@@ -31,7 +31,7 @@ The active relation semantics are defined in [`../data-model.md`](../data-model.
 
 ## Alternatives considered
 
-- First-class Claim objects in v1: rejected due to scope and unresolved authoring semantics.
+- First-class Claim objects: rejected due to scope and unresolved authoring semantics.
 - Generated Claim IDs during indexing: rejected because rebuildable projections cannot own durable identity.
 - Use line numbers inside notes: rejected because ordinary editing makes line numbers unstable.
 

@@ -1,125 +1,73 @@
 # Architecture
 
 > Status: Active  
-> Baseline: v0.1  
-> Authoritative for: system boundaries, dependency direction, logical layers, and repository layout
+> Baseline: Contract v2
+> Authoritative for: system boundaries, dependency direction, logical layers, and vault topology
 
-## Purpose
+## Purpose and invariants
 
-Knowlume is a local-first Knowledge Operating System for long-term learning and knowledge evolution. It preserves traceable sources, connects human notes to evidence, exposes a stable `kb` control plane to humans and automation, and promotes reviewed private knowledge into explicitly public material.
+Knowlume is a local-first Knowledge Operating System for long-term learning and knowledge evolution. It keeps sourced Facts, source-free human thought, reviewed AI material, and public output distinguishable.
 
-The architectural center is deliberately small:
-
-```text
-Markdown/YAML + stable external source references
-                    |
-                    v
-               kb-core (Python)
-          +---------+---------+
-          |         |         |
-          v         v         v
-        CLI       Web UI   Index projection
-          |                   SQLite FTS5
-          v
-   Codex / other harnesses
-```
-
-Obsidian, Zotero, Git, Quartz, and future native components are replaceable adapters. None of them owns the domain model.
-
-## Architectural invariants
-
-1. Tracked Markdown/YAML and stable references to original material are the durable knowledge source.
-2. SQLite, caches, derived content, and public staging are rebuildable or disposable.
-3. CLI, Web, and automation invoke the same application services.
-4. Domain code depends on ports, never directly on Zotero, Obsidian, Quartz, GitHub, or UI frameworks.
-5. New knowledge is private by default; public output is built from an allowlist into a separate staging tree.
-6. Reliability precedes semantic search, RAG, MCP, graphs, and multi-agent features.
-
-Detailed object rules live in [`data-model.md`](data-model.md). Persistence and search mechanics live in [`storage-index-search.md`](storage-index-search.md). Security enforcement lives in [`security-publishing.md`](security-publishing.md).
+1. Tracked Markdown/YAML and stable external references are durable knowledge.
+2. SQLite, caches, transaction state, derived output, and public staging are rebuildable.
+3. Application code and personal vaults are separate.
+4. CLI, Web, and automation invoke the same application services.
+5. Domain code depends on ports, not Zotero, Obsidian, Git, Quartz, or UI frameworks.
+6. New objects are private by default; public output is built from an audited allowlist.
+7. Reliability and provenance precede semantic search, MCP, graphs, and multi-agent features.
 
 ## Logical layers
 
 | Layer | Responsibility | May depend on |
 |---|---|---|
-| `domain` | Source, Note, Snippet, AI Artifact, Relation, provenance, stable value types | Python standard library and domain-local code |
-| `application` | capture, process, scan, search, index, lint, review, publish use cases | domain and ports |
-| `ports` | storage, reference manager, search, version control, publishing, repository access contracts | domain contracts |
-| `adapters` | Filesystem, Zotero, Obsidian, Git, Quartz, GitHub implementations | ports plus external libraries |
-| `cli` | Typer commands and machine-readable output | application services |
-| `web` | FastAPI/Jinja2/HTMX management interface | application services |
+| `domain` | immutable objects, sections, citations, relations, provenance values | standard library and domain-local code |
+| `application` | init, capture, scan, lint, search, review, migration, publish | domain and ports |
+| `ports` | vault, file store, reference manager, search, VCS, publisher contracts | domain contracts |
+| `adapters` | filesystem, Zotero, Obsidian, Git, Quartz implementations | ports and external libraries |
+| `cli` / `web` | human and machine interfaces | application services |
 
-Dependency direction points inward. Adapters and interfaces may be replaced without migrating durable knowledge files.
+Dependencies point inward. Adapter replacement never requires a durable knowledge migration unless the versioned domain contract changes.
 
-## Repository layout
+## Code and vault separation
+
+The application repository contains code, schemas, templates, migrations, tests, and design documents. A personal vault is initialized independently:
 
 ```text
-Knowlume/
-├── AGENTS.md
-├── README.md
-├── pyproject.toml
-├── schemas/                    # executable contracts
-├── templates/                  # object creation templates
-├── plan/                       # active design and roadmap
-├── src/kb/
-│   ├── domain/
-│   ├── application/
-│   ├── ports/
-│   ├── adapters/
-│   ├── index/
-│   ├── cli/
-│   └── web/
-├── knowledge/
-│   ├── sources/{papers,web,books,oss}/
-│   ├── notes/{literature,concept,synthesis,evergreen}/
-│   ├── snippets/
-│   └── ai/{artifacts,tmp}/
-├── migrations/
-├── tests/
-├── .cache/                     # ignored
-├── derived/                    # ignored
-├── public-staging/             # ignored, generated
-└── kb.sqlite                   # ignored, rebuildable
+vault/
+├── knowlume.toml
+├── sources/{papers,web,books,oss}/
+├── notes/{ideas,literature,concepts,syntheses}/
+├── snippets/
+├── ai/artifacts/
+├── relations/
+└── .knowlume/{locks,transactions}/   # ignored, disposable
 ```
 
-Large PDF/EPUB files, Zotero storage, logs, temporary clones, and generated output do not enter Git by default. Source-specific preservation rules are defined in [`sources-and-adapters.md`](sources-and-adapters.md).
+`knowlume.toml` contains portable relative configuration. Absolute vault paths, credentials, adapter endpoints, locks, and transaction state are machine-local. Vault resolution is `--vault`, `KNOWLUME_VAULT`, nearest ancestor marker, then user default; ambiguity fails.
+
+Application `private` visibility is not encryption and does not prevent Git pushes. Knowlume never performs Git commit, push, pull, or history rewriting implicitly.
 
 ## Principal flows
 
-### Capture
-
 ```text
-CLI/Web -> application capture use case -> reference adapter
-        -> source card in file store -> scanner -> index projection
+capture/write -> application service -> conflict-aware vault port
+              -> durable v2 file(s) -> scanner -> optional projection
+
+query -> file or FTS SearchBackend -> provenance/visibility filters
+      -> typed result -> CLI/Web/automation
+
+public allowlist -> dependency classification -> audit
+                 -> atomic isolated staging -> Quartz adapter
 ```
 
-The detailed command and error contract belongs to [`interfaces.md`](interfaces.md).
-
-### Search and context
-
-```text
-CLI/Web/Codex -> SearchBackend port -> file or FTS implementation
-              -> visibility/AI filters -> typed result or JSON output
-```
-
-Search ranking and index behavior belong to [`storage-index-search.md`](storage-index-search.md).
-
-### Publish
-
-```text
-explicit allowlist -> transitive audit -> isolated public-staging
-                   -> Quartz adapter -> preview/build output
-```
-
-The private/public trust boundary belongs to [`security-publishing.md`](security-publishing.md).
+Single-file writes use expected checksums and same-directory atomic replacement. Multi-file use cases use a vault lock, transaction manifest, same-filesystem staging, and recovery. Windows and Linux expose the same conflict behavior; implementation begins in Phase 1.
 
 ## External boundaries
 
-- Zotero owns reference-manager records and attachments, accessed through a supported local API.
-- Obsidian is a Markdown editor, not a database.
-- Git records tracked knowledge and code evolution, not disposable projections.
-- Quartz receives only audited public staging.
-- External LLM access is absent from v1; any future integration requires an explicit data-release policy.
+- Zotero owns reference-manager records and attachments, accessed only through supported APIs.
+- Obsidian edits Markdown but owns no domain state.
+- Git records durable-file evolution but is not a secrecy boundary.
+- Quartz receives audited staging, never the private vault.
+- External model access requires explicit caller scope and release policy.
 
-## Evolution rule
-
-Architecture changes that alter durable files, IDs, visibility, relations, locators, or publish boundaries require a versioned contract change. Update schemas, templates, fixtures, tests, and the relevant ADR before implementation.
+Architecture changes affecting durable files, IDs, roles, visibility, locators, relations, or publishing require a new contract version and migration decision.

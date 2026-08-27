@@ -17,7 +17,7 @@ Use independent state dimensions:
 - `maturity` describes Note maturity;
 - `review_status` describes review state where applicable.
 
-Source archival is represented by record status, not by workflow stage. The executable enum and applicability rules are authoritative in [`../../schemas/objects.schema.json`](../../schemas/objects.schema.json); semantics are explained in [`../data-model.md`](../data-model.md).
+Source archival is represented by record status, not by workflow stage. The current executable enum and applicability rules are authoritative in the [Contract v2 object schema](../../schemas/v2/objects.schema.json); semantics are explained in [`../data-model.md`](../data-model.md).
 
 ## Consequences
 

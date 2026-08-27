@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/cli-envelope-v1.schema.json",
+  "title": "Knowlume CLI JSON envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["interface_version", "command", "success", "exit_code", "data", "warnings", "errors"],
+  "properties": {
+    "interface_version": { "const": 1 },
+    "command": { "type": "string", "minLength": 1 },
+    "success": { "type": "boolean" },
+    "exit_code": { "type": "integer", "minimum": 0, "maximum": 6 },
+    "data": {},
+    "warnings": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } },
+    "errors": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } }
+  },
+  "$defs": {
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "message": { "type": "string", "minLength": 1 },
+        "object_id": { "type": "string" },
+        "path": { "type": "string" },
+        "details": { "type": "object" }
+      }
+    }
+  }
+}
