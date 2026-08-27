@@ -452,7 +452,7 @@ def test_interface_and_migration_report_contracts(
     interface_contracts: ContractBundle,
 ) -> None:
     schemas, registry = interface_contracts
-    assert set(schemas) == {"cli-envelope-v1", "migration-report-v1"}
+    assert set(schemas) == {"add-result-v1", "cli-envelope-v1", "migration-report-v1"}
     assert all("v1.schema.json" in schema["$id"] for schema in schemas.values())
     envelope = load_json(ROOT / "tests" / "fixtures" / "interfaces" / "valid-cli-envelope.json")
     assert validation_errors(envelope, schemas["cli-envelope-v1"], registry) == []
@@ -471,6 +471,29 @@ def test_interface_and_migration_report_contracts(
     assert ambiguous["details"]["inference_policy"] == "prohibited"
 
 
+def test_add_result_contract(interface_contracts: ContractBundle) -> None:
+    schemas, registry = interface_contracts
+    fixture_dir = ROOT / "tests" / "fixtures" / "interfaces"
+    for path in sorted(fixture_dir.glob("valid-add-result-*.json")):
+        result = load_json(path)
+        assert validation_errors(result, schemas["add-result-v1"], registry) == [], path
+
+        envelope = {
+            "interface_version": 1,
+            "command": "add",
+            "success": True,
+            "exit_code": 0,
+            "data": result,
+            "warnings": [],
+            "errors": [],
+        }
+        assert validation_errors(envelope, schemas["cli-envelope-v1"], registry) == [], path
+
+    for path in sorted(fixture_dir.glob("invalid-add-result-*.json")):
+        result = load_json(path)
+        assert validation_errors(result, schemas["add-result-v1"], registry), path
+
+
 def test_v2_contracts_do_not_reintroduce_obsolete_note_fields() -> None:
     forbidden = {"source_ids", "related_notes", "supersedes", "superseded_by", "ai_assisted"}
     schema = json.loads((V2_SCHEMA_DIR / "objects.schema.json").read_text(encoding="utf-8"))
@@ -483,6 +506,7 @@ def test_internal_documentation_links_resolve() -> None:
     docs = [
         ROOT / "README.md",
         ROOT / "AGENTS.md",
+        ROOT / "CLI.md",
         *sorted((ROOT / "plan").rglob("*.md")),
         *sorted((ROOT / "schemas").rglob("README.md")),
         *sorted((ROOT / "templates").rglob("README.md")),

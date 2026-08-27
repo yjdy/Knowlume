@@ -15,8 +15,8 @@ Phase 0R is complete: Contract v1 is archived and executable for history/migrati
 |---|---|---|
 | 0R — Contract v2 | ADRs, versioned schemas/templates/fixtures, migration report, projection DDL, contract/link tests | v1 remains executable; v2 positive/negative and migration cases pass; DDL and interface surfaces are frozen |
 | 1 — Vault and core | vault discovery, domain values, parser/scanner/lint, safe single/multi-file writes, Note creation/evolution | ID/section round-trip, typed errors, conflict detection, and crash recovery pass on Windows/Linux |
-| 2A — Paper/Zotero slice | paper capture, canonicalization, Zotero metadata/attachment recovery | capture is idempotent; attachment and locator recovery pass without absolute tracked paths |
-| 2B — Web/Book/OSS | snapshots, edition identity, immutable commits, snippet/license review | source-specific locator and publication fixtures pass |
+| 2A — Paper/Zotero slice | internal paper capture service, DOI/arXiv canonicalization, Zotero metadata/attachment recovery | internal paper capture is idempotent; attachment and locator recovery pass without absolute tracked paths; no partial public `kb add` is exposed |
+| 2B — Unified capture | web/book/OSS adapters, snapshots, edition identity, immutable commits, snippet/license review, public `kb add` router | all four recognition paths, explicit override, idempotency, failure atomicity, and add-result JSON pass alongside source-specific locator/publication fixtures |
 | 3 — Projection/search | SQLite rebuild/index, FTS, bilingual normalization, context assembly | deleting SQLite and rebuilding is deterministic; every FTS hit returns to durable segment/section |
 | 4 — Read-only Web | loopback Dashboard, Sources, Notes, Search, health views | Web and CLI share services and business rules; Web has no mutations |
 | 5 — Automation/AI | machine context, AI review/promotion, explicit scopes, doctor | AI cannot cross review, privacy, or provenance boundaries |
@@ -30,8 +30,8 @@ Phase 0R is complete: Contract v1 is archived and executable for history/migrati
 |---|---:|---|
 | contract/schema validation | 0R | versioned positive/negative fixtures and documentation links pass |
 | `init`, `scan`, `status`, `lint`, `note new/show/evolve`, `relation add/remove/list`, `migrate` | 1 | vault, parser, identity, atomicity, conflict, recovery, and migration tests |
-| `add paper`, `source list/show/open/sync`, `inbox`, `process` | 2A | canonical and idempotent Zotero slice |
-| `add web/book/repo`, `snippet add` | 2B | snapshot, edition, commit/range/license checks |
+| paper capture application service, `source list/show/open/sync`, `inbox`, `process` | 2A | canonical and idempotent Zotero slice without a public add command |
+| `add`, `snippet add` | 2B | four-type recognition, override, add-result JSON, failure atomicity, snapshot, edition, commit/range, and license checks |
 | `grep`, `search`, `index`, `get`, `context` | 3 | deterministic projection and result-to-file explanation |
 | `serve` read views | 4 | shared-service parity and local-service security |
 | `ai list/review/promote`, automation JSON, `doctor` | 5 | promotion audit and explicit-scope tests |

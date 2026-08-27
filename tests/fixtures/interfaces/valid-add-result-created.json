@@ -1,0 +1,9 @@
+{
+  "input": "https://github.com/openai/openai-python",
+  "requested_type": null,
+  "detected_type": "repo",
+  "source_type": "oss",
+  "canonical_identity": "repo:github.com/openai/openai-python",
+  "source_id": "src_01JSTAG7N9Q3V5X8Y2Z4A6B8C3",
+  "created": true
+}

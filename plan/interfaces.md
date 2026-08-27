@@ -10,7 +10,8 @@ All interfaces call shared application services. Phase 0R defines these contract
 ```text
 kb init PATH
 kb status                         kb scan
-kb add [paper|web|book|repo]      kb source [list|show|open|sync]
+kb add INPUT [--type paper|web|book|repo] [--json]
+kb source [list|show|open|sync]
 kb inbox                          kb process SOURCE_ID
 kb note new --type idea|literature|concept|synthesis
 kb note show ID                   kb note evolve ID --to concept
@@ -44,13 +45,28 @@ Multiple candidates or conflicting configuration produce a typed ambiguity error
 
 ## Capture and mutation behavior
 
-DOI/arXiv, GitHub/GitLab URLs, ISBN, and ordinary URLs may infer paper, OSS, book, and web sources respectively. An explicit type overrides inference. Ambiguous identity stops rather than guessing, and repeated capture of the same canonical identity is idempotent.
+The only public capture surface is `kb add INPUT [--type paper|web|book|repo] [--json]`. It is released in Phase 2B only after all four capture paths pass their gates. Phase 2A delivers the internal paper/Zotero capture service without exposing a partial parent command. CLI type `repo` maps to durable `source_type: oss`.
+
+Recognition is non-interactive and follows this order:
+
+1. an explicit `--type` override;
+2. arXiv identifier or URL -> paper;
+3. DOI -> paper or book according to resolved metadata;
+4. checksum-valid ISBN -> book;
+5. repository URL on a known or configured Git host -> repo;
+6. another HTTP(S) URL -> web.
+
+Unavailable or ambiguous DOI metadata requires `--type`; it is never guessed. Unknown self-hosted Git URLs default to web unless the host is configured. An explicit `--type repo` still requires adapter-backed resolution of a canonical project root. Local files, clipboard bodies, and batch input are outside the first command contract.
+
+The capture flow is `normalize -> recognize -> metadata resolve -> canonical identity -> duplicate check -> Source construction -> adapter snapshot/sync -> atomic write -> scan`. Once the Phase 3 projection exists, a successful capture also requests an index refresh, but index availability is never a Phase 2B write prerequisite. `--type` does not bypass metadata, canonicalization, schema, snapshot, license, or safety checks. Any ambiguity or failure leaves no Source card, relation, or partial update. Repeated capture of the same canonical identity succeeds with the existing Source ID and `created: false`.
 
 Note evolution from Idea to Concept preserves the Note and section IDs and appends `type_history`. Relation operations write only the shard owned by the source object. Migration defaults to dry-run and refuses apply while required decisions or blocking findings remain.
 
 ## Machine interface v1
 
 Commands that support JSON emit exactly one document matching the [CLI envelope v1 schema](../schemas/interfaces/cli-envelope-v1.schema.json) to stdout; diagnostics go to stderr. `interface_version` is independent from object, locator, relation, projection, and parser/tokenizer versions.
+
+Successful `kb add --json` data matches the [add result v1 schema](../schemas/interfaces/add-result-v1.schema.json). `requested_type` records the explicit override or `null`; `detected_type` is the effective CLI type after applying that override. The result always records the corresponding durable `source_type`, canonical identity, Source ID, and whether a new Source was created.
 
 Exit codes are frozen as:
 
@@ -63,6 +79,15 @@ Exit codes are frozen as:
 | 4 | concurrent modification conflict |
 | 5 | external dependency unavailable |
 | 6 | security or publish-audit failure |
+
+The principal `kb add` diagnostics are fixed as:
+
+| Code | Exit | Meaning |
+|---|---:|---|
+| `ADD_INPUT_INVALID` | 2 | input has no accepted identifier or URL shape |
+| `ADD_TYPE_AMBIGUOUS` | 3 | source type cannot be selected without `--type` |
+| `ADD_METADATA_UNAVAILABLE` | 5 | required metadata or capture adapter is unavailable |
+| `ADD_WRITE_CONFLICT` | 4 | durable state changed before the atomic write |
 
 The [migration report v1 schema](../schemas/interfaces/migration-report-v1.schema.json) distinguishes automatic changes, required human decisions, blocking findings, and prohibited inference.
 

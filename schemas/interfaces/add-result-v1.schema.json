@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/add-result-v1.schema.json",
+  "title": "Knowlume add result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "input",
+    "requested_type",
+    "detected_type",
+    "source_type",
+    "canonical_identity",
+    "source_id",
+    "created"
+  ],
+  "properties": {
+    "input": { "type": "string", "minLength": 1 },
+    "requested_type": { "enum": [null, "paper", "web", "book", "repo"] },
+    "detected_type": { "enum": ["paper", "web", "book", "repo"] },
+    "source_type": { "enum": ["paper", "web", "book", "oss"] },
+    "canonical_identity": { "type": "string", "minLength": 1 },
+    "source_id": { "type": "string", "pattern": "^src_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "created": { "type": "boolean" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "detected_type": { "const": "paper" } }, "required": ["detected_type"] },
+      "then": { "properties": { "source_type": { "const": "paper" } } }
+    },
+    {
+      "if": { "properties": { "detected_type": { "const": "web" } }, "required": ["detected_type"] },
+      "then": { "properties": { "source_type": { "const": "web" } } }
+    },
+    {
+      "if": { "properties": { "detected_type": { "const": "book" } }, "required": ["detected_type"] },
+      "then": { "properties": { "source_type": { "const": "book" } } }
+    },
+    {
+      "if": { "properties": { "detected_type": { "const": "repo" } }, "required": ["detected_type"] },
+      "then": { "properties": { "source_type": { "const": "oss" } } }
+    },
+    {
+      "if": { "properties": { "requested_type": { "const": "paper" } }, "required": ["requested_type"] },
+      "then": { "properties": { "detected_type": { "const": "paper" } } }
+    },
+    {
+      "if": { "properties": { "requested_type": { "const": "web" } }, "required": ["requested_type"] },
+      "then": { "properties": { "detected_type": { "const": "web" } } }
+    },
+    {
+      "if": { "properties": { "requested_type": { "const": "book" } }, "required": ["requested_type"] },
+      "then": { "properties": { "detected_type": { "const": "book" } } }
+    },
+    {
+      "if": { "properties": { "requested_type": { "const": "repo" } }, "required": ["requested_type"] },
+      "then": { "properties": { "detected_type": { "const": "repo" } } }
+    }
+  ]
+}

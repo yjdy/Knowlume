@@ -45,7 +45,6 @@
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `add.paper` | `kb add paper INPUT` | 通过 DOI、arXiv 或显式标识捕获论文 | canonicalization、重复检测、Zotero adapter、Source factory | `Planned` | — |
 | `inbox` | `kb inbox` | 列出等待处理的 Source | 按 `workflow_stage=inbox` 查询 durable files | `Planned` | — |
 | `process` | `kb process SOURCE_ID` | 推进来源的阅读和整合工作流 | Source workflow service、合法状态转换、冲突安全写入 | `Planned` | — |
 | `source.list` | `kb source list` | 筛选和列出 Sources | Scanner-backed query 与稳定排序 | `Planned` | — |
@@ -53,14 +52,23 @@
 | `source.open` | `kb source open ID` | 通过 adapter 打开原始材料 | Zotero recovery route、typed unavailable error | `Planned` | — |
 | `source.sync` | `kb source sync ID` | 从 Zotero 同步可更新元数据 | Adapter mapping、字段所有权、差异预览、冲突检测 | `Planned` | — |
 
-## Phase 2B — Web, Book, and OSS
+## Phase 2B — Unified capture
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `add.web` | `kb add web URL` | 捕获网页及可恢复快照身份 | URL canonicalization、snapshot provider、hash/locator validation | `Planned` | — |
-| `add.book` | `kb add book INPUT` | 通过 ISBN、DOI 或 bibliographic identity 捕获书籍 | 版本/edition 识别、Zotero mapping、重复检测 | `Planned` | — |
-| `add.repo` | `kb add repo URL` | 捕获 GitHub/GitLab 项目元数据 | host/repo normalization、immutable commit、license evidence | `Planned` | — |
+| `add` | `kb add INPUT [--type paper\|web\|book\|repo] [--json]` | 自动识别并捕获四类 Source，显式类型只覆盖识别 | Unified router、canonical identity、duplicate check、type adapter、atomic write、add-result v1 | `Planned` | — |
 | `snippet.add` | `kb snippet add` | 保存固定 commit 的受审代码片段 | OSS Source、relative path、inclusive range、license/publication review | `Planned` | — |
+
+### `kb add` type capability matrix
+
+以下 ID 只跟踪内部 type backend，不是独立 CLI 命令。统一父命令在四条路径全部通过 Phase 2B gate 后才公开。
+
+| Capability ID | CLI type | Durable source type | Delivery | Implementation plan | Status |
+|---|---|---|---|---|---|
+| `add.paper` | `paper` | `paper` | Phase 2A internal | DOI/arXiv canonicalization、Zotero metadata、idempotent Source factory | `Planned` |
+| `add.web` | `web` | `web` | Phase 2B | URL canonicalization、snapshot provider、hash/locator validation | `Planned` |
+| `add.book` | `book` | `book` | Phase 2B | DOI/ISBN metadata、edition identity、Zotero mapping | `Planned` |
+| `add.repo` | `repo` | `oss` | Phase 2B | configured Git host、project-root resolution、immutable commit、license evidence | `Planned` |
 
 ## Phase 3 — Projection and search
 
@@ -125,4 +133,5 @@
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-08-27 | 将四类 capture 入口统一为 `kb add INPUT [--type ...] [--json]` | 公共命令归属 Phase 2B；四类 backend 独立跟踪且保持 `Planned` |
 | 2026-08-27 | 建立 Contract v2 CLI 全量库存与交付状态账本 | 与 active interfaces/roadmap 对齐；所有命令尚为 `Planned` |
