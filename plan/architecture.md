@@ -47,7 +47,11 @@ vault/
 └── .knowlume/{locks,transactions}/   # ignored, disposable
 ```
 
-`knowlume.toml` contains portable relative configuration. Absolute vault paths, credentials, adapter endpoints, locks, and transaction state are machine-local. Vault resolution is `--vault`, `KNOWLUME_VAULT`, nearest ancestor marker, then user default; ambiguity fails.
+`knowlume.toml` contains portable relative configuration defined by the independent
+[`configuration contract`](../schemas/config/README.md). Absolute vault paths, credentials, adapter
+endpoints, locks, and transaction state are machine-local. Vault resolution is `--vault`,
+`KNOWLUME_VAULT`, nearest ancestor marker, then the platformdirs user data vault; selection and
+ambiguity rules are fixed by [`ADR-0011`](decisions/0011-phase1-vault-and-transaction-contracts.md).
 
 Application `private` visibility is not encryption and does not prevent Git pushes. Knowlume never performs Git commit, push, pull, or history rewriting implicitly.
 
@@ -64,7 +68,10 @@ public allowlist -> dependency classification -> audit
                  -> atomic isolated staging -> Quartz adapter
 ```
 
-Single-file writes use expected checksums and same-directory atomic replacement. Multi-file use cases use a vault lock, transaction manifest, same-filesystem staging, and recovery. Windows and Linux expose the same conflict behavior; implementation begins in Phase 1.
+Single-file writes use expected checksums and same-directory atomic replacement. Multi-file use cases
+use a vault lock, versioned transaction manifest, same-filesystem staging, and explicit recovery or
+rollback. Machine-local state schemas are under [`schemas/state/`](../schemas/state/README.md).
+Windows and Linux expose the same conflict behavior; implementation begins in Phase 1.
 
 ## External boundaries
 

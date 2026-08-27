@@ -1,0 +1,9 @@
+{
+  "lock_version": 1,
+  "lock_name": "vault-write",
+  "vault_id": "vault_01JSTAG7N9Q3V5X8Y2Z4A6B8D2",
+  "owner_token": "15e63a62-b18f-4ba8-94d6-d2500fe85e26",
+  "process_id": 2718,
+  "acquired_at": "2026-08-27T08:00:00Z",
+  "transaction_id": "txn_01JSTAG7N9Q3V5X8Y2Z4A6B8D2"
+}

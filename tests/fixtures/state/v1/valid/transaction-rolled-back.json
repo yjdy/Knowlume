@@ -1,0 +1,23 @@
+{
+  "transaction_version": 1,
+  "transaction_id": "txn_01JSTAG7N9Q3V5X8Y2Z4A6B8D3",
+  "vault_id": "vault_01JSTAG7N9Q3V5X8Y2Z4A6B8D2",
+  "operation": "migrate_v1_to_v2",
+  "state": "rolled_back",
+  "outcome": "rollback",
+  "created_at": "2026-08-27T08:00:00Z",
+  "updated_at": "2026-08-27T08:00:03Z",
+  "entries": [
+    {
+      "target_path": "sources/papers/example.md",
+      "action": "delete",
+      "original_exists": true,
+      "expected_checksum": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "staged_path": null,
+      "staged_checksum": null,
+      "backup_path": ".knowlume/transactions/txn_01JSTAG7N9Q3V5X8Y2Z4A6B8D3/backups/sources/papers/example.md",
+      "backup_checksum": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "state": "restored"
+    }
+  ]
+}

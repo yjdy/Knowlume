@@ -20,6 +20,7 @@ The cross-platform Python package and release-engineering foundation is implemen
 | [`security-publishing.md`](security-publishing.md) | trust boundaries, AI, visibility, publishing |
 | [`roadmap.md`](roadmap.md) | phases, command ownership, delivery gates |
 | [`distribution.md`](distribution.md) | Python packaging, runtime assets, compatibility, release trust |
+| [`phase1-goal.md`](phase1-goal.md) | directly reusable Phase 1 execution goal, checks, and rollback checkpoints |
 | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | v1-to-v2 migration behavior |
 | [`decisions/`](decisions/) | accepted architecture decisions |
 | [`chapter-map.md`](chapter-map.md) | completed historical design migration audit |

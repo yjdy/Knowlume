@@ -1,0 +1,34 @@
+{
+  "transaction_version": 1,
+  "transaction_id": "txn_01JSTAG7N9Q3V5X8Y2Z4A6B8D2",
+  "vault_id": "vault_01JSTAG7N9Q3V5X8Y2Z4A6B8D2",
+  "operation": "migrate_v1_to_v2",
+  "state": "committing",
+  "outcome": "pending",
+  "created_at": "2026-08-27T08:00:00Z",
+  "updated_at": "2026-08-27T08:00:02Z",
+  "entries": [
+    {
+      "target_path": "notes/ideas/example.md",
+      "action": "replace",
+      "original_exists": true,
+      "expected_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "staged_path": ".knowlume/transactions/txn_01JSTAG7N9Q3V5X8Y2Z4A6B8D2/staging/notes/ideas/example.md",
+      "staged_checksum": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "backup_path": ".knowlume/transactions/txn_01JSTAG7N9Q3V5X8Y2Z4A6B8D2/backups/notes/ideas/example.md",
+      "backup_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "state": "backed_up"
+    },
+    {
+      "target_path": "relations/note_01JSTAG7N9Q3V5X8Y2Z4A6B8D2.yaml",
+      "action": "replace",
+      "original_exists": false,
+      "expected_checksum": null,
+      "staged_path": ".knowlume/transactions/txn_01JSTAG7N9Q3V5X8Y2Z4A6B8D2/staging/relations/note_01JSTAG7N9Q3V5X8Y2Z4A6B8D2.yaml",
+      "staged_checksum": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "backup_path": null,
+      "backup_checksum": null,
+      "state": "applied"
+    }
+  ]
+}

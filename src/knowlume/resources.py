@@ -30,11 +30,15 @@ def read_asset_text(relative_name: str) -> str:
 
 
 REQUIRED_ASSETS = (
+    "schemas/config/v1/knowlume.schema.json",
+    "schemas/state/v1/transaction-manifest.schema.json",
+    "schemas/state/v1/vault-write-lock.schema.json",
     "schemas/v1/objects.schema.json",
     "schemas/v2/objects.schema.json",
     "schemas/v2/note-body.schema.json",
     "schemas/interfaces/cli-envelope-v1.schema.json",
     "schemas/interfaces/update-check-result-v1.schema.json",
+    "templates/config/v1/knowlume.toml",
     "templates/v1/notes/literature.md",
     "templates/v2/notes/idea.md",
 )

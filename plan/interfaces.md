@@ -37,14 +37,47 @@ The unique command-to-phase-to-gate matrix is maintained in the [roadmap](roadma
 
 ## Vault discovery
 
-Resolution order is:
+`--vault PATH` is a global option and precedes the subcommand, for example
+`kb --vault PATH scan`. Resolution stops at the first present source in this order:
 
 1. `--vault PATH`;
 2. `KNOWLUME_VAULT`;
 3. search upward from the current directory for `knowlume.toml`;
-4. user-level default vault.
+4. the platformdirs user data location `knowlume/vault`.
 
-Multiple candidates or conflicting configuration produce a typed ambiguity error. A configured vault is independent from the program repository.
+`kb init PATH` uses its positional path and does not run discovery. If global `--vault` is also
+present, both normalized paths must identify the same target. Repeated explicit values that normalize
+to different targets are ambiguous. Once a source is selected, lower-priority sources are not
+consulted; this makes an intentional explicit override deterministic.
+
+The selected root must contain one valid [`knowlume.toml`](../schemas/config/README.md), except while
+`init` is creating it. Missing markers, invalid configuration, unsupported versions, path escape, and
+selection conflicts fail closed. The complete path, lock, and transaction rules are fixed by
+[`ADR-0011`](decisions/0011-phase1-vault-and-transaction-contracts.md). A configured vault is
+independent from the program repository.
+
+### Phase 1 diagnostics
+
+These codes and exit classes are stable. Commands may add contextual `object_id`, safe relative
+`path`, or `details`, but must not expose note bodies, credentials, or unnecessary absolute vault
+paths.
+
+| Code | Exit | Meaning |
+|---|---:|---|
+| `VAULT_REQUIRED` | 3 | no vault was selected and no valid default marker exists |
+| `VAULT_NOT_FOUND` | 3 | the selected root or its marker does not exist |
+| `VAULT_CONFIG_INVALID` | 3 | TOML, schema, path uniqueness, or containment is invalid |
+| `VAULT_CONFIG_UNSUPPORTED` | 3 | configuration or object Contract version is outside the readable range |
+| `VAULT_AMBIGUOUS` | 3 | one discovery source supplies distinct normalized candidates |
+| `VAULT_SELECTION_CONFLICT` | 3 | `kb init PATH` conflicts with global `--vault` |
+| `VAULT_TARGET_NOT_EMPTY` | 3 | initialization target is non-empty and is not the same initialized vault |
+| `VAULT_PATH_UNSAFE` | 6 | traversal, symlink, junction, or resolved containment escapes the vault |
+| `VAULT_UNAVAILABLE` | 5 | filesystem permissions or availability prevent the requested access |
+| `WRITE_CONFLICT` | 4 | a target differs from the expected checksum or existence state |
+| `VAULT_LOCKED` | 4 | another writer or unrecovered lock owns the vault write lock |
+| `TRANSACTION_RECOVERY_REQUIRED` | 4 | a valid interrupted transaction must be resumed or rolled back before writing |
+| `TRANSACTION_MANIFEST_INVALID` | 3 | transaction state is malformed, unsupported, or inconsistent |
+| `TRANSACTION_RECOVERY_CONFLICT` | 4 | neither forward recovery nor rollback is provably safe |
 
 ## Capture and mutation behavior
 

@@ -22,6 +22,7 @@ def test_python_distribution_metadata_is_frozen() -> None:
     assert wheel["packages"] == ["src/knowlume"]
     assert wheel["force-include"] == {
         "schemas": "knowlume/_assets/schemas",
+        "templates/config": "knowlume/_assets/templates/config",
         "templates/v1": "knowlume/_assets/templates/v1",
         "templates/v2": "knowlume/_assets/templates/v2",
     }

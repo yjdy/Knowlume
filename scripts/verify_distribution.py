@@ -9,6 +9,7 @@ from pathlib import Path, PurePosixPath
 ROOT = Path(__file__).resolve().parents[1]
 AUTHORITATIVE_ASSETS = [
     *sorted((ROOT / "schemas").rglob("*")),
+    *sorted((ROOT / "templates" / "config").rglob("*")),
     *sorted((ROOT / "templates" / "v1").rglob("*")),
     *sorted((ROOT / "templates" / "v2").rglob("*")),
 ]

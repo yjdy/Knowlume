@@ -66,6 +66,7 @@ packages = ["src/knowlume"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "schemas" = "knowlume/_assets/schemas"
+"templates/config" = "knowlume/_assets/templates/config"
 "templates/v1" = "knowlume/_assets/templates/v1"
 "templates/v2" = "knowlume/_assets/templates/v2"
 
@@ -73,6 +74,7 @@ packages = ["src/knowlume"]
 include = [
     "/src",
     "/schemas",
+    "/templates/config",
     "/templates/v1",
     "/templates/v2",
     "/tests",

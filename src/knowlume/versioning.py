@@ -4,6 +4,7 @@ from importlib.metadata import PackageNotFoundError, version
 from typing import TypedDict
 
 from knowlume.constants import (
+    CONFIG_VERSION,
     DISTRIBUTION_NAME,
     INTERFACE_VERSION,
     LOCATOR_VERSION,
@@ -11,17 +12,20 @@ from knowlume.constants import (
     PARSER_VERSION,
     PROJECTION_VERSION,
     RELATION_SCHEMA_VERSION,
+    TRANSACTION_VERSION,
 )
 
 
 class VersionReport(TypedDict):
     package: str
+    config: int
     object_contract: int
     locator: int
     relation_schema: int
     interface: int
     projection: int
     parser: int
+    transaction: int
 
 
 def package_version() -> str:
@@ -34,12 +38,14 @@ def package_version() -> str:
 def version_report() -> VersionReport:
     return {
         "package": package_version(),
+        "config": CONFIG_VERSION,
         "object_contract": OBJECT_CONTRACT_VERSION,
         "locator": LOCATOR_VERSION,
         "relation_schema": RELATION_SCHEMA_VERSION,
         "interface": INTERFACE_VERSION,
         "projection": PROJECTION_VERSION,
         "parser": PARSER_VERSION,
+        "transaction": TRANSACTION_VERSION,
     }
 
 
@@ -47,7 +53,9 @@ def format_version_report() -> str:
     report = version_report()
     return (
         f"Knowlume {report['package']} "
-        f"(object={report['object_contract']}, locator={report['locator']}, "
+        f"(config={report['config']}, object={report['object_contract']}, "
+        f"locator={report['locator']}, "
         f"relation={report['relation_schema']}, interface={report['interface']}, "
-        f"projection={report['projection']}, parser={report['parser']})"
+        f"projection={report['projection']}, parser={report['parser']}, "
+        f"transaction={report['transaction']})"
     )

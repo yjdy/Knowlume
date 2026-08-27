@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/state/v1/transaction-manifest.schema.json",
+  "title": "Knowlume recoverable multi-file transaction manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "transaction_version",
+    "transaction_id",
+    "vault_id",
+    "operation",
+    "state",
+    "outcome",
+    "created_at",
+    "updated_at",
+    "entries"
+  ],
+  "properties": {
+    "transaction_version": { "const": 1 },
+    "transaction_id": { "$ref": "#/$defs/transactionId" },
+    "vault_id": { "$ref": "#/$defs/vaultId" },
+    "operation": { "enum": ["migrate_v1_to_v2"] },
+    "state": {
+      "enum": [
+        "locked",
+        "staging",
+        "staged",
+        "committing",
+        "committed",
+        "rolling_back",
+        "rolled_back",
+        "cleaning",
+        "complete"
+      ]
+    },
+    "outcome": { "enum": ["pending", "commit", "rollback"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "vaultId": {
+      "type": "string",
+      "pattern": "^vault_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "transactionId": {
+      "type": "string",
+      "pattern": "^txn_[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "checksum": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "nullableChecksum": {
+      "oneOf": [
+        { "$ref": "#/$defs/checksum" },
+        { "type": "null" }
+      ]
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001F])[^/]+(?:/[^/]+)*$"
+    },
+    "durableTargetPath": {
+      "allOf": [
+        { "$ref": "#/$defs/relativePath" },
+        { "pattern": "^(?!\\.knowlume(?:/|$)).+" }
+      ]
+    },
+    "transactionStatePath": {
+      "allOf": [
+        { "$ref": "#/$defs/relativePath" },
+        {
+          "pattern": "^\\.knowlume/transactions/txn_[0-9A-HJKMNP-TV-Z]{26}/(?:staging|backups)/.+$"
+        }
+      ]
+    },
+    "nullableStatePath": {
+      "oneOf": [
+        { "$ref": "#/$defs/transactionStatePath" },
+        { "type": "null" }
+      ]
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_path",
+        "action",
+        "original_exists",
+        "expected_checksum",
+        "staged_path",
+        "staged_checksum",
+        "backup_path",
+        "backup_checksum",
+        "state"
+      ],
+      "properties": {
+        "target_path": { "$ref": "#/$defs/durableTargetPath" },
+        "action": { "enum": ["replace", "delete"] },
+        "original_exists": { "type": "boolean" },
+        "expected_checksum": { "$ref": "#/$defs/nullableChecksum" },
+        "staged_path": { "$ref": "#/$defs/nullableStatePath" },
+        "staged_checksum": { "$ref": "#/$defs/nullableChecksum" },
+        "backup_path": { "$ref": "#/$defs/nullableStatePath" },
+        "backup_checksum": { "$ref": "#/$defs/nullableChecksum" },
+        "state": { "enum": ["planned", "staged", "backed_up", "applied", "restored"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "original_exists": { "const": false } } },
+          "then": {
+            "properties": {
+              "expected_checksum": { "type": "null" },
+              "backup_path": { "type": "null" },
+              "backup_checksum": { "type": "null" }
+            }
+          },
+          "else": {
+            "properties": {
+              "expected_checksum": { "$ref": "#/$defs/checksum" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "action": { "const": "delete" } } },
+          "then": {
+            "properties": {
+              "original_exists": { "const": true },
+              "staged_path": { "type": "null" },
+              "staged_checksum": { "type": "null" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

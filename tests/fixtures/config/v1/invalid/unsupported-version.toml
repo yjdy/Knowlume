@@ -1,0 +1,10 @@
+config_version = 2
+vault_id = "vault_01JSTAG7N9Q3V5X8Y2Z4A6B8D6"
+object_contract_version = 2
+
+[paths]
+sources = "sources"
+notes = "notes"
+snippets = "snippets"
+ai_artifacts = "ai/artifacts"
+relations = "relations"
