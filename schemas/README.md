@@ -9,7 +9,7 @@ Machine-enforced fields and constraints are versioned. Contract v2 is the produc
 | Source locators | [`v2/locator.schema.json`](v2/locator.schema.json) | [`v1/locator.schema.json`](v1/locator.schema.json) |
 | Relation shards | [`v2/relations.schema.json`](v2/relations.schema.json) | [`v1/relations.schema.json`](v1/relations.schema.json) |
 | SQLite projection | [`v2/sqlite-projection-v2.sql`](v2/sqlite-projection-v2.sql) | [`v1/sqlite-projection-v1.sql`](v1/sqlite-projection-v1.sql) |
-| CLI and migration reports | [`interfaces/`](interfaces/README.md) | Not defined in v1 |
+| Machine interfaces and reports | [`interfaces/`](interfaces/README.md) | Not defined in v1 |
 
 Active creation templates live under [`../templates/v2/`](../templates/v2/README.md). Maintained v2 examples and rejected cases live under [`../tests/fixtures/v2/`](../tests/fixtures/v2/). The migration policy is [`../plan/migrations/v1-to-v2.md`](../plan/migrations/v1-to-v2.md).
 

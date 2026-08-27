@@ -6,6 +6,8 @@
 
 Phase 0R is complete: Contract v2, role-based Notes, relation shards, versioned interfaces, migration reports, SQLite projection v2, templates, fixtures, and acceptance tests are present. Phase 1 production implementation is next.
 
+The cross-platform Python package and release-engineering foundation is implemented independently of the feature phases. It exposes only verified release diagnostics until Phase 1 commands satisfy their gates.
+
 ## Active documents
 
 | Document | Authority |
@@ -17,6 +19,7 @@ Phase 0R is complete: Contract v2, role-based Notes, relation shards, versioned 
 | [`interfaces.md`](interfaces.md) | CLI, JSON, workflows, Web |
 | [`security-publishing.md`](security-publishing.md) | trust boundaries, AI, visibility, publishing |
 | [`roadmap.md`](roadmap.md) | phases, command ownership, delivery gates |
+| [`distribution.md`](distribution.md) | Python packaging, runtime assets, compatibility, release trust |
 | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | v1-to-v2 migration behavior |
 | [`decisions/`](decisions/) | accepted architecture decisions |
 | [`chapter-map.md`](chapter-map.md) | completed historical design migration audit |

@@ -1,0 +1,92 @@
+from __future__ import annotations
+
+import subprocess
+import sys
+import tomllib
+
+from phase0_support import ROOT
+
+
+def test_python_distribution_metadata_is_frozen() -> None:
+    config = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    project = config["project"]
+    assert project["name"] == "knowlume"
+    assert project["requires-python"] == ">=3.13,<3.15"
+    assert project["scripts"] == {"kb": "knowlume.cli:app"}
+    assert set(project["optional-dependencies"]) == {"web", "zotero", "all"}
+    assert not {"fastapi>=0.115", "jinja2>=3.1", "uvicorn[standard]>=0.34"} & set(
+        project["dependencies"]
+    )
+
+    wheel = config["tool"]["hatch"]["build"]["targets"]["wheel"]
+    assert wheel["packages"] == ["src/knowlume"]
+    assert wheel["force-include"] == {
+        "schemas": "knowlume/_assets/schemas",
+        "templates/v1": "knowlume/_assets/templates/v1",
+        "templates/v2": "knowlume/_assets/templates/v2",
+    }
+    assert config["tool"]["knowlume"]["release"] == {
+        "testpypi-enabled": False,
+        "pypi-prerelease-enabled": False,
+        "pypi-stable-enabled": False,
+    }
+
+
+def test_release_workflows_cover_required_trust_and_platform_gates() -> None:
+    workflow_root = ROOT / ".github" / "workflows"
+    assert {
+        "ci.yml",
+        "package-smoke.yml",
+        "release.yml",
+    } <= {path.name for path in workflow_root.glob("*.yml")}
+    ci = (workflow_root / "ci.yml").read_text(encoding="utf-8")
+    smoke = (workflow_root / "package-smoke.yml").read_text(encoding="utf-8")
+    release = (workflow_root / "release.yml").read_text(encoding="utf-8")
+    for document in (ci, smoke, release):
+        target_systems = ("ubuntu-latest", "windows-latest", "macos-latest")
+        assert all(os_name in document for os_name in target_systems)
+        assert '"3.13"' in document
+        assert '"3.14"' in document
+    assert "pypa/gh-action-pypi-publish" in release
+    assert "id-token: write" in release
+    assert "actions/attest-build-provenance" in release
+    assert "scripts/verify_distribution.py" in ci
+    assert "uv tool run" in smoke
+    assert "pipx" in smoke
+
+
+def test_release_tag_and_phase_gates_fail_closed() -> None:
+    script = ROOT / "scripts" / "check_release_tag.py"
+    valid_tag = subprocess.run(
+        [sys.executable, str(script), "v0.1.0"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert valid_tag.returncode == 0
+
+    closed_gate = subprocess.run(
+        [sys.executable, str(script), "v0.1.0", "--target", "testpypi"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert closed_gate.returncode == 1
+    assert "release gate 'testpypi-enabled' is closed" in closed_gate.stderr
+
+    closed_stable_gate = subprocess.run(
+        [sys.executable, str(script), "v0.1.0", "--target", "pypi"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert closed_stable_gate.returncode == 1
+    assert "release gate 'pypi-stable-enabled' is closed" in closed_stable_gate.stderr
+
+    wrong_tag = subprocess.run(
+        [sys.executable, str(script), "v9.9.9"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert wrong_tag.returncode == 1

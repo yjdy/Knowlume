@@ -7,7 +7,20 @@ Each phase starts only after the preceding executable gate is green. Thematic do
 
 ## Current state
 
-Phase 0R is complete: Contract v1 is archived and executable for history/migration, Contract v2 is the sole production target, and v2 decisions, schemas, templates, fixtures, migration contract, SQLite projection, and acceptance tests are in place. Phase 1 is next. No production `kb` package, CLI, migration program, database, or Web service exists yet.
+Phase 0R is complete and Phase 1 is next. A production Python package and release-engineering foundation exists, but it exposes only package version, installation diagnostics, and explicit update discovery. No vault/domain command, migration program, database, capture/search implementation, or Web service exists yet.
+
+## Release track
+
+Release engineering runs across the feature phases without advancing their gates:
+
+| Gate | Distribution outcome |
+|---|---|
+| Foundation | pure-Python wheel/sdist, bundled resource audit, `--version`, package `doctor`, explicit `update-check`, three-platform CI |
+| Phase 1 complete | manually approved TestPyPI internal package |
+| Phase 3 complete | first public PyPI prerelease and matching GitHub Release |
+| Phase 6B complete | stable `1.0.0` or later |
+
+Publishing remains blocked until the release owner controls the normalized PyPI project name. Package installation, upgrade, downgrade, and removal never migrate or delete a vault.
 
 ## Phases and gates
 
@@ -29,12 +42,13 @@ Phase 0R is complete: Contract v1 is archived and executable for history/migrati
 | Commands/capability | Phase | Required gate evidence |
 |---|---:|---|
 | contract/schema validation | 0R | versioned positive/negative fixtures and documentation links pass |
+| `--version`, package `doctor`, `update-check` | Release foundation | command tests, wheel resource/content audit, and isolated install smoke pass |
 | `init`, `scan`, `status`, `lint`, `note new/show/evolve`, `relation add/remove/list`, `migrate` | 1 | vault, parser, identity, atomicity, conflict, recovery, and migration tests |
 | paper capture application service, `source list/show/open/sync`, `inbox`, `process` | 2A | canonical and idempotent Zotero slice without a public add command |
 | `add`, `snippet add` | 2B | four-type recognition, override, add-result JSON, failure atomicity, snapshot, edition, commit/range, and license checks |
 | `grep`, `search`, `index`, `get`, `context` | 3 | deterministic projection and result-to-file explanation |
 | `serve` read views | 4 | shared-service parity and local-service security |
-| `ai list/review/promote`, automation JSON, `doctor` | 5 | promotion audit and explicit-scope tests |
+| `ai list/review/promote`, automation JSON, extended `doctor` adapter probes | 5 | promotion audit and explicit-scope tests |
 | `related`, `backlinks`, `history`, `note merge/supersede`, `tidy`, `organize`, `review` | 6A | identity and history preservation |
 | `publish audit/build/preview` | 6B | complete closure and adversarial staging tests |
 

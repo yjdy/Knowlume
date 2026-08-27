@@ -3,11 +3,14 @@
 > Status: Active — Contract v2
 > Authoritative for: user-facing commands, machine output, vault discovery, and management surfaces
 
-All interfaces call shared application services. Phase 0R defines these contracts only; it does not provide an executable `kb` package, CLI, migration tool, or Web service.
+All interfaces call shared application services. A production package skeleton now provides release diagnostics only; Phase 1 application commands, migration behavior, and the Web service remain unimplemented.
 
 ## Command surface and ownership
 
 ```text
+kb --version
+kb doctor [--json]
+kb update-check [--pre] [--json]
 kb init PATH
 kb status                         kb scan
 kb add INPUT [--type paper|web|book|repo] [--json]
@@ -90,6 +93,10 @@ The principal `kb add` diagnostics are fixed as:
 | `ADD_WRITE_CONFLICT` | 4 | durable state changed before the atomic write |
 
 The [migration report v1 schema](../schemas/interfaces/migration-report-v1.schema.json) distinguishes automatic changes, required human decisions, blocking findings, and prohibited inference.
+
+`kb --version` reports package and independent contract/projection/parser versions without resolving a vault. `kb doctor` currently validates the Python runtime and bundled release assets; later phases extend it with vault and adapter capability probes without changing its command identity.
+
+`kb update-check` is the only package-update network operation. It runs only when invoked, never installs an update, defaults to stable versions, and uses `--pre` to consider prereleases. JSON success data follows [update-check result v1](../schemas/interfaces/update-check-result-v1.schema.json). Unavailable or malformed package metadata emits `UPDATE_CHECK_UNAVAILABLE` with exit code 5. No vault path, object identity, content, or usage data is sent.
 
 ## Web management interface
 

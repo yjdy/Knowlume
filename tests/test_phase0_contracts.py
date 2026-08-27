@@ -452,7 +452,12 @@ def test_interface_and_migration_report_contracts(
     interface_contracts: ContractBundle,
 ) -> None:
     schemas, registry = interface_contracts
-    assert set(schemas) == {"add-result-v1", "cli-envelope-v1", "migration-report-v1"}
+    assert set(schemas) == {
+        "add-result-v1",
+        "cli-envelope-v1",
+        "migration-report-v1",
+        "update-check-result-v1",
+    }
     assert all("v1.schema.json" in schema["$id"] for schema in schemas.values())
     envelope = load_json(ROOT / "tests" / "fixtures" / "interfaces" / "valid-cli-envelope.json")
     assert validation_errors(envelope, schemas["cli-envelope-v1"], registry) == []
@@ -492,6 +497,26 @@ def test_add_result_contract(interface_contracts: ContractBundle) -> None:
     for path in sorted(fixture_dir.glob("invalid-add-result-*.json")):
         result = load_json(path)
         assert validation_errors(result, schemas["add-result-v1"], registry), path
+
+
+def test_update_check_result_contract(interface_contracts: ContractBundle) -> None:
+    schemas, registry = interface_contracts
+    fixture_dir = ROOT / "tests" / "fixtures" / "interfaces"
+    result = load_json(fixture_dir / "valid-update-check-result.json")
+    assert validation_errors(result, schemas["update-check-result-v1"], registry) == []
+    envelope = {
+        "interface_version": 1,
+        "command": "update-check",
+        "success": True,
+        "exit_code": 0,
+        "data": result,
+        "warnings": [],
+        "errors": [],
+    }
+    assert validation_errors(envelope, schemas["cli-envelope-v1"], registry) == []
+
+    invalid = load_json(fixture_dir / "invalid-update-check-result.json")
+    assert validation_errors(invalid, schemas["update-check-result-v1"], registry)
 
 
 def test_v2_contracts_do_not_reintroduce_obsolete_note_fields() -> None:

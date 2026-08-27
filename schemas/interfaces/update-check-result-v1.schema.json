@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/update-check-result-v1.schema.json",
+  "title": "Knowlume update check result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "result_version",
+    "distribution_name",
+    "current_version",
+    "latest_version",
+    "update_available",
+    "channel",
+    "published_at",
+    "release_url"
+  ],
+  "properties": {
+    "result_version": { "const": 1 },
+    "distribution_name": { "enum": ["knowlume", "knowlume-kb"] },
+    "current_version": { "type": "string", "minLength": 1 },
+    "latest_version": { "type": "string", "minLength": 1 },
+    "update_available": { "type": "boolean" },
+    "channel": { "enum": ["stable", "prerelease"] },
+    "published_at": {
+      "oneOf": [
+        { "type": "string", "format": "date-time" },
+        { "type": "null" }
+      ]
+    },
+    "release_url": { "type": "string", "format": "uri" }
+  }
+}

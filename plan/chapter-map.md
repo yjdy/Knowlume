@@ -12,6 +12,7 @@ The original design was audited and split into active thematic documents. The fr
 | Security, AI, privacy, publishing | [`security-publishing.md`](security-publishing.md) | Complete |
 | Phases, scope, commands, acceptance | [`roadmap.md`](roadmap.md) | Complete |
 | Contract v1 migration | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | Complete |
+| Post-baseline package distribution | [`distribution.md`](distribution.md) | Complete |
 
 ## Completion checks
 

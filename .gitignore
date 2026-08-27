@@ -2,6 +2,7 @@ tmp/
 .venv/
 .cache/
 derived/
+dist/
 public-staging/
 knowledge/ai/tmp/
 kb.sqlite

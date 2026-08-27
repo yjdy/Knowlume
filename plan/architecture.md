@@ -28,6 +28,10 @@ Knowlume is a local-first Knowledge Operating System for long-term learning and 
 
 Dependencies point inward. Adapter replacement never requires a durable knowledge migration unless the versioned domain contract changes.
 
+## Distribution boundary
+
+The production import package is `knowlume`, while the human command remains `kb`. Installed wheels carry versioned schemas and templates as package resources; runtime code never depends on a source checkout or the current working directory. Core installation is pure Python, with Web and external adapters isolated behind optional extras. Package installation and removal cannot own or mutate a vault. Release and compatibility policy is authoritative in [`distribution.md`](distribution.md).
+
 ## Code and vault separation
 
 The application repository contains code, schemas, templates, migrations, tests, and design documents. A personal vault is initialized independently:
