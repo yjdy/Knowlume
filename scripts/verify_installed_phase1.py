@@ -15,7 +15,16 @@ SOURCE_ID = "src_01JSTAG7N9Q3V5X8Y2Z4A6B8C0"
 
 
 def _run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(command, cwd=cwd, check=True, capture_output=True, text=True)
+    environment = os.environ.copy()
+    environment["PYTHONIOENCODING"] = "cp1252"
+    return subprocess.run(
+        command,
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        encoding="utf-8",
+        env=environment,
+    )
 
 
 def main() -> int:

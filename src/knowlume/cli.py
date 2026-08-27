@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Annotated, NoReturn
 
@@ -31,6 +32,13 @@ app.add_typer(note_app, name="note")
 app.add_typer(relation_app, name="relation")
 
 
+def _configure_cli_streams() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8")
+
+
 def _version_callback(value: bool) -> None:
     if value:
         typer.echo(format_version_report())
@@ -55,6 +63,7 @@ def main(
     ] = None,
 ) -> None:
     """Knowlume command line interface."""
+    _configure_cli_streams()
     ctx.ensure_object(dict)
     ctx.obj["vault"] = vault
 

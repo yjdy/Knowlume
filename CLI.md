@@ -11,6 +11,7 @@
 - 命令语义和参数边界以 [`plan/interfaces.md`](plan/interfaces.md) 为准。
 - 阶段归属和 gate 以 [`plan/roadmap.md`](plan/roadmap.md) 为准。
 - JSON 输出和迁移报告以 [`schemas/interfaces/`](schemas/interfaces/README.md) 为准。
+- 所有平台的 CLI stdout/stderr 均使用 UTF-8；机器输出与诊断继续严格分流。
 - 本文档只负责库存、实现计划、状态和证据，不建立另一套业务规则。
 - 新增、删除、重命名命令，或改变阶段、状态、JSON 支持情况时，必须在同一变更中更新本文档。
 - 一个命令只有在实现完成、命令级测试通过且完整仓库测试通过后，才能标记为 `Verified`。
