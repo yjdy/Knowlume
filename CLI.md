@@ -4,7 +4,7 @@
 
 > Last synchronized: 2026-08-27  
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Release foundation implemented; Phase 1 application commands remain planned
+> Current delivery state: Phase 0R complete; no production `kb` package exists
 
 ## Authority and update rules
 
@@ -25,6 +25,7 @@
 | `Verified` | 命令级测试和完整仓库测试均通过 |
 | `Deferred` | 已明确后置，当前阶段不实现 |
 
+<<<<<<< HEAD
 ## Release foundation
 
 | ID | Command | Description | Implementation plan | Status | Verification |
@@ -33,6 +34,8 @@
 | `doctor` | `kb doctor [--json]` | 检查 Python 兼容性、wheel 资源完整性和用户状态目录 | package resource checks；后续阶段扩展 vault/adapter probes | `Verified` | `tests/test_distribution_runtime.py`; isolated wheel smoke; complete suite |
 | `update-check` | `kb update-check [--pre] [--json]` | 显式查询 PyPI 版本，不下载或安装更新 | stable/prerelease 选择、typed network failure、update-check-result v1 | `Verified` | `tests/test_distribution_runtime.py`; complete suite |
 
+=======
+>>>>>>> parent of 9968690 (docs: 增加未来发布的相关计划)
 ## Phase 1 — Vault and core
 
 | ID | Command | Description | Implementation plan | Status | Verification |
@@ -103,7 +106,7 @@
 | `ai.list` | `kb ai list` | 列出待审核及已处理 AI Artifacts | Artifact query、默认私有过滤 | `Planned` | — |
 | `ai.review` | `kb ai review ID` | 记录接受或拒绝的人工审核 | reviewer/time/action provenance、冲突安全写入 | `Planned` | — |
 | `ai.promote` | `kb ai promote ID` | 将已审核 Artifact 晋升到普通 Note | promoted state、Note block、`promoted_from` 私有审计关系事务 | `Planned` | — |
-`doctor` 的稳定命令入口已在 Release foundation 实现。Phase 5 只扩展 Git、SQLite、Zotero、vault 和外部 adapter probes，不新增第二个命令。
+| `doctor` | `kb doctor` | 检查运行时和外部 adapter 能力 | Python/Git/SQLite/Zotero/vault capability probes | `Planned` | — |
 
 ## Phase 6A — Evolution and history
 
@@ -141,7 +144,10 @@
 
 | Date | Change | Comparison result |
 |---|---|---|
+<<<<<<< HEAD
 | 2026-08-27 | 建立跨平台 package 与 release foundation，新增 `--version`、`doctor --json`、`update-check` | 三个入口已实现；Phase 1–6 业务命令状态不变 |
 | 2026-08-27 | 冻结 Phase 1 config v1 与 transaction v1，并扩展 `--version` 报告 | 版本仍相互独立；尚未实现 vault 行为 |
+=======
+>>>>>>> parent of 9968690 (docs: 增加未来发布的相关计划)
 | 2026-08-27 | 将四类 capture 入口统一为 `kb add INPUT [--type ...] [--json]` | 公共命令归属 Phase 2B；四类 backend 独立跟踪且保持 `Planned` |
 | 2026-08-27 | 建立 Contract v2 CLI 全量库存与交付状态账本 | 与 active interfaces/roadmap 对齐；所有命令尚为 `Planned` |

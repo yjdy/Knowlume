@@ -9,9 +9,13 @@ Machine-enforced fields and constraints are versioned. Contract v2 is the produc
 | Source locators | [`v2/locator.schema.json`](v2/locator.schema.json) | [`v1/locator.schema.json`](v1/locator.schema.json) |
 | Relation shards | [`v2/relations.schema.json`](v2/relations.schema.json) | [`v1/relations.schema.json`](v1/relations.schema.json) |
 | SQLite projection | [`v2/sqlite-projection-v2.sql`](v2/sqlite-projection-v2.sql) | [`v1/sqlite-projection-v1.sql`](v1/sqlite-projection-v1.sql) |
+<<<<<<< HEAD
 | Machine interfaces and reports | [`interfaces/`](interfaces/README.md) | Not defined in v1 |
 | Portable vault configuration | [`config/v1/`](config/README.md) | Not defined before Phase 1 |
 | Machine-local lock and transaction state | [`state/v1/`](state/README.md) | Not defined before Phase 1 |
+=======
+| CLI and migration reports | [`interfaces/`](interfaces/README.md) | Not defined in v1 |
+>>>>>>> parent of 9968690 (docs: 增加未来发布的相关计划)
 
 Active object creation templates live under [`../templates/v2/`](../templates/v2/README.md), and the
 portable vault configuration template lives under
