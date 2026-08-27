@@ -55,6 +55,8 @@ def test_release_workflows_cover_required_trust_and_platform_gates() -> None:
     assert "scripts/verify_distribution.py" in ci
     assert "uv tool run" in smoke
     assert "pipx" in smoke
+    assert "actions/setup-python@v6" in smoke
+    assert "python-version: ${{ matrix.python }}" in smoke
     assert "scripts/verify_installed_phase1.py" in smoke
     assert "scripts/verify_install_lifecycle.py" in smoke
     assert "scripts/release_plan.py" in release

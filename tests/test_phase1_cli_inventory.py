@@ -61,6 +61,6 @@ def test_every_phase1_command_has_help() -> None:
         ["update-check", "--help"],
     )
     for command in commands:
-        result = runner.invoke(app, command)
+        result = runner.invoke(app, command, color=False)
         assert result.exit_code == 0, command
-        assert "--help" in result.stdout
+        assert "Usage:" in result.stdout
