@@ -1,6 +1,6 @@
 # Phase 2A execution goal: Paper and Zotero
 
-> Status: In progress — local implementation and gates green; cross-platform CI pending  
+> Status: In progress — local implementation and gates green; cross-platform CI pending
 > Target: complete the Paper/Zotero vertical slice without exposing the Phase 2B `kb add` command
 
 ## 1. Outcome

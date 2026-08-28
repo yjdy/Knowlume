@@ -157,4 +157,3 @@ of existing durable fields requires a separate version and migration decision.
   would erase the conflict baseline.
 - Publish a paper-only `kb add` in Phase 2A: rejected by
   [`ADR-0009`](0009-unified-add-command.md), which releases all capture paths together in Phase 2B.
-

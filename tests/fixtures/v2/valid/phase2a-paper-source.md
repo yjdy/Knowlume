@@ -31,4 +31,3 @@ tags: []
 ---
 
 # A Phase 2A Paper
-
