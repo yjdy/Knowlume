@@ -3,19 +3,26 @@
 > Status: Active — Contract v2
 > Authoritative for: user-facing commands, machine output, vault discovery, and management surfaces
 
-All interfaces call shared application services. Phase 0R defines these contracts only; it does not provide an executable `kb` package, CLI, migration tool, or Web service.
+All interfaces call shared application services. Phase 1 Vault, scanner, Note, relation, and explicit
+v1-to-v2 migration commands are implemented; the Web service remains unimplemented.
 
 ## Command surface and ownership
 
 ```text
+kb --version
+kb [--vault PATH] COMMAND
+kb doctor [--json]
+kb update-check [--pre] [--json]
 kb init PATH
 kb status                         kb scan
 kb add INPUT [--type paper|web|book|repo] [--json]
 kb source [list|show|open|sync]
 kb inbox                          kb process SOURCE_ID
-kb note new --type idea|literature|concept|synthesis
+kb note new --type idea|literature|concept|synthesis [--source SOURCE_ID]
 kb note show ID                   kb note evolve ID --to concept
-kb relation [add|remove|list]     kb snippet add
+kb relation add FROM_ID TO_ID --type TYPE [--section SECTION_ID]
+kb relation remove FROM_ID TO_ID --type TYPE [--section SECTION_ID]
+kb relation list ID              kb snippet add
 kb grep QUERY                     kb search QUERY
 kb get ID                         kb context QUERY
 kb related ID                     kb backlinks ID
@@ -34,47 +41,19 @@ The unique command-to-phase-to-gate matrix is maintained in the [roadmap](roadma
 
 ## Vault discovery
 
-`--vault PATH` is a global option and precedes the subcommand, for example
-`kb --vault PATH scan`. Resolution stops at the first present source in this order:
+Resolution order is:
 
 1. `--vault PATH`;
 2. `KNOWLUME_VAULT`;
 3. search upward from the current directory for `knowlume.toml`;
-4. the platformdirs user data location `knowlume/vault`.
+4. user-level default vault.
 
-`kb init PATH` uses its positional path and does not run discovery. If global `--vault` is also
-present, both normalized paths must identify the same target. Repeated explicit values that normalize
-to different targets are ambiguous. Once a source is selected, lower-priority sources are not
-consulted; this makes an intentional explicit override deterministic.
+Multiple candidates or conflicting configuration produce a typed ambiguity error. A configured vault is independent from the program repository.
 
-The selected root must contain one valid [`knowlume.toml`](../schemas/config/README.md), except while
-`init` is creating it. Missing markers, invalid configuration, unsupported versions, path escape, and
-selection conflicts fail closed. The complete path, lock, and transaction rules are fixed by
-[`ADR-0011`](decisions/0011-phase1-vault-and-transaction-contracts.md). A configured vault is
-independent from the program repository.
-
-### Phase 1 diagnostics
-
-These codes and exit classes are stable. Commands may add contextual `object_id`, safe relative
-`path`, or `details`, but must not expose note bodies, credentials, or unnecessary absolute vault
-paths.
-
-| Code | Exit | Meaning |
-|---|---:|---|
-| `VAULT_REQUIRED` | 3 | no vault was selected and no valid default marker exists |
-| `VAULT_NOT_FOUND` | 3 | the selected root or its marker does not exist |
-| `VAULT_CONFIG_INVALID` | 3 | TOML, schema, path uniqueness, or containment is invalid |
-| `VAULT_CONFIG_UNSUPPORTED` | 3 | configuration or object Contract version is outside the readable range |
-| `VAULT_AMBIGUOUS` | 3 | one discovery source supplies distinct normalized candidates |
-| `VAULT_SELECTION_CONFLICT` | 3 | `kb init PATH` conflicts with global `--vault` |
-| `VAULT_TARGET_NOT_EMPTY` | 3 | initialization target is non-empty and is not the same initialized vault |
-| `VAULT_PATH_UNSAFE` | 6 | traversal, symlink, junction, or resolved containment escapes the vault |
-| `VAULT_UNAVAILABLE` | 5 | filesystem permissions or availability prevent the requested access |
-| `WRITE_CONFLICT` | 4 | a target differs from the expected checksum or existence state |
-| `VAULT_LOCKED` | 4 | another writer or unrecovered lock owns the vault write lock |
-| `TRANSACTION_RECOVERY_REQUIRED` | 4 | a valid interrupted transaction must be resumed or rolled back before writing |
-| `TRANSACTION_MANIFEST_INVALID` | 3 | transaction state is malformed, unsupported, or inconsistent |
-| `TRANSACTION_RECOVERY_CONFLICT` | 4 | neither forward recovery nor rollback is provably safe |
+`--vault` is a root option and precedes the command. `kb init PATH` uses only its positional target;
+combining it with root `--vault` is `VAULT_ARGUMENT_CONFLICT` (exit 2). Other Vault commands do not
+implicitly create a missing candidate. Configuration, discovery, conflict, recovery, and unsafe-path
+diagnostics are frozen by [ADR-0011](decisions/0011-phase1-vault-and-transaction-contracts.md).
 
 ## Capture and mutation behavior
 
@@ -95,9 +74,17 @@ The capture flow is `normalize -> recognize -> metadata resolve -> canonical ide
 
 Note evolution from Idea to Concept preserves the Note and section IDs and appends `type_history`. Relation operations write only the shard owned by the source object. Migration defaults to dry-run and refuses apply while required decisions or blocking findings remain.
 
+Relation `--section` identifies a stable section on the stored target. `related_to` is stored once in
+canonical object-ID order, and incoming navigation is derived by scanning rather than persisted as a
+backlink. Add and remove compare the complete canonical key; omitting `--section` cannot remove a
+section-targeted relation.
+
+`note new --type literature` requires `--source SOURCE_ID` and atomically creates the required
+`summarizes` relation. `--source` is rejected for the other Note types; no Source is guessed.
+
 ## Machine interface v1
 
-Commands that support JSON emit exactly one document matching the [CLI envelope v1 schema](../schemas/interfaces/cli-envelope-v1.schema.json) to stdout; diagnostics go to stderr. `interface_version` is independent from object, locator, relation, projection, and parser/tokenizer versions.
+CLI stdout and stderr use UTF-8 on every supported platform. Commands that support JSON emit exactly one document matching the [CLI envelope v1 schema](../schemas/interfaces/cli-envelope-v1.schema.json) to stdout; diagnostics go to stderr. `interface_version` is independent from object, locator, relation, projection, and parser/tokenizer versions.
 
 Successful `kb add --json` data matches the [add result v1 schema](../schemas/interfaces/add-result-v1.schema.json). `requested_type` records the explicit override or `null`; `detected_type` is the effective CLI type after applying that override. The result always records the corresponding durable `source_type`, canonical identity, Source ID, and whether a new Source was created.
 
@@ -123,6 +110,15 @@ The principal `kb add` diagnostics are fixed as:
 | `ADD_WRITE_CONFLICT` | 4 | durable state changed before the atomic write |
 
 The [migration report v1 schema](../schemas/interfaces/migration-report-v1.schema.json) distinguishes automatic changes, required human decisions, blocking findings, and prohibited inference.
+
+Phase 1 scanner and lint services use the versioned
+[`finding-v1`](../schemas/interfaces/finding-v1.schema.json) shape. Phase 1 commands remain
+human-readable unless their syntax explicitly includes `--json`; `migrate` emits migration-report
+v1. Any later JSON option requires an explicit result schema inside CLI envelope v1 before release.
+
+`kb --version` reports package and independent contract/projection/parser versions without resolving a vault. `kb doctor` currently validates the Python runtime and bundled release assets; later phases extend it with vault and adapter capability probes without changing its command identity.
+
+`kb update-check` is the only package-update network operation. It runs only when invoked, never installs an update, defaults to stable versions, and uses `--pre` to consider prereleases. JSON success data follows [update-check result v1](../schemas/interfaces/update-check-result-v1.schema.json). Unavailable or malformed package metadata emits `UPDATE_CHECK_UNAVAILABLE` with exit code 5. No vault path, object identity, content, or usage data is sent.
 
 ## Web management interface
 

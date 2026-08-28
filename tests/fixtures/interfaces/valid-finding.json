@@ -1,0 +1,10 @@
+{
+  "finding_version": 1,
+  "code": "FACT_CITATION_MISSING",
+  "severity": "error",
+  "category": "reference",
+  "message": "Fact block requires at least one citation.",
+  "path": "notes/ideas/example.md",
+  "object_id": "note_01JSTAG7N9Q3V5X8Y2Z4A6B8D2",
+  "section_id": "sec_facts"
+}

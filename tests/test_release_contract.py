@@ -3,6 +3,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import tomllib
+from pathlib import Path
 
 from phase0_support import ROOT
 
@@ -54,6 +55,37 @@ def test_release_workflows_cover_required_trust_and_platform_gates() -> None:
     assert "scripts/verify_distribution.py" in ci
     assert "uv tool run" in smoke
     assert "pipx" in smoke
+    assert "actions/setup-python@v6" in smoke
+    assert "python-version: ${{ matrix.python }}" in smoke
+    assert "scripts/verify_installed_phase1.py" in smoke
+    assert "scripts/verify_install_lifecycle.py" in smoke
+    assert "scripts/release_plan.py" in release
+    assert "if: needs.release-plan.outputs.testpypi == 'true'" in release
+    assert "if: needs.release-plan.outputs.pypi == 'true'" in release
+    assert "needs.release-plan.outputs.github_release == 'true'" in release
+
+
+def test_release_plan_skips_formal_publication_for_testpypi_only(tmp_path: Path) -> None:
+    source = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    config = tmp_path / "phase1.toml"
+    config.write_text(source.replace("testpypi-enabled = false", "testpypi-enabled = true"))
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/release_plan.py"),
+            "--config",
+            str(config),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert result.stdout.splitlines() == [
+        "testpypi=true",
+        "pypi=false",
+        "github_release=false",
+    ]
 
 
 def test_release_tag_and_phase_gates_fail_closed() -> None:

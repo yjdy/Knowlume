@@ -17,7 +17,7 @@ Deleting SQLite must not delete knowledge. Given the same durable files and sche
 
 Program code and the personal vault are separate. Vault discovery follows the order defined in [interfaces](interfaces.md). Tracked Source cards and configuration never store machine-specific absolute paths.
 
-Single-file writes use an expected checksum, a temporary file in the destination directory, flush, and atomic replacement. Multi-file operations use a vault lock, transaction manifest, and same-filesystem staging. Interrupted transactions must be detectable and recoverable or reversible. The versioned machine contracts live under [`schemas/state/`](../schemas/state/README.md), and the exact state/recovery protocol is fixed by [`ADR-0011`](decisions/0011-phase1-vault-and-transaction-contracts.md). Phase 1 implements and tests equivalent observable behavior on Windows and Linux. Knowlume does not automatically commit, push, pull, or rewrite Git history.
+Single-file writes use an expected checksum, a temporary file in the destination directory, flush, and atomic replacement. Multi-file operations use a vault lock, transaction manifest, and same-filesystem staging. Interrupted transactions must be detectable and recoverable or reversible. Phase 1 implements and tests equivalent observable behavior on Windows and Linux. Knowlume does not automatically commit, push, pull, or rewrite Git history.
 
 ## Git history
 

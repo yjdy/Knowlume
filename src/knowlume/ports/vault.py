@@ -1,20 +1,36 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
-
-from knowlume.domain.config import VaultConfig
+from typing import Protocol, cast
 
 
-class VaultStoragePort(Protocol):
-    def normalize_path(self, value: str | Path, *, base: Path) -> Path: ...
+@dataclass(frozen=True)
+class VaultConfig:
+    config_version: int
+    object_contract_version: int
+    sources: str
+    notes: str
+    snippets: str
+    ai_artifacts: str
+    relations: str
+    state: str
 
-    def find_nearest_vault(self, start: Path) -> Path | None: ...
 
-    def default_vault(self) -> Path: ...
+@dataclass(frozen=True)
+class Vault:
+    root: Path
+    config: VaultConfig
 
-    def has_marker(self, root: Path) -> bool: ...
+    def path(self, name: str) -> Path:
+        return self.root / cast(str, getattr(self.config, name))
 
-    def load_config(self, root: Path) -> VaultConfig: ...
 
-    def initialize(self, root: Path, config_text: str, config: VaultConfig) -> bool: ...
+class VaultPort(Protocol):
+    def initialize(self, target: Path, config_text: str) -> Vault: ...
+
+    def discover(self, *, explicit: Path | None, cwd: Path) -> Vault: ...
+
+    def atomic_write(
+        self, vault: Vault, relative_path: str, content: bytes, expected_checksum: str | None
+    ) -> str: ...

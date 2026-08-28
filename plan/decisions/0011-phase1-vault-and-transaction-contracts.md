@@ -1,4 +1,4 @@
-# ADR-0011: Freeze Phase 1 vault discovery and transaction recovery contracts
+# ADR-0011: Freeze Phase 1 Vault and transaction contracts
 
 - Status: Accepted
 - Date: 2026-08-27
@@ -6,110 +6,101 @@
 
 ## Context
 
-ADR-0006 requires an independent portable vault, conflict-aware single-file writes, and recoverable
-multi-file writes. Phase 1 cannot implement those behaviors safely until configuration identity,
-discovery conflicts, lock ownership, transaction progress, and recovery outcomes are machine-readable
-and independently versioned.
+Phase 1 introduces the first commands that discover and mutate an independent Vault. The existing
+architecture fixes the discovery order and requires conflict-aware single-file writes plus
+recoverable multi-file transactions, but it does not yet freeze the portable configuration shape,
+transaction state machine, CLI option placement, or typed Vault failures.
 
 ## Decision
 
-### Portable vault configuration
+### Portable Vault configuration
 
-A vault root contains `knowlume.toml` conforming to
-[`knowlume.schema.json`](../../schemas/config/v1/knowlume.schema.json). Configuration version 1
-contains a stable `vault_id`, writable object Contract version 2, and relative POSIX paths for the five
-durable collections. Configured paths are pairwise distinct, non-overlapping after lexical
-normalization, and contained by the resolved vault root after filesystem resolution. The fixed
-machine-local state directory is `.knowlume`; it is not configurable.
+`knowlume.toml` follows configuration contract v1, whose executable schema is
+[`../../schemas/config/v1/knowlume.schema.json`](../../schemas/config/v1/knowlume.schema.json).
+It records `config_version = 1`, `object_contract_version = 2`, and the relative directories for
+Sources, Notes, Snippets, AI Artifacts, relations, and disposable state. Paths use portable POSIX
+relative syntax, cannot contain `..`, and must resolve inside the Vault. Configured durable roots
+and the state root must be distinct and non-overlapping.
 
-`kb init PATH` uses its positional path and never performs ordinary vault discovery. A global
-`--vault PATH` may accompany `init` only when both paths resolve to the same target; otherwise the
-command fails with `VAULT_SELECTION_CONFLICT`. For every other vault command, `--vault` is a global
-option written before the subcommand and resolution stops at the first present source:
+The file contains no machine-specific absolute path, credential, adapter endpoint, lock, or
+transaction record. A future incompatible configuration change increments `config_version`
+independently from object, locator, relation, interface, projection, parser, and transaction
+versions.
 
-1. `--vault PATH`;
-2. `KNOWLUME_VAULT`;
-3. the nearest ancestor containing `knowlume.toml`;
-4. the platformdirs user data location `knowlume/vault`.
+### CLI placement and discovery
 
-A repeated explicit option with different normalized values is ambiguous. A selected path must
-contain exactly one valid marker and supported configuration/object versions. Lower-priority sources
-are not consulted after a source is selected, so an intentional explicit override is deterministic.
-Path containment is checked after resolving existing ancestors; traversal and symlink or junction
-escape fail closed.
+`--vault PATH` is a root option and therefore precedes the command: `kb --vault PATH scan`.
+`kb init PATH` owns its explicit target and does not perform discovery. Supplying root `--vault`
+with `init PATH` is a usage conflict even if the paths appear equal.
 
-### Single-writer lock
+Other Vault commands resolve exactly one candidate in this order: root `--vault`,
+`KNOWLUME_VAULT`, the nearest ancestor containing `knowlume.toml`, then the platformdirs default
+`user_data_dir("knowlume")/vault`. A higher-priority candidate replaces lower-priority candidates;
+lower-priority candidates do not create ambiguity. Each selected candidate is canonicalized before
+validation. Aliases that resolve inconsistently, multiple same-precedence candidates supplied by a
+future configuration source, or overlapping configured roots fail as ambiguous or conflicting.
+No missing candidate is created implicitly.
 
-All multi-file operations acquire `.knowlume/locks/vault-write.json` by exclusive creation. The lock
-conforms to [`vault-write-lock.schema.json`](../../schemas/state/v1/vault-write-lock.schema.json) and
-contains an opaque owner token. A writer removes only a lock with its own token. A leftover lock is
-never broken merely because its process ID appears inactive; the associated manifest must first be
-validated and explicitly recovered or rolled back.
+Phase 1 Vault diagnostics are stable:
 
-### Transaction manifest and state machine
+| Code | Exit | Meaning |
+|---|---:|---|
+| `VAULT_ARGUMENT_CONFLICT` | 2 | `--vault` is combined with `init PATH`, or mutually exclusive options are combined |
+| `VAULT_NOT_FOUND` | 3 | no selected candidate or marker exists |
+| `VAULT_INVALID` | 3 | marker, topology, path, or configuration content is invalid |
+| `VAULT_VERSION_UNSUPPORTED` | 3 | configuration or object Contract is newer or otherwise unreadable |
+| `VAULT_PATH_CONFLICT` | 3 | configured roots overlap or contradict the selected root |
+| `VAULT_AMBIGUOUS` | 3 | one precedence level resolves to more than one Vault |
+| `VAULT_WRITE_CONFLICT` | 4 | durable content changed after it was read |
+| `VAULT_LOCKED` | 4 | another writer owns the Vault lock |
+| `VAULT_RECOVERY_REQUIRED` | 4 | an unfinished transaction must be recovered before a new write |
+| `VAULT_RECOVERY_FAILED` | 4 | safe deterministic recovery could not be completed |
+| `VAULT_PATH_UNSAFE` | 6 | traversal, link, junction, or resolved-path escape crosses the Vault boundary |
 
-Each operation stores
-`.knowlume/transactions/<transaction_id>/manifest.json` conforming to
-[`transaction-manifest.schema.json`](../../schemas/state/v1/transaction-manifest.schema.json). Every
-manifest records the intended outcome and the expected, staged, backup, and current state of each
-target. Manifest updates themselves use checksum-aware atomic replacement.
+Human-readable Phase 1 commands do not gain an implicit `--json` option. `migrate` emits the
+already-versioned migration report v1. Scanner and lint services use
+[`finding-v1`](../../schemas/interfaces/finding-v1.schema.json); a later public JSON option must use
+the CLI envelope and receive its own result schema before release.
 
-The forward state sequence is:
+### Transaction protocol
 
-```text
-locked -> staging -> staged -> committing -> committed -> cleaning -> complete
-```
+Transaction contract v1 is defined by
+[`transaction-manifest.schema.json`](../../schemas/transactions/v1/transaction-manifest.schema.json).
+One exclusive lock exists at `.knowlume/locks/vault-write.lock`. A transaction owns
+`.knowlume/transactions/<transaction_id>/`, containing an atomically replaced `manifest.json`,
+same-filesystem staged replacements, and backups. Manifest paths are Vault-relative and must remain
+inside the resolved Vault after link-aware canonicalization.
 
-Any non-terminal state may enter rollback:
+Before the first durable replacement, the writer validates every expected checksum and persists a
+`prepared` manifest. Entries commit in manifest order. Manifest and entry state are persisted before
+and after each replace so interruption is observable. The transaction states are `preparing`,
+`prepared`, `committing`, `rolling_back`, `committed`, and `rolled_back`; entry states are `pending`,
+`backed_up`, `replaced`, and `restored`.
 
-```text
-locked|staging|staged|committing|committed -> rolling_back -> rolled_back -> cleaning -> complete
-```
+Recovery is fail-closed and idempotent:
 
-Before a target replacement, the writer verifies `expected_checksum`, materializes and verifies any
-backup, records `backed_up`, then atomically replaces or deletes the target and records `applied`.
-Rollback restores verified backups or removes targets whose `original_exists` is false, then records
-`restored`. `outcome` is `pending` until commit or rollback is chosen, `commit` after the durable set
-is complete, and `rollback` once rollback begins. Cleanup removes only recorded staging and backup
-paths after the durable outcome is verified.
+- `preparing` or `prepared`: restore any recorded backup and roll back;
+- `committing`: roll back every replaced entry in reverse order;
+- `rolling_back`: continue rollback in reverse order;
+- `committed`: verify committed checksums, then clean disposable transaction state;
+- `rolled_back`: verify original checksums, then clean disposable transaction state.
 
-Recovery validates the schema, vault ID, transaction ID/path agreement, checksums, unique targets,
-state/outcome combination, and every target's observable bytes. A matching retry may resume a
-provably safe commit. If forward recovery cannot be proven and every required backup is valid, the
-transaction rolls back. If neither action is provably safe, no durable file is changed and
-`TRANSACTION_RECOVERY_CONFLICT` is returned. Read-only commands may report pending recovery but do
-not alter it.
-
-### Stable Phase 1 diagnostics
-
-The names and exit classes of vault, path, write, lock, and recovery diagnostics are owned by
-[`interfaces.md`](../interfaces.md). Human output writes diagnostics to stderr. A command that later
-adds JSON output must use CLI envelope v1; no unversioned Phase 1 JSON result is permitted.
-
-## Consequences
-
-- Configuration and transaction formats can evolve independently of Contract v2.
-- A copied vault retains its identity; discovery still selects a concrete root and never merges two
-  copies implicitly.
-- Crash recovery costs additional fsyncs and manifest writes, but every mutation boundary is
-  inspectable.
-- Platform-specific locking and replacement adapters must produce the same typed observable outcomes.
-- Transaction state is disposable after verified completion and is never the only source of a
-  knowledge fact.
+An unsupported manifest version, malformed lock, unexplained transaction directory, checksum
+mismatch, or path outside the Vault stops recovery. No new write begins while recovery is required.
+Cleanup removes only the validated transaction directory and releases only the lock owned by that
+transaction.
 
 ## Migration impact
 
-This decision introduces configuration v1 and transaction v1 before Phase 1 production vaults exist,
-so no existing production durable file requires migration. Contract v1 knowledge fixtures remain
-read-only migration input. Any future incompatible configuration or transaction record requires its
-own version decision and explicit handling; package install or upgrade never performs it.
+Contract v2 object files do not change, and Contract v1 remains byte-stable. Existing directories
+without `knowlume.toml` are not silently adopted; `kb init` or an explicit migration workflow is
+required. Configuration v1 has no predecessor. Transaction state is disposable and is never
+migrated; unsupported manifests require compatible recovery tooling or manual operator review.
 
-## Alternatives considered
+## Consequences
 
-- Reuse object `schema_version` for configuration and transactions: rejected because their lifecycles
-  and compatibility ranges are independent.
-- Infer progress from target, temporary, or backup file presence: rejected because a crash can occur
-  between any filesystem operation and the next observation.
-- Automatically break a lock from PID liveness alone: rejected because PID reuse and platform
-  differences can admit concurrent writers.
-
+- Installed and source-checkout commands share one deterministic discovery and failure model.
+- Portable configuration can be copied with a Vault without leaking machine state.
+- Crash recovery has a finite, testable state machine and never reports partial success.
+- Future JSON surfaces, configuration revisions, and transaction revisions require explicit version
+  decisions rather than inheriting Contract v2 implicitly.

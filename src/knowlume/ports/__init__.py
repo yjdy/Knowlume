@@ -1,1 +1,1 @@
-"""Dependency-inversion ports used by application services."""
+"""Inward-facing protocols implemented by filesystem and external adapters."""

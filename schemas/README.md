@@ -9,18 +9,10 @@ Machine-enforced fields and constraints are versioned. Contract v2 is the produc
 | Source locators | [`v2/locator.schema.json`](v2/locator.schema.json) | [`v1/locator.schema.json`](v1/locator.schema.json) |
 | Relation shards | [`v2/relations.schema.json`](v2/relations.schema.json) | [`v1/relations.schema.json`](v1/relations.schema.json) |
 | SQLite projection | [`v2/sqlite-projection-v2.sql`](v2/sqlite-projection-v2.sql) | [`v1/sqlite-projection-v1.sql`](v1/sqlite-projection-v1.sql) |
-<<<<<<< HEAD
 | Machine interfaces and reports | [`interfaces/`](interfaces/README.md) | Not defined in v1 |
-| Portable vault configuration | [`config/v1/`](config/README.md) | Not defined before Phase 1 |
-| Machine-local lock and transaction state | [`state/v1/`](state/README.md) | Not defined before Phase 1 |
-=======
-| CLI and migration reports | [`interfaces/`](interfaces/README.md) | Not defined in v1 |
->>>>>>> parent of 9968690 (docs: 增加未来发布的相关计划)
+| Portable Vault configuration | [`config/v1/`](config/v1/README.md) | Not defined |
+| Disposable transaction manifests | [`transactions/v1/`](transactions/v1/README.md) | Not defined |
 
-Active object creation templates live under [`../templates/v2/`](../templates/v2/README.md), and the
-portable vault configuration template lives under
-[`../templates/config/v1/`](../templates/config/v1/README.md). Maintained examples and rejected cases
-live under [`../tests/fixtures/`](../tests/fixtures/). The migration policy is
-[`../plan/migrations/v1-to-v2.md`](../plan/migrations/v1-to-v2.md).
+Active creation templates live under [`../templates/v2/`](../templates/v2/README.md). Maintained v2 examples and rejected cases live under [`../tests/fixtures/v2/`](../tests/fixtures/v2/). The migration policy is [`../plan/migrations/v1-to-v2.md`](../plan/migrations/v1-to-v2.md).
 
 Backward-incompatible durable changes require a new contract version, migration impact, templates, positive and negative fixtures, and executable acceptance tests.

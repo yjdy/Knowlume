@@ -3,11 +3,11 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, ClassVar, Self
+from typing import Any
 
 
 class DomainError(ValueError):
-    """A stable Contract v2 parse or domain validation failure."""
+    """Stable typed Contract v2 failure."""
 
     def __init__(self, code: str, message: str, *, details: dict[str, Any] | None = None) -> None:
         super().__init__(message)
@@ -100,39 +100,29 @@ class RelationType(StrEnum):
     SUPERSEDES = "supersedes"
 
 
+_ID_RE = re.compile(r"^(src|note|snip|ai)_[0-9A-HJKMNP-TV-Z]{26}$")
+_SECTION_RE = re.compile(r"^sec_[a-z0-9][a-z0-9_-]{2,63}$")
+_KIND_BY_PREFIX = {
+    "src": ObjectKind.SOURCE,
+    "note": ObjectKind.NOTE,
+    "snip": ObjectKind.SNIPPET,
+    "ai": ObjectKind.AI_ARTIFACT,
+}
+
+
 @dataclass(frozen=True, order=True)
 class ObjectId:
     value: str
 
-    _PATTERN: ClassVar[re.Pattern[str]] = re.compile(
-        r"^(?P<prefix>src|note|snip|ai)_[0-9A-HJKMNP-TV-Z]{26}$"
-    )
-    _KINDS: ClassVar[dict[str, ObjectKind]] = {
-        "src": ObjectKind.SOURCE,
-        "note": ObjectKind.NOTE,
-        "snip": ObjectKind.SNIPPET,
-        "ai": ObjectKind.AI_ARTIFACT,
-    }
-
-    @classmethod
-    def parse(cls, value: object, *, expected_kind: ObjectKind | None = None) -> Self:
-        if not isinstance(value, str):
-            raise DomainError("OBJECT_ID_INVALID", "object ID must be a string")
-        match = cls._PATTERN.fullmatch(value)
-        if match is None:
-            raise DomainError("OBJECT_ID_INVALID", f"invalid object ID: {value!r}")
-        result = cls(value)
-        if expected_kind is not None and result.kind is not expected_kind:
-            raise DomainError(
-                "OBJECT_KIND_MISMATCH",
-                f"object ID {value!r} does not identify {expected_kind.value}",
-            )
-        return result
+    def __post_init__(self) -> None:
+        if not _ID_RE.fullmatch(self.value):
+            raise DomainError("OBJECT_ID_INVALID", f"invalid object ID: {self.value!r}")
 
     @property
     def kind(self) -> ObjectKind:
-        prefix = self.value.split("_", 1)[0]
-        return self._KINDS[prefix]
+        match = _ID_RE.fullmatch(self.value)
+        assert match is not None
+        return _KIND_BY_PREFIX[match.group(1)]
 
     def __str__(self) -> str:
         return self.value
@@ -142,22 +132,16 @@ class ObjectId:
 class SectionId:
     value: str
 
-    _PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"^sec_[a-z0-9][a-z0-9_-]{2,63}$")
-
-    @classmethod
-    def parse(cls, value: object) -> Self:
-        if not isinstance(value, str) or cls._PATTERN.fullmatch(value) is None:
-            raise DomainError("SECTION_ID_INVALID", f"invalid section ID: {value!r}")
-        return cls(value)
+    def __post_init__(self) -> None:
+        if not _SECTION_RE.fullmatch(self.value):
+            raise DomainError("SECTION_ID_INVALID", f"invalid section ID: {self.value!r}")
 
     def __str__(self) -> str:
         return self.value
 
 
-def enum_value(enum_type: type[StrEnum], value: object, *, field: str) -> StrEnum:
-    if not isinstance(value, str):
-        raise DomainError("FIELD_INVALID", f"{field} must be a string")
+def enum_value[EnumT: StrEnum](enum_type: type[EnumT], value: object, *, field: str) -> EnumT:
     try:
-        return enum_type(value)
-    except ValueError as error:
+        return enum_type(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError) as error:
         raise DomainError("FIELD_INVALID", f"unsupported {field}: {value!r}") from error

@@ -2,15 +2,16 @@
 
 本文档记录所有已规划 `kb` 命令的用途、交付阶段、实现方案、当前状态和验证证据，用于每次 CLI 变更后的对比与验收。
 
-> Last synchronized: 2026-08-27  
+> Last synchronized: 2026-08-28
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Phase 0R complete; no production `kb` package exists
+> Current delivery state: Phase 1 Complete; all registered Phase 1 commands are verified
 
 ## Authority and update rules
 
 - 命令语义和参数边界以 [`plan/interfaces.md`](plan/interfaces.md) 为准。
 - 阶段归属和 gate 以 [`plan/roadmap.md`](plan/roadmap.md) 为准。
 - JSON 输出和迁移报告以 [`schemas/interfaces/`](schemas/interfaces/README.md) 为准。
+- 所有平台的 CLI stdout/stderr 均使用 UTF-8；机器输出与诊断继续严格分流。
 - 本文档只负责库存、实现计划、状态和证据，不建立另一套业务规则。
 - 新增、删除、重命名命令，或改变阶段、状态、JSON 支持情况时，必须在同一变更中更新本文档。
 - 一个命令只有在实现完成、命令级测试通过且完整仓库测试通过后，才能标记为 `Verified`。
@@ -25,32 +26,29 @@
 | `Verified` | 命令级测试和完整仓库测试均通过 |
 | `Deferred` | 已明确后置，当前阶段不实现 |
 
-<<<<<<< HEAD
 ## Release foundation
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `version` | `kb --version` | 显示 package、config、Contract、interface、projection、parser 和 transaction 版本 | `importlib.metadata` 与独立版本常量；不解析 vault | `Verified` | `tests/test_distribution_runtime.py`; isolated wheel smoke; complete suite |
+| `version` | `kb --version` | 显示 package、Contract、interface、projection 和 parser 版本 | `importlib.metadata` 与独立版本常量；不解析 vault | `Verified` | `tests/test_distribution_runtime.py`; isolated wheel smoke; complete suite |
 | `doctor` | `kb doctor [--json]` | 检查 Python 兼容性、wheel 资源完整性和用户状态目录 | package resource checks；后续阶段扩展 vault/adapter probes | `Verified` | `tests/test_distribution_runtime.py`; isolated wheel smoke; complete suite |
 | `update-check` | `kb update-check [--pre] [--json]` | 显式查询 PyPI 版本，不下载或安装更新 | stable/prerelease 选择、typed network failure、update-check-result v1 | `Verified` | `tests/test_distribution_runtime.py`; complete suite |
 
-=======
->>>>>>> parent of 9968690 (docs: 增加未来发布的相关计划)
 ## Phase 1 — Vault and core
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `init` | `kb init PATH` | 初始化独立 vault、便携配置和必要目录 | Vault port、路径边界、原子配置写入 | `Planned` | — |
-| `scan` | `kb scan` | 扫描并解析 v2 对象、Note body 和 relation shards | Vault discovery、parser、semantic validation、scanner | `Planned` | — |
-| `status` | `kb status` | 汇总对象、工作流、健康和可用能力状态 | Scanner 结果上的只读 application service | `Planned` | — |
-| `lint` | `kb lint [--strict\|--changed]` | 报告契约、引用、provenance、关系和安全问题 | 类型化 findings；Git changed-file adapter 后置接入 | `Planned` | — |
-| `note.new` | `kb note new --type idea\|literature\|concept\|synthesis` | 从 v2 模板创建 Note | Domain factory、稳定 ID/section、冲突安全写入 | `Planned` | — |
-| `note.show` | `kb note show ID` | 按稳定 ID 显示规范化 Note | Object lookup、body parser、人类/JSON renderer | `Planned` | — |
-| `note.evolve` | `kb note evolve ID --to concept` | 将 Idea 原位演化为 Concept | 保留对象/section ID，追加 `type_history`，原子写入 | `Planned` | — |
-| `relation.add` | `kb relation add FROM_ID TO_ID --type TYPE` | 向来源对象分片增加关系 | 关系矩阵、canonical identity、分片所有权、事务写入 | `Planned` | — |
-| `relation.remove` | `kb relation remove FROM_ID TO_ID --type TYPE` | 从来源对象分片删除关系 | 精确 canonical key 匹配、冲突检测、事务写入 | `Planned` | — |
-| `relation.list` | `kb relation list ID` | 列出对象的正向关系 | 读取所属 shard；反向关系由扫描结果派生 | `Planned` | — |
-| `migrate` | `kb migrate --from 1 --to 2 [--dry-run\|--apply]` | 生成迁移报告并在无阻塞项时应用 v1→v2 | 默认 dry-run、版本化报告、禁止猜测、可恢复多文件事务 | `Planned` | — |
+| `init` | `kb init PATH` | 初始化独立 vault、便携配置和必要目录 | Vault port、路径边界、原子配置写入 | `Verified` | `tests/test_phase1_vault.py`; complete suite |
+| `scan` | `kb scan` | 扫描并解析 v2 对象、Note body 和 relation shards | Vault discovery、parser、semantic validation、scanner | `Verified` | `tests/test_phase1_scanner_cli.py`; complete suite |
+| `status` | `kb status` | 汇总对象、工作流、健康和可用能力状态 | Scanner 结果上的只读 application service | `Verified` | `tests/test_phase1_scanner_cli.py`; complete suite |
+| `lint` | `kb lint [--strict\|--changed]` | 报告契约、引用、provenance、关系和安全问题 | 类型化 findings；`--changed` 仅过滤完整扫描后的显示结果 | `Verified` | `tests/test_phase1_scanner_cli.py`; complete suite |
+| `note.new` | `kb note new --type idea\|literature\|concept\|synthesis [--source SOURCE_ID]` | 从 v2 模板创建 Note；Literature 显式绑定 Source | Domain factory、稳定 ID/section、冲突安全写入 | `Verified` | `tests/test_phase1_notes_cli.py`; complete suite |
+| `note.show` | `kb note show ID` | 按稳定 ID 显示规范化 Note | Object lookup、body parser、人类 renderer | `Verified` | `tests/test_phase1_notes_cli.py`; complete suite |
+| `note.evolve` | `kb note evolve ID --to concept` | 将 Idea 原位演化为 Concept | 保留对象/section ID，追加 `type_history`，原子写入 | `Verified` | `tests/test_phase1_notes_cli.py`; complete suite |
+| `relation.add` | `kb relation add FROM_ID TO_ID --type TYPE [--section SECTION_ID]` | 向来源对象分片增加关系 | 关系矩阵、canonical identity、分片所有权、冲突安全写入 | `Verified` | `tests/test_phase1_relations_cli.py`; complete suite |
+| `relation.remove` | `kb relation remove FROM_ID TO_ID --type TYPE [--section SECTION_ID]` | 从来源对象分片删除关系 | 精确 canonical key 匹配、冲突检测、原子写入 | `Verified` | `tests/test_phase1_relations_cli.py`; complete suite |
+| `relation.list` | `kb relation list ID` | 列出对象的正向及反向关系 | 读取所属 shard；反向关系由扫描结果派生 | `Verified` | `tests/test_phase1_relations_cli.py`; complete suite |
+| `migrate` | `kb migrate --from 1 --to 2 [--dry-run\|--apply]` | 生成迁移报告并在无阻塞项时应用 v1→v2 | 默认 dry-run、版本化报告、禁止猜测、可恢复多文件事务 | `Verified` | `tests/test_phase1_migration_cli.py`; complete suite |
 
 ## Phase 2A — Paper and Zotero
 
@@ -106,7 +104,7 @@
 | `ai.list` | `kb ai list` | 列出待审核及已处理 AI Artifacts | Artifact query、默认私有过滤 | `Planned` | — |
 | `ai.review` | `kb ai review ID` | 记录接受或拒绝的人工审核 | reviewer/time/action provenance、冲突安全写入 | `Planned` | — |
 | `ai.promote` | `kb ai promote ID` | 将已审核 Artifact 晋升到普通 Note | promoted state、Note block、`promoted_from` 私有审计关系事务 | `Planned` | — |
-| `doctor` | `kb doctor` | 检查运行时和外部 adapter 能力 | Python/Git/SQLite/Zotero/vault capability probes | `Planned` | — |
+`doctor` 的稳定命令入口已在 Release foundation 实现。Phase 5 只扩展 Git、SQLite、Zotero、vault 和外部 adapter probes，不新增第二个命令。
 
 ## Phase 6A — Evolution and history
 
@@ -144,10 +142,11 @@
 
 | Date | Change | Comparison result |
 |---|---|---|
-<<<<<<< HEAD
+| 2026-08-28 | Phase 1 跨平台最终门禁完成 | [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 覆盖 Windows/Linux/macOS × Python 3.13/3.14，所有 Phase 1 命令保持 `Verified` |
 | 2026-08-27 | 建立跨平台 package 与 release foundation，新增 `--version`、`doctor --json`、`update-check` | 三个入口已实现；Phase 1–6 业务命令状态不变 |
-| 2026-08-27 | 冻结 Phase 1 config v1 与 transaction v1，并扩展 `--version` 报告 | 版本仍相互独立；尚未实现 vault 行为 |
-=======
->>>>>>> parent of 9968690 (docs: 增加未来发布的相关计划)
+| 2026-08-27 | 实现 `kb init PATH` 与根级 `--vault PATH` 契约 | `init` 命令级测试、Vault 边界测试与完整套件通过 |
+| 2026-08-27 | 实现确定性 `scan`、scanner-backed `status` 与 `lint` | v2 正反 fixtures、关系/基数/引用、CLI 行为与完整套件通过 |
+| 2026-08-27 | 实现 Note 创建、显示与 Idea→Concept 原位演化 | Literature 使用显式 `--source`；身份/section/body、冲突与完整套件通过 |
+| 2026-08-28 | 实现 relation 操作与显式 v1→v2 迁移 | canonical shard、反向派生、dry-run/apply、崩溃恢复、安装包 CLI 冒烟与完整套件通过 |
 | 2026-08-27 | 将四类 capture 入口统一为 `kb add INPUT [--type ...] [--json]` | 公共命令归属 Phase 2B；四类 backend 独立跟踪且保持 `Planned` |
 | 2026-08-27 | 建立 Contract v2 CLI 全量库存与交付状态账本 | 与 active interfaces/roadmap 对齐；所有命令尚为 `Planned` |

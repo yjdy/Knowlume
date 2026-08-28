@@ -1,1 +1,1 @@
-"""Infrastructure adapters for durable and external representations."""
+"""Adapters translating external representations into domain values."""

@@ -6,11 +6,16 @@ Knowlume 是一个 local-first 的个人知识系统：以可读、可迁移的 
 
 ## Current status
 
-Phase 0R（Contract v2）已完成，Phase 1 是下一阶段。当前仓库提供版本化契约、模板、fixtures、SQLite 投影、迁移规范和验收测试；尚未提供可运行的 `kb` CLI、Web 服务或真实迁移程序。
+Phase 0R（Contract v2）与 Phase 1 均已完成。Vault、parser/scanner、safe writes、Note、relation
+和显式迁移已通过本地、隔离安装，以及 Windows/macOS/Linux × Python 3.13/3.14 的
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) 与
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 门禁。Capture、search
+和 Web 功能仍按路线图逐阶段实现，所有发布开关保持关闭。
 
 ```text
 Phase 0R  Contract v2                         Complete
-Phase 1   Vault, domain, parser, safe writes  Next
+Release   Python package foundation           Implemented
+Phase 1   Vault, domain, parser, safe writes  Complete
 Phase 2A  Paper + Zotero                      Planned
 Phase 2B  Web, Book, OSS                      Planned
 Phase 3   SQLite projection and search        Planned
@@ -42,6 +47,7 @@ Phase 7   Semantic, MCP, graph, multi-agent   Deferred
 | [schemas/v2/](schemas/v2/README.md) | 当前生产目标的对象、body、locator、relation 与 SQLite 契约 |
 | [schemas/v1/](schemas/v1/README.md) | 只读历史契约 |
 | [schemas/interfaces/](schemas/interfaces/README.md) | CLI envelope 与 migration report 契约 |
+| [src/knowlume/](src/knowlume/) | 可安装 Python package 与当前已实现命令 |
 | [templates/v2/](templates/v2/README.md) | 新内容模板 |
 | [tests/fixtures/](tests/fixtures/) | v1 历史、v2 正反和迁移样本 |
 | [plan/](plan/README.md) | 活动设计、ADR、迁移规范、路线图与历史归档 |
@@ -52,13 +58,24 @@ Phase 7   Semantic, MCP, graph, multi-agent   Deferred
 
 ## Local development
 
-需要 Git、[uv](https://docs.astral.sh/uv/) 和 Python 3.13–3.14。当前没有 production package，因此可按下列方式准备环境：
+需要 Git、[uv](https://docs.astral.sh/uv/) 和 Python 3.13–3.14：
 
 ```powershell
 uv python install 3.14
 uv venv --python 3.14 .venv
-uv sync --no-install-project
+uv sync --all-extras
 ```
+
+当前可执行的 Phase 1 命令可从完整账本查看；以下命令可快速检查安装和初始化独立 vault：
+
+```powershell
+uv run --no-sync kb --version
+uv run --no-sync kb init PATH
+uv run --no-sync kb --vault PATH scan
+uv run --no-sync kb update-check
+```
+
+`doctor` 检查的是安装产物中的资源完整性，应在构建并隔离安装 wheel 后运行；editable 源码环境不会回退读取仓库资源。`update-check` 只有在显式调用时联网，并且不会安装更新。正式 PyPI 发布要等 Phase 3 gate；当前不要把本地构建误认为公开版本。
 
 运行完整契约与文档链接检查：
 
@@ -76,6 +93,7 @@ uv run --no-sync pytest -p no:cacheprovider
 - [Storage, index, and search](plan/storage-index-search.md)
 - [Interfaces](plan/interfaces.md)
 - [Security and publishing](plan/security-publishing.md)
+- [Distribution and releases](plan/distribution.md)
 - [Roadmap](plan/roadmap.md)
 - [Accepted decisions](plan/decisions/)
 - [v1→v2 migration](plan/migrations/v1-to-v2.md)

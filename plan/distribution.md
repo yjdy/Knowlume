@@ -11,9 +11,7 @@
 - Repository and release source: `https://github.com/yjdy/Knowlume`.
 - Version source: the static PEP 440 version in `pyproject.toml`; release tag `vX.Y.Z` must match it exactly.
 
-Package version and durable contract versions are independent. Runtime version output reports the
-package, configuration, object contract, locator, relation, CLI interface, projection, parser, and
-transaction versions together.
+Package version and durable contract versions are independent. Runtime version output reports the package, object contract, locator, relation, CLI interface, projection, and parser versions together.
 
 ## Installation profiles
 

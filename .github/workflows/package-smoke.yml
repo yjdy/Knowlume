@@ -1,0 +1,82 @@
+name: Package smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [Phase1]
+  pull_request:
+    paths:
+      - "pyproject.toml"
+      - "uv.lock"
+      - "src/**"
+      - "schemas/**"
+      - "templates/**"
+      - "scripts/verify_distribution.py"
+      - "scripts/verify_installed_phase1.py"
+      - "scripts/verify_install_lifecycle.py"
+      - ".github/workflows/package-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv build
+      - run: python scripts/verify_distribution.py dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-smoke-dist
+          path: dist/
+          if-no-files-found: error
+
+  install:
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-smoke-dist
+          path: dist
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Smoke test with uv tool
+        shell: bash
+        run: |
+          WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )
+          uv tool run --from "$WHEEL" kb --version
+          uv tool run --from "$WHEEL" kb doctor
+      - name: Smoke test with pipx
+        shell: bash
+        run: |
+          WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )
+          python -m pip install pipx
+          python -m pipx run --spec "$WHEEL" kb --version
+      - name: Smoke test Phase 1 commands
+        shell: bash
+        run: |
+          WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )
+          python scripts/verify_installed_phase1.py "$WHEEL"
+      - name: Verify package lifecycle preserves Vaults
+        shell: bash
+        run: |
+          WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )
+          python scripts/verify_install_lifecycle.py "$WHEEL"

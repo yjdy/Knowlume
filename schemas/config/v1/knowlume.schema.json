@@ -1,37 +1,32 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://knowlume.dev/schemas/config/v1/knowlume.schema.json",
-  "title": "Knowlume portable vault configuration v1",
+  "title": "Knowlume portable Vault configuration v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["config_version", "vault_id", "object_contract_version", "paths"],
+  "required": ["config_version", "object_contract_version", "vault"],
   "properties": {
     "config_version": { "const": 1 },
-    "vault_id": { "$ref": "#/$defs/vaultId" },
     "object_contract_version": { "const": 2 },
-    "paths": {
+    "vault": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["sources", "notes", "snippets", "ai_artifacts", "relations"],
+      "required": ["sources", "notes", "snippets", "ai_artifacts", "relations", "state"],
       "properties": {
         "sources": { "$ref": "#/$defs/relativePath" },
         "notes": { "$ref": "#/$defs/relativePath" },
         "snippets": { "$ref": "#/$defs/relativePath" },
         "ai_artifacts": { "$ref": "#/$defs/relativePath" },
-        "relations": { "$ref": "#/$defs/relativePath" }
+        "relations": { "$ref": "#/$defs/relativePath" },
+        "state": { "$ref": "#/$defs/relativePath" }
       }
     }
   },
   "$defs": {
-    "vaultId": {
-      "type": "string",
-      "pattern": "^vault_[0-9A-HJKMNP-TV-Z]{26}$"
-    },
     "relativePath": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 512,
-      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001F])[^/]+(?:/[^/]+)*$"
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"
     }
   }
 }

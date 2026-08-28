@@ -7,11 +7,22 @@ import zipfile
 from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
+FORBIDDEN_WHEEL_PARTS = {
+    "tests",
+    "fixtures",
+    "plan",
+    "tmp",
+    "vault",
+    "vaults",
+    "__pycache__",
+    ".pytest_cache",
+}
+FORBIDDEN_WHEEL_SUFFIXES = {".db", ".sqlite", ".sqlite3", ".log", ".pyc"}
 AUTHORITATIVE_ASSETS = [
     *sorted((ROOT / "schemas").rglob("*")),
-    *sorted((ROOT / "templates" / "config").rglob("*")),
     *sorted((ROOT / "templates" / "v1").rglob("*")),
     *sorted((ROOT / "templates" / "v2").rglob("*")),
+    *sorted((ROOT / "templates" / "config").rglob("*")),
 ]
 AUTHORITATIVE_ASSETS = [path for path in AUTHORITATIVE_ASSETS if path.is_file()]
 
@@ -34,8 +45,17 @@ def verify_wheel(path: Path) -> list[str]:
             normalized = PurePosixPath(name)
             if normalized.is_absolute() or ".." in normalized.parts:
                 errors.append(f"unsafe wheel member: {name}")
-            if name.startswith(("tests/", "plan/", "fixtures/", "tmp/")):
+            if FORBIDDEN_WHEEL_PARTS.intersection(normalized.parts):
                 errors.append(f"forbidden wheel member: {name}")
+            if normalized.suffix.lower() in FORBIDDEN_WHEEL_SUFFIXES:
+                errors.append(f"forbidden wheel member: {name}")
+            if not (
+                normalized.parts
+                and (
+                    normalized.parts[0] == "knowlume" or normalized.parts[0].endswith(".dist-info")
+                )
+            ):
+                errors.append(f"wheel member is outside the package allowlist: {name}")
         for source in AUTHORITATIVE_ASSETS:
             packaged_name = _wheel_asset_name(source)
             if packaged_name not in names:
@@ -53,10 +73,13 @@ def verify_sdist(path: Path) -> list[str]:
         names = [PurePosixPath(member.name) for member in members]
         if any("tmp" in name.parts for name in names):
             errors.append("source distribution contains tmp data")
+        if any(
+            name.suffix.lower() in FORBIDDEN_WHEEL_SUFFIXES or "__pycache__" in name.parts
+            for name in names
+        ):
+            errors.append("source distribution contains disposable runtime data")
         if not any(
-            "src" in name.parts
-            and "knowlume" in name.parts
-            and name.suffix == ".py"
+            "src" in name.parts and "knowlume" in name.parts and name.suffix == ".py"
             for name in names
         ):
             errors.append("source distribution has no src/knowlume package")

@@ -76,11 +76,9 @@ def test_update_check_rejects_network_failure() -> None:
 def test_version_command_reports_independent_contract_versions() -> None:
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
-    assert "config=1" in result.stdout
     assert "object=2" in result.stdout
     assert "interface=1" in result.stdout
     assert "projection=2" in result.stdout
-    assert "transaction=1" in result.stdout
 
 
 def test_doctor_json_uses_machine_envelope(monkeypatch: pytest.MonkeyPatch) -> None:

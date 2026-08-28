@@ -48,6 +48,15 @@ Do not change a schema, parser, template, or domain model in isolation. Backward
 
 Detailed semantics belong to [data-model](plan/data-model.md), [sources and adapters](plan/sources-and-adapters.md), and the v2 schemas.
 
+## Distribution discipline
+
+- Treat [`plan/distribution.md`](plan/distribution.md) as the authority for package layout, runtime assets, compatibility, release trust, and rollout gates.
+- Keep top-level schemas and templates authoritative. Bundled wheel assets are build copies and must match their source bytes.
+- Runtime code accesses bundled assets through `importlib.resources`; it must not search a source checkout or current working directory.
+- Keep package and Contract migrations independent. Install, upgrade, downgrade, and uninstall operations must not mutate a vault.
+- Keep the core wheel pure Python. Optional Web or adapter imports fail with typed capability diagnostics when their extras are absent.
+- Do not publish to TestPyPI, PyPI, or GitHub Releases unless explicitly requested. A release requires the complete test matrix, artifact audit, matching protected tag, and approved release environment.
+
 ## Migration discipline
 
 Migration from v1 defaults to dry-run, reports automatic changes, human decisions, blockers, and prohibited guesses, and cannot apply with unresolved required findings. Fixed v1 sections and `sec_original_facts` are migration input only and must not reappear as v2 production requirements.
@@ -79,6 +88,8 @@ uv run --no-sync pytest -p no:cacheprovider
 ```
 
 The suite includes internal documentation-link checks. Do not claim a command, compatibility target, phase gate, or feature works unless execution or repository evidence supports it.
+
+For packaging or release changes, also build wheel/sdist, run `scripts/verify_distribution.py`, and install the wheel outside the source checkout before handoff.
 
 Keep [`CLI.md`](CLI.md) synchronized in the same change whenever a CLI command is added, removed, renamed, reassigned to a phase, implemented, or newly verified. Treat it as a delivery ledger, not as a replacement for the interface and roadmap authorities. Mark a command `Verified` only with command-level automated evidence and a passing complete repository suite.
 
