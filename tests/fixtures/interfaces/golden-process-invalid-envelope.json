@@ -1,0 +1,14 @@
+{
+  "interface_version": 1,
+  "command": "process",
+  "success": false,
+  "exit_code": 3,
+  "data": null,
+  "warnings": [],
+  "errors": [
+    {
+      "code": "SOURCE_WORKFLOW_INVALID",
+      "message": "Source workflow transitions must advance exactly one adjacent stage"
+    }
+  ]
+}

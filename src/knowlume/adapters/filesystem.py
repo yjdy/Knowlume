@@ -236,6 +236,39 @@ class FilesystemVault:
         destination = vault.root.joinpath(*relative.parts)
         return self._atomic_path(vault.root, destination, content, expected_checksum)
 
+    def atomic_delete(self, vault: Vault, relative_path: str, expected_checksum: str) -> None:
+        state_root = vault.path("state")
+        if (state_root / "locks" / "vault-write.lock").exists():
+            raise DomainError("VAULT_LOCKED", "another writer owns the Vault lock")
+        if any((state_root / "transactions").iterdir()):
+            raise DomainError(
+                "VAULT_RECOVERY_REQUIRED",
+                "an unfinished transaction must be recovered before writing",
+            )
+        relative = PurePosixPath(relative_path)
+        if (
+            "\\" in relative_path
+            or relative.is_absolute()
+            or ".." in relative.parts
+            or relative.as_posix() != relative_path
+        ):
+            raise DomainError("VAULT_PATH_UNSAFE", "delete path is not Vault-relative")
+        destination = vault.root.joinpath(*relative.parts)
+        parent = destination.parent.resolve(strict=True)
+        if not _inside(vault.root, parent):
+            raise DomainError("VAULT_PATH_UNSAFE", "delete target escapes the Vault")
+        if not destination.is_file() or not _inside(vault.root, destination.resolve(strict=True)):
+            raise DomainError("VAULT_WRITE_CONFLICT", "durable file changed after it was written")
+        if checksum_file(destination) != expected_checksum:
+            raise DomainError("VAULT_WRITE_CONFLICT", "durable file changed after it was written")
+        destination.unlink()
+        if os.name != "nt":
+            directory_fd = os.open(parent, os.O_RDONLY)
+            try:
+                os.fsync(directory_fd)
+            finally:
+                os.close(directory_fd)
+
     def _atomic_path(
         self, root: Path, destination: Path, content: bytes, expected_checksum: str | None
     ) -> str:

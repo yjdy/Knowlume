@@ -58,6 +58,8 @@ def _copy_valid_vault(vault: Vault) -> None:
 
 
 def _invalid_destination(vault: Vault, source: Path) -> Path:
+    if source.name.startswith("paper-"):
+        return vault.root / "sources" / "papers" / source.name
     if source.name == "snippet-line-range.md":
         return vault.root / "snippets" / source.name
     if source.name in {"idea-evergreen.md", "idea-mature.md"}:
@@ -74,7 +76,7 @@ def test_scan_is_deterministic_and_healthy_for_all_valid_v2_fixtures(tmp_path: P
     assert first.healthy
     assert first.findings == ()
     assert first.object_counts() == {
-        "source": 4,
+        "source": 6,
         "note": 5,
         "snippet": 1,
         "ai_artifact": 2,
@@ -91,6 +93,8 @@ def test_scan_is_deterministic_and_healthy_for_all_valid_v2_fixtures(tmp_path: P
         ("idea-evergreen.md", "NOTE_MATURITY_INVALID"),
         ("idea-mature.md", "NOTE_MATURITY_INVALID"),
         ("missing-human-section.md", "NOTE_HUMAN_SECTION_MISSING"),
+        ("paper-arxiv-version-without-id.md", "FIELD_INVALID"),
+        ("paper-attachment-path.md", "FIELD_INVALID"),
         ("snippet-line-range.md", "SNIPPET_RANGE_INVALID"),
         ("unknown-role.md", "FIELD_INVALID"),
     ],
@@ -154,7 +158,7 @@ def test_scan_status_and_lint_commands_share_scanner_results(
     _copy_valid_vault(vault)
     scan = runner.invoke(app, ["--vault", str(vault.root), "scan"])
     assert scan.exit_code == 0
-    assert "12 objects" in scan.stdout
+    assert "14 objects" in scan.stdout
     status = runner.invoke(app, ["--vault", str(vault.root), "status"])
     assert status.exit_code == 0
     assert "Vault is healthy" in status.stdout

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -213,10 +214,21 @@ class Source:
     canonical_url: str | None = None
     snapshot_ref: SnapshotRef | None = None
     zotero_library_id: str | None = None
+    zotero_library_type: str | None = None
     zotero_key: str | None = None
+    zotero_item_version: int | None = None
+    synced_at: datetime | None = None
+    managed_fields_hash: str | None = None
     attachment_key: str | None = None
+    attachment_version: int | None = None
+    attachment_filename: str | None = None
+    attachment_media_type: str | None = None
+    attachment_size: int | None = None
+    attachment_sha256: str | None = None
     isbn: str | None = None
     doi: str | None = None
+    arxiv_id: str | None = None
+    arxiv_version: int | None = None
     repository_host: str | None = None
     repository_path: str | None = None
     default_branch: str | None = None
@@ -246,6 +258,36 @@ class Source:
             raise DomainError(
                 "SOURCE_IDENTITY_MISSING", f"{self.source_type.value} Source metadata is incomplete"
             )
+        if self.zotero_library_type not in {None, "user", "group"}:
+            raise DomainError("FIELD_INVALID", "unsupported Zotero library type")
+        if self.zotero_item_version is not None and self.zotero_item_version < 0:
+            raise DomainError("FIELD_INVALID", "Zotero item version cannot be negative")
+        if self.arxiv_version is not None and self.arxiv_id is None:
+            raise DomainError("FIELD_INVALID", "arXiv version requires arXiv identity")
+        if self.arxiv_version is not None and self.arxiv_version < 1:
+            raise DomainError("FIELD_INVALID", "arXiv version must be positive")
+        if self.arxiv_id is not None and not re.fullmatch(
+            r"(?:[a-z-]+(?:\.[a-z]{2})?/\d{7}|\d{4}\.\d{4,5})", self.arxiv_id
+        ):
+            raise DomainError("FIELD_INVALID", "arXiv identity must be normalized")
+        if self.attachment_media_type not in {None, "application/pdf"}:
+            raise DomainError("FIELD_INVALID", "primary attachment must be a PDF")
+        if self.attachment_filename is not None and (
+            not self.attachment_filename
+            or "/" in self.attachment_filename
+            or "\\" in self.attachment_filename
+        ):
+            raise DomainError("FIELD_INVALID", "attachment filename must not contain a path")
+        if self.attachment_version is not None and self.attachment_version < 0:
+            raise DomainError("FIELD_INVALID", "attachment version cannot be negative")
+        if self.attachment_size is not None and self.attachment_size < 1:
+            raise DomainError("FIELD_INVALID", "attachment size must be positive")
+        for field, value in (
+            ("managed_fields_hash", self.managed_fields_hash),
+            ("attachment_sha256", self.attachment_sha256),
+        ):
+            if value is not None and not re.fullmatch(r"sha256:[0-9a-f]{64}", value):
+                raise DomainError("FIELD_INVALID", f"{field} must be a SHA-256 value")
 
 
 @dataclass(frozen=True)

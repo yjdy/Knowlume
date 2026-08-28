@@ -15,9 +15,14 @@ def test_python_distribution_metadata_is_frozen() -> None:
     assert project["requires-python"] == ">=3.13,<3.15"
     assert project["scripts"] == {"kb": "knowlume.cli:app"}
     assert set(project["optional-dependencies"]) == {"web", "zotero", "all"}
-    assert not {"fastapi>=0.115", "jinja2>=3.1", "uvicorn[standard]>=0.34"} & set(
-        project["dependencies"]
-    )
+    assert project["optional-dependencies"]["zotero"] == ["httpx>=0.28.1,<1"]
+    assert "httpx>=0.28.1,<1" in project["optional-dependencies"]["all"]
+    assert not {
+        "fastapi>=0.115",
+        "httpx>=0.28.1,<1",
+        "jinja2>=3.1",
+        "uvicorn[standard]>=0.34",
+    } & set(project["dependencies"])
 
     wheel = config["tool"]["hatch"]["build"]["targets"]["wheel"]
     assert wheel["packages"] == ["src/knowlume"]

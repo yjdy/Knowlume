@@ -1,0 +1,29 @@
+{
+  "interface_version": 1,
+  "command": "source list",
+  "success": true,
+  "exit_code": 0,
+  "data": {
+    "filter": {
+      "source_type": null,
+      "workflow_stage": null,
+      "record_status": null,
+      "visibility": null
+    },
+    "sources": [
+      {
+        "source_id": "src_01JSTAG7N9Q3V5X8Y2Z4A6B8F3",
+        "source_type": "paper",
+        "title": "CLI Paper",
+        "visibility": "private",
+        "record_status": "active",
+        "workflow_stage": "inbox",
+        "created": "2026-08-28",
+        "updated": "2026-08-28"
+      }
+    ],
+    "count": 1
+  },
+  "warnings": [],
+  "errors": []
+}

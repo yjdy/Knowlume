@@ -72,6 +72,42 @@ Unavailable or ambiguous DOI metadata requires `--type`; it is never guessed. Un
 
 The capture flow is `normalize -> recognize -> metadata resolve -> canonical identity -> duplicate check -> Source construction -> adapter snapshot/sync -> atomic write -> scan`. Once the Phase 3 projection exists, a successful capture also requests an index refresh, but index availability is never a Phase 2B write prerequisite. `--type` does not bypass metadata, canonicalization, schema, snapshot, license, or safety checks. Any ambiguity or failure leaves no Source card, relation, or partial update. Repeated capture of the same canonical identity succeeds with the existing Source ID and `created: false`.
 
+### Phase 2A Source interface
+
+The implemented Phase 2A syntax is:
+
+```text
+kb source list [--type TYPE] [--stage STAGE] [--status STATUS] [--visibility VISIBILITY] [--json]
+kb source show ID [--json]
+kb source open ID
+kb source sync ID [--adopt-remote] [--accept-attachment-change] [--json]
+kb inbox [--json]
+kb process ID --to reading|processed|integrated [--json]
+```
+
+These options are registered and covered by command-level tests. Their delivery status and
+verification evidence are synchronized in [`CLI.md`](../CLI.md).
+
+`source list` and `inbox` scan durable files and do not depend on SQLite. Source list sorts by
+`updated` descending then Source ID ascending. Inbox lists `workflow_stage=inbox` Sources by
+`created` ascending then Source ID ascending. `source show` resolves a stable Source ID and displays
+normalized metadata and recovery information without probing or mutating the adapter.
+
+`source open` is human-facing and has no JSON mode. It resolves the recorded primary PDF through the
+Zotero adapter into disposable cache, verifies its integrity when known, and asks the operating
+system to open it. Missing capability or material uses exit code 5; a known content-hash mismatch is
+a conflict and does not open unverified bytes.
+
+`source sync` updates Zotero-owned metadata automatically only when the durable synchronization
+baseline, external identity, attachment integrity, and expected file checksum are safe. A no-op is
+successful and byte-preserving. `--adopt-remote` is reserved for a pre-existing Source without a
+matching baseline; `--accept-attachment-change` explicitly accepts replacement PDF bytes and warns
+that existing Fact locators need review. Failures produce no partial write.
+
+`process` requires an explicit adjacent target in
+`inbox -> reading -> processed -> integrated`. Requesting the current stage succeeds without a
+rewrite. A skipped, backward, or post-integrated transition is a contract error.
+
 Note evolution from Idea to Concept preserves the Note and section IDs and appends `type_history`. Relation operations write only the shard owned by the source object. Migration defaults to dry-run and refuses apply while required decisions or blocking findings remain.
 
 Relation `--section` identifies a stable section on the stored target. `related_to` is stored once in
@@ -115,6 +151,36 @@ Phase 1 scanner and lint services use the versioned
 [`finding-v1`](../schemas/interfaces/finding-v1.schema.json) shape. Phase 1 commands remain
 human-readable unless their syntax explicitly includes `--json`; `migrate` emits migration-report
 v1. Any later JSON option requires an explicit result schema inside CLI envelope v1 before release.
+
+Phase 2A JSON options use explicit interface schemas for Source list, Source show, Source
+synchronization, and Source workflow results. Inbox reuses the Source-list result with an explicit
+inbox filter. `source open` remains human-facing and has no JSON schema.
+
+The schema filenames are:
+
+- `source-list-result-v1.schema.json` for `source list` and `inbox`;
+- `source-show-result-v1.schema.json` for `source show`;
+- `source-sync-result-v1.schema.json` for `source sync`;
+- `source-workflow-result-v1.schema.json` for `process`.
+
+Phase 2A uses these typed diagnostics:
+
+| Code | Exit/severity | Meaning |
+|---|---:|---|
+| `PAPER_CANONICAL_IDENTITY_MISSING` | 3 | resolved Paper metadata has neither DOI nor arXiv identity |
+| `PAPER_IDENTITY_CONFLICT` | 3 | canonical identifiers resolve to different Sources or an existing identity changes |
+| `PAPER_ATTACHMENT_UNAVAILABLE` | warning | capture/sync found no readable primary PDF |
+| `PAPER_ATTACHMENT_AMBIGUOUS` | warning | capture/sync found more than one primary-PDF candidate and selected none |
+| `PAPER_ATTACHMENT_CHANGED` | 4 | recovered bytes do not match the durable attachment hash |
+| `SOURCE_SYNC_LOCAL_MODIFIED` | 4 | current adapter-managed fields do not match their durable baseline |
+| `SOURCE_SYNC_BASELINE_REQUIRED` | 4 | a legacy Source differs from Zotero and requires explicit remote adoption |
+| `SOURCE_WORKFLOW_INVALID` | 3 | requested Source stage skips, regresses, or advances beyond the workflow |
+| `ZOTERO_CAPABILITY_UNAVAILABLE` | 5 | the optional `knowlume[zotero]` transport dependency is not installed |
+| `ZOTERO_API_UNAVAILABLE` | 5 | the Zotero Local API is disabled, unreachable, or returned an unexpected failure |
+| `ZOTERO_ITEM_UNAVAILABLE` | 5 | the recorded Zotero item or requested attachment cannot be recovered |
+
+Expected-checksum failures continue to use the Phase 1 `VAULT_WRITE_CONFLICT` diagnostic rather
+than introducing a Source-specific duplicate.
 
 `kb --version` reports package and independent contract/projection/parser versions without resolving a vault. `kb doctor` currently validates the Python runtime and bundled release assets; later phases extend it with vault and adapter capability probes without changing its command identity.
 

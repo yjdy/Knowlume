@@ -8,10 +8,12 @@ from typing import Annotated, NoReturn
 import typer
 
 from knowlume.adapters.filesystem import FilesystemVault
+from knowlume.adapters.zotero_local import ZoteroLocalApi
 from knowlume.application.migration import MigrationService
 from knowlume.application.notes import NoteService
 from knowlume.application.relations import ListedRelation, RelationService
 from knowlume.application.scanning import Finding, changed_paths, scan_vault
+from knowlume.application.sources import SourceService
 from knowlume.application.vault import VaultService
 from knowlume.doctor import doctor_report
 from knowlume.domain.values import DomainError
@@ -28,8 +30,10 @@ app = typer.Typer(
 )
 note_app = typer.Typer(help="Create, show, and evolve Notes.", no_args_is_help=True)
 relation_app = typer.Typer(help="Add, remove, and list durable relations.", no_args_is_help=True)
+source_app = typer.Typer(help="List, show, open, and synchronize Sources.", no_args_is_help=True)
 app.add_typer(note_app, name="note")
 app.add_typer(relation_app, name="relation")
+app.add_typer(source_app, name="source")
 
 
 def _configure_cli_streams() -> None:
@@ -77,11 +81,14 @@ def _exit_with_domain_error(error: DomainError) -> NoReturn:
         "VAULT_LOCKED",
         "VAULT_RECOVERY_REQUIRED",
         "VAULT_RECOVERY_FAILED",
+        "PAPER_ATTACHMENT_CHANGED",
+        "SOURCE_SYNC_LOCAL_MODIFIED",
+        "SOURCE_SYNC_BASELINE_REQUIRED",
     }:
         exit_code = 4
     elif error.code == "VAULT_PATH_UNSAFE":
         exit_code = 6
-    elif error.code == "CHANGED_FILES_UNAVAILABLE":
+    elif error.code == "CHANGED_FILES_UNAVAILABLE" or error.code.startswith("ZOTERO_"):
         exit_code = 5
     typer.echo(f"{error.code}: {error}", err=True)
     raise typer.Exit(exit_code)
@@ -197,6 +204,52 @@ def _migration_service() -> MigrationService:
     return MigrationService(
         config_reader=lambda: read_asset_text("templates/config/v1/knowlume.toml")
     )
+
+
+def _source_service() -> SourceService:
+    return SourceService(filesystem=FilesystemVault(), zotero=ZoteroLocalApi())
+
+
+def _source_exit_code(error: DomainError) -> int:
+    if error.code in {"ADD_INPUT_INVALID", "VAULT_ARGUMENT_CONFLICT"}:
+        return 2
+    if error.code in {
+        "VAULT_WRITE_CONFLICT",
+        "PAPER_ATTACHMENT_CHANGED",
+        "SOURCE_SYNC_LOCAL_MODIFIED",
+        "SOURCE_SYNC_BASELINE_REQUIRED",
+    }:
+        return 4
+    if error.code.startswith("ZOTERO_"):
+        return 5
+    if error.code == "VAULT_PATH_UNSAFE":
+        return 6
+    return 3
+
+
+def _exit_source_error(error: DomainError, *, command: str, json_output: bool) -> NoReturn:
+    exit_code = _source_exit_code(error)
+    if json_output:
+        typer.echo(
+            render_json(
+                error_envelope(
+                    command,
+                    exit_code=exit_code,
+                    code=error.code,
+                    message=str(error),
+                )
+            )
+        )
+        raise typer.Exit(exit_code)
+    _exit_with_domain_error(error)
+
+
+def _success_with_warnings(command: str, data: object, warnings: tuple[str, ...]) -> str:
+    envelope = success_envelope(command, data)
+    envelope["warnings"] = [
+        {"code": code, "message": code.replace("_", " ").title()} for code in warnings
+    ]
+    return render_json(envelope)
 
 
 def _render_relation(relation: ListedRelation) -> str:
@@ -321,6 +374,168 @@ def relation_list(
     for relation in relations:
         typer.echo(_render_relation(relation))
     typer.echo(f"{len(relations)} relation(s).")
+
+
+@source_app.command("list")
+def source_list(
+    ctx: typer.Context,
+    source_type: Annotated[
+        str | None, typer.Option("--type", help="Filter by paper, web, book, or oss.")
+    ] = None,
+    stage: Annotated[str | None, typer.Option("--stage", help="Filter by workflow stage.")] = None,
+    status: Annotated[str | None, typer.Option("--status", help="Filter by record status.")] = None,
+    visibility: Annotated[
+        str | None, typer.Option("--visibility", help="Filter by visibility.")
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """List durable Sources using the scanner rather than SQLite."""
+
+    try:
+        result = _source_service().list(
+            _resolved_vault(ctx),
+            source_type=source_type,
+            workflow_stage=stage,
+            record_status=status,
+            visibility=visibility,
+        )
+    except DomainError as error:
+        _exit_source_error(error, command="source list", json_output=json_output)
+    if json_output:
+        typer.echo(render_json(success_envelope("source list", result)))
+        return
+    for source in result["sources"]:
+        typer.echo(
+            f"{source['source_id']} {source['source_type']} {source['workflow_stage']} "
+            f"{source['title']}"
+        )
+    typer.echo(f"{result['count']} source(s).")
+
+
+@source_app.command("show")
+def source_show(
+    ctx: typer.Context,
+    source_id: Annotated[str, typer.Argument(help="Source ID")],
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Display a normalized Source without probing its adapter."""
+
+    service = _source_service()
+    try:
+        if json_output:
+            typer.echo(
+                render_json(
+                    success_envelope("source show", service.show(_resolved_vault(ctx), source_id))
+                )
+            )
+        else:
+            typer.echo(service.rendered(_resolved_vault(ctx), source_id), nl=False)
+    except DomainError as error:
+        _exit_source_error(error, command="source show", json_output=json_output)
+
+
+@source_app.command("open")
+def source_open(
+    ctx: typer.Context,
+    source_id: Annotated[str, typer.Argument(help="Source ID")],
+) -> None:
+    """Recover, verify, and open the recorded primary PDF."""
+
+    try:
+        _source_service().open(_resolved_vault(ctx), source_id)
+    except DomainError as error:
+        _exit_source_error(error, command="source open", json_output=False)
+    typer.echo(f"Opened primary attachment for {source_id}.")
+
+
+@source_app.command("sync")
+def source_sync(
+    ctx: typer.Context,
+    source_id: Annotated[str, typer.Argument(help="Source ID")],
+    adopt_remote: Annotated[
+        bool,
+        typer.Option("--adopt-remote", help="Explicitly adopt remote managed fields."),
+    ] = False,
+    accept_attachment_change: Annotated[
+        bool,
+        typer.Option(
+            "--accept-attachment-change",
+            help="Accept changed PDF bytes and require locator review.",
+        ),
+    ] = False,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Synchronize Zotero-managed fields with durable conflict checks."""
+
+    try:
+        result = _source_service().sync(
+            _resolved_vault(ctx),
+            source_id,
+            adopt_remote=adopt_remote,
+            accept_attachment_change=accept_attachment_change,
+        )
+    except DomainError as error:
+        _exit_source_error(error, command="source sync", json_output=json_output)
+    if json_output:
+        typer.echo(_success_with_warnings("source sync", result.data(), result.warnings))
+        return
+    action = "updated" if result.changed else "unchanged"
+    typer.echo(f"Source {source_id} is {action}.")
+    for warning in result.warnings:
+        typer.echo(f"WARNING {warning}", err=True)
+
+
+@app.command("inbox")
+def inbox_command(
+    ctx: typer.Context,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """List Sources waiting in the inbox workflow stage."""
+
+    try:
+        result = _source_service().list(_resolved_vault(ctx), inbox=True)
+    except DomainError as error:
+        _exit_source_error(error, command="inbox", json_output=json_output)
+    if json_output:
+        typer.echo(render_json(success_envelope("inbox", result)))
+        return
+    for source in result["sources"]:
+        typer.echo(f"{source['source_id']} {source['source_type']} {source['title']}")
+    typer.echo(f"{result['count']} inbox source(s).")
+
+
+@app.command("process")
+def process_command(
+    ctx: typer.Context,
+    source_id: Annotated[str, typer.Argument(help="Source ID")],
+    target: Annotated[
+        str, typer.Option("--to", help="Adjacent target: reading, processed, or integrated.")
+    ],
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Advance a Source by one explicit workflow stage."""
+
+    try:
+        result = _source_service().process(_resolved_vault(ctx), source_id, target)
+    except DomainError as error:
+        _exit_source_error(error, command="process", json_output=json_output)
+    if json_output:
+        typer.echo(render_json(success_envelope("process", result.data())))
+        return
+    typer.echo(
+        f"{source_id}: {result.previous_stage.value} -> {result.current_stage.value}"
+        f" ({'changed' if result.changed else 'unchanged'})"
+    )
 
 
 @app.command("migrate")

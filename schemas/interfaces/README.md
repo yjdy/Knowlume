@@ -7,3 +7,7 @@ Interface contracts have independent versions from durable object and projection
 - `migration-report-v1.schema.json`: dry-run/apply planning report for contract migration.
 - `update-check-result-v1.schema.json`: explicit package update discovery result returned inside the CLI envelope.
 - `finding-v1.schema.json`: stable scanner/lint diagnostic shape; paths are Vault-relative.
+- `source-list-result-v1.schema.json`: scanner-backed Source query and inbox results.
+- `source-show-result-v1.schema.json`: normalized Source lookup results.
+- `source-sync-result-v1.schema.json`: Zotero synchronization outcomes.
+- `source-workflow-result-v1.schema.json`: explicit Source workflow transition outcomes.

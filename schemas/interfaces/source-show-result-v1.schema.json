@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/source-show-result-v1.schema.json",
+  "title": "Knowlume Source show result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source", "path", "checksum"],
+  "properties": {
+    "source": { "type": "object", "minProperties": 10 },
+    "path": { "type": "string", "pattern": "^(?![A-Za-z]:[\\\\/])(?![\\\\/]).+" },
+    "checksum": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}

@@ -7,10 +7,12 @@ Each phase starts only after the preceding executable gate is green. Thematic do
 
 ## Current state
 
-Phase 0R and Phase 1 are complete. Phase 1 passed local, distribution, isolated-install, and
+Phase 0R and Phase 1 are complete. Phase 2A implementation and local gates are green; its
+cross-platform Python 3.13–3.14 CI confirmation remains pending before the phase is declared
+complete. Phase 1 passed local, distribution, isolated-install, and
 Windows/macOS/Linux Python 3.13–3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913)
 and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates. Database,
-capture/search, and Web work remain in their later phases; publication gates remain closed.
+unified capture/search, and Web work remain in their later phases; publication gates remain closed.
 
 ## Release track
 
@@ -31,7 +33,7 @@ Publishing remains blocked until the release owner controls the normalized PyPI 
 |---|---|---|
 | 0R — Contract v2 | ADRs, versioned schemas/templates/fixtures, migration report, projection DDL, contract/link tests | v1 remains executable; v2 positive/negative and migration cases pass; DDL and interface surfaces are frozen |
 | 1 — Vault and core | vault discovery, domain values, parser/scanner/lint, safe single/multi-file writes, Note creation/evolution | ID/section round-trip, typed errors, conflict detection, and crash recovery pass on Windows/Linux |
-| 2A — Paper/Zotero slice | internal paper capture service, DOI/arXiv canonicalization, Zotero metadata/attachment recovery | internal paper capture is idempotent; attachment and locator recovery pass without absolute tracked paths; no partial public `kb add` is exposed |
+| 2A — Paper/Zotero slice | internal paper capture service, DOI/arXiv canonicalization, read-only Zotero Local API, one-primary-PDF recovery, Source query/sync/workflow | capture is canonical, idempotent, conflict-safe, and failure-atomic; attachment recovery has integrity evidence without tracked absolute paths; planned Source commands pass; no public `kb add` is exposed |
 | 2B — Unified capture | web/book/OSS adapters, snapshots, edition identity, immutable commits, snippet/license review, public `kb add` router | all four recognition paths, explicit override, idempotency, failure atomicity, and add-result JSON pass alongside source-specific locator/publication fixtures |
 | 3 — Projection/search | SQLite rebuild/index, FTS, bilingual normalization, context assembly | deleting SQLite and rebuilding is deterministic; every FTS hit returns to durable segment/section |
 | 4 — Read-only Web | loopback Dashboard, Sources, Notes, Search, health views | Web and CLI share services and business rules; Web has no mutations |
@@ -47,7 +49,7 @@ Publishing remains blocked until the release owner controls the normalized PyPI 
 | contract/schema validation | 0R | versioned positive/negative fixtures and documentation links pass |
 | `--version`, package `doctor`, `update-check` | Release foundation | command tests, wheel resource/content audit, and isolated install smoke pass |
 | `init`, `scan`, `status`, `lint`, `note new/show/evolve`, `relation add/remove/list`, `migrate` | 1 | vault, parser, identity, atomicity, conflict, recovery, and migration tests |
-| paper capture application service, `source list/show/open/sync`, `inbox`, `process` | 2A | canonical and idempotent Zotero slice without a public add command |
+| paper capture application service, `source list/show/open/sync`, `inbox`, `process` | 2A | canonical DOI/arXiv identity, loopback Zotero recovery, synchronization ownership/conflicts, primary-PDF integrity, explicit workflow transitions, and no public add command |
 | `add`, `snippet add` | 2B | four-type recognition, override, add-result JSON, failure atomicity, snapshot, edition, commit/range, and license checks |
 | `grep`, `search`, `index`, `get`, `context` | 3 | deterministic projection and result-to-file explanation |
 | `serve` read views | 4 | shared-service parity and local-service security |
@@ -56,6 +58,32 @@ Publishing remains blocked until the release owner controls the normalized PyPI 
 | `publish audit/build/preview` | 6B | complete closure and adversarial staging tests |
 
 This matrix is the only delivery-batch authority.
+
+## Phase 2A executable gate
+
+Phase 2A follows [`phase2a-goal.md`](phase2a-goal.md) and
+[`ADR-0012`](decisions/0012-phase2a-paper-zotero-design.md). It is complete only when all of the
+following are directly proven:
+
+- DOI/arXiv normalization, version handling, alias matching, split-identity conflict, and repeated
+  internal capture are deterministic;
+- new Zotero-only items are ineligible for automated capture while existing readable v2 Sources are
+  preserved;
+- the read-only loopback Zotero adapter covers unavailable, timeout, permission, missing-item, and
+  malformed-response failures without reading private SQLite;
+- zero, one, and multiple PDF candidates, integrity match/mismatch, disposable cache, and explicit
+  attachment replacement behave as specified without durable absolute paths;
+- synchronization preserves human-owned fields, detects local managed-field edits and identifier
+  collisions, adopts a safe first baseline, and uses expected-checksum atomic writes;
+- Source list/show/open/sync, inbox, and explicit adjacent workflow transitions pass command-level
+  tests, including versioned JSON where planned;
+- SQLite remains unnecessary, public `kb add` remains unregistered, and the core wheel works without
+  Zotero optional dependencies;
+- the complete repository, type, lint, package audit, isolated-install, and supported-platform CI
+  gates pass before any status is changed.
+
+Phase 2B recognition, public `kb add`, Web/Book/OSS adapters, cloud Zotero access, multi-attachment
+selection, and Phase 3 projection/search remain outside this gate.
 
 ## Deferred scope
 

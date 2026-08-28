@@ -252,10 +252,21 @@ def _parse_source(data: dict[str, Any]) -> Source:
         "canonical_url",
         "snapshot_ref",
         "zotero_library_id",
+        "zotero_library_type",
         "zotero_key",
+        "zotero_item_version",
+        "synced_at",
+        "managed_fields_hash",
         "attachment_key",
+        "attachment_version",
+        "attachment_filename",
+        "attachment_media_type",
+        "attachment_size",
+        "attachment_sha256",
         "isbn",
         "doi",
+        "arxiv_id",
+        "arxiv_version",
         "repository_host",
         "repository_path",
         "default_branch",
@@ -283,10 +294,39 @@ def _parse_source(data: dict[str, Any]) -> Source:
         canonical_url=_optional_string(data.get("canonical_url"), "canonical_url"),
         snapshot_ref=_snapshot(data["snapshot_ref"]) if data.get("snapshot_ref") else None,
         zotero_library_id=_optional_string(data.get("zotero_library_id"), "zotero_library_id"),
+        zotero_library_type=_optional_string(
+            data.get("zotero_library_type"), "zotero_library_type"
+        ),
         zotero_key=_optional_string(data.get("zotero_key"), "zotero_key"),
+        zotero_item_version=_integer(data["zotero_item_version"], "zotero_item_version")
+        if data.get("zotero_item_version") is not None
+        else None,
+        synced_at=_datetime(data["synced_at"], "synced_at")
+        if data.get("synced_at") is not None
+        else None,
+        managed_fields_hash=_optional_string(
+            data.get("managed_fields_hash"), "managed_fields_hash"
+        ),
         attachment_key=_optional_string(data.get("attachment_key"), "attachment_key"),
+        attachment_version=_integer(data["attachment_version"], "attachment_version")
+        if data.get("attachment_version") is not None
+        else None,
+        attachment_filename=_optional_string(
+            data.get("attachment_filename"), "attachment_filename"
+        ),
+        attachment_media_type=_optional_string(
+            data.get("attachment_media_type"), "attachment_media_type"
+        ),
+        attachment_size=_integer(data["attachment_size"], "attachment_size")
+        if data.get("attachment_size") is not None
+        else None,
+        attachment_sha256=_optional_string(data.get("attachment_sha256"), "attachment_sha256"),
         isbn=_optional_string(data.get("isbn"), "isbn"),
         doi=_optional_string(data.get("doi"), "doi"),
+        arxiv_id=_optional_string(data.get("arxiv_id"), "arxiv_id"),
+        arxiv_version=_integer(data["arxiv_version"], "arxiv_version")
+        if data.get("arxiv_version") is not None
+        else None,
         repository_host=_optional_string(data.get("repository_host"), "repository_host"),
         repository_path=_optional_string(data.get("repository_path"), "repository_path"),
         default_branch=_optional_string(data.get("default_branch"), "default_branch"),
@@ -617,10 +657,21 @@ def _object_data(obj: DurableObject) -> dict[str, Any]:
             "canonical_url",
             "snapshot_ref",
             "zotero_library_id",
+            "zotero_library_type",
             "zotero_key",
+            "zotero_item_version",
+            "synced_at",
+            "managed_fields_hash",
             "attachment_key",
+            "attachment_version",
+            "attachment_filename",
+            "attachment_media_type",
+            "attachment_size",
+            "attachment_sha256",
             "isbn",
             "doi",
+            "arxiv_id",
+            "arxiv_version",
             "repository_host",
             "repository_path",
             "default_branch",
@@ -686,6 +737,12 @@ def _object_data(obj: DurableObject) -> dict[str, Any]:
         if value is not None and value != () or field in required_values:
             data[field] = _value(value)
     return data
+
+
+def object_data(obj: DurableObject) -> dict[str, Any]:
+    """Return the normalized JSON-compatible frontmatter representation."""
+
+    return _object_data(obj)
 
 
 def _yaml(value: object) -> str:

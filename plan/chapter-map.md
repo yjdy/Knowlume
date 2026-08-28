@@ -14,6 +14,7 @@ The original design was audited and split into active thematic documents. The fr
 | Contract v1 migration | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | Complete |
 | Post-baseline package distribution | [`distribution.md`](distribution.md) | Complete |
 | Phase 1 Vault configuration and transaction protocol | [`decisions/0011-phase1-vault-and-transaction-contracts.md`](decisions/0011-phase1-vault-and-transaction-contracts.md) | Complete |
+| Phase 2A Paper identity, Zotero, attachment, synchronization, and workflow design | [`phase2a-goal.md`](phase2a-goal.md), [`ADR-0012`](decisions/0012-phase2a-paper-zotero-design.md) | Design ownership recorded |
 
 ## Completion checks
 

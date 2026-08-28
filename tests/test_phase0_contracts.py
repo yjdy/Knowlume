@@ -147,7 +147,14 @@ def test_v2_valid_relation_shards_and_cardinality(
     assert all(v2_objects[target]["visibility"] == "private" for _, target in audit_edges)
 
 
-@pytest.mark.parametrize("filename", ["idea-mature.md", "idea-evergreen.md"])
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "idea-mature.md",
+        "idea-evergreen.md",
+        "paper-attachment-path.md",
+    ],
+)
 def test_v2_invalid_object_schema_fixtures(v2_contracts: ContractBundle, filename: str) -> None:
     schemas, registry = v2_contracts
     frontmatter, _ = load_markdown(V2_FIXTURES / "invalid" / filename)
@@ -442,6 +449,10 @@ def test_interface_and_migration_report_contracts(
         "cli-envelope-v1",
         "finding-v1",
         "migration-report-v1",
+        "source-list-result-v1",
+        "source-show-result-v1",
+        "source-sync-result-v1",
+        "source-workflow-result-v1",
         "update-check-result-v1",
     }
     assert all("v1.schema.json" in schema["$id"] for schema in schemas.values())
@@ -503,6 +514,22 @@ def test_update_check_result_contract(interface_contracts: ContractBundle) -> No
 
     invalid = load_json(fixture_dir / "invalid-update-check-result.json")
     assert validation_errors(invalid, schemas["update-check-result-v1"], registry)
+
+
+def test_phase2a_source_result_contracts(interface_contracts: ContractBundle) -> None:
+    schemas, registry = interface_contracts
+    fixture_dir = ROOT / "tests" / "fixtures" / "interfaces"
+    cases = {
+        "source-list-result-v1": "valid-source-list-result.json",
+        "source-show-result-v1": "valid-source-show-result.json",
+        "source-sync-result-v1": "valid-source-sync-result.json",
+        "source-workflow-result-v1": "valid-source-workflow-result.json",
+    }
+    for schema_name, fixture_name in cases.items():
+        result = load_json(fixture_dir / fixture_name)
+        assert validation_errors(result, schemas[schema_name], registry) == [], fixture_name
+    invalid = load_json(fixture_dir / "invalid-source-workflow-result.json")
+    assert validation_errors(invalid, schemas["source-workflow-result-v1"], registry)
 
 
 def test_v2_contracts_do_not_reintroduce_obsolete_note_fields() -> None:
