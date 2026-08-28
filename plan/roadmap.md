@@ -7,9 +7,11 @@ Each phase starts only after the preceding executable gate is green. Thematic do
 
 ## Current state
 
-Phase 0R and Phase 1 are complete. Phase 2A implementation and local gates are green; its
-cross-platform Python 3.13–3.14 CI confirmation remains pending before the phase is declared
-complete. Phase 1 passed local, distribution, isolated-install, and
+Phase 0R, Phase 1, and Phase 2A are complete. Phase 2A passed local, distribution,
+isolated-install, and Windows/macOS/Linux Python 3.13–3.14
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) gates. Phase 1 passed
+local, distribution, isolated-install, and
 Windows/macOS/Linux Python 3.13–3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913)
 and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates. Database,
 unified capture/search, and Web work remain in their later phases; publication gates remain closed.

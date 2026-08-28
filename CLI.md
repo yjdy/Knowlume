@@ -4,7 +4,7 @@
 
 > Last synchronized: 2026-08-28
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Phase 2A implemented and locally verified; cross-platform CI pending
+> Current delivery state: Phase 2A Complete; commands Verified
 
 ## Authority and update rules
 
@@ -54,12 +54,12 @@
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `inbox` | `kb inbox [--json]` | 列出等待处理的 Source | 按 `workflow_stage=inbox` 查询 durable files | `Implemented` | `tests/test_phase2a_cli.py`; installed wheel smoke; complete suite; cross-platform CI pending |
-| `process` | `kb process SOURCE_ID --to STAGE [--json]` | 推进来源的阅读和整合工作流 | Source workflow service、相邻状态转换、冲突安全写入 | `Implemented` | `tests/test_phase2a_sources.py`; `tests/test_phase2a_cli.py`; complete suite; cross-platform CI pending |
-| `source.list` | `kb source list [filters] [--json]` | 筛选和列出 Sources | Scanner-backed query 与稳定排序 | `Implemented` | `tests/test_phase2a_sources.py`; `tests/test_phase2a_cli.py`; installed wheel smoke; cross-platform CI pending |
-| `source.show` | `kb source show ID [--json]` | 显示 Source card 和恢复信息 | Source lookup、人类/JSON renderer | `Implemented` | `tests/test_phase2a_cli.py`; installed wheel smoke; complete suite; cross-platform CI pending |
-| `source.open` | `kb source open ID` | 通过 adapter 打开原始材料 | Zotero recovery route、SHA-256 校验、typed unavailable error | `Implemented` | `tests/test_phase2a_sources.py`; `tests/test_phase2a_cli.py`; complete suite; cross-platform CI pending |
-| `source.sync` | `kb source sync ID [--adopt-remote] [--accept-attachment-change] [--json]` | 从 Zotero 同步可更新元数据 | 字段所有权、durable baseline、身份/附件/写冲突检测 | `Implemented` | `tests/test_phase2a_sources.py`; `tests/test_phase2a_cli.py`; complete suite; cross-platform CI pending |
+| `inbox` | `kb inbox [--json]` | 列出等待处理的 Source | 按 `workflow_stage=inbox` 查询 durable files | `Verified` | `tests/test_phase2a_cli.py`; installed wheel smoke; complete suite; [CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) |
+| `process` | `kb process SOURCE_ID --to STAGE [--json]` | 推进来源的阅读和整合工作流 | Source workflow service、相邻状态转换、冲突安全写入 | `Verified` | `tests/test_phase2a_sources.py`; `tests/test_phase2a_cli.py`; complete suite; [CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) |
+| `source.list` | `kb source list [filters] [--json]` | 筛选和列出 Sources | Scanner-backed query 与稳定排序 | `Verified` | `tests/test_phase2a_sources.py`; `tests/test_phase2a_cli.py`; installed wheel smoke; [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) |
+| `source.show` | `kb source show ID [--json]` | 显示 Source card 和恢复信息 | Source lookup、人类/JSON renderer | `Verified` | `tests/test_phase2a_cli.py`; installed wheel smoke; complete suite; [CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) |
+| `source.open` | `kb source open ID` | 通过 adapter 打开原始材料 | Zotero recovery route、SHA-256 校验、typed unavailable error | `Verified` | `tests/test_phase2a_sources.py`; `tests/test_phase2a_cli.py`; complete suite; [CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) |
+| `source.sync` | `kb source sync ID [--adopt-remote] [--accept-attachment-change] [--json]` | 从 Zotero 同步可更新元数据 | 字段所有权、durable baseline、身份/附件/写冲突检测 | `Verified` | `tests/test_phase2a_sources.py`; `tests/test_phase2a_cli.py`; complete suite; [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) |
 
 ## Phase 2B — Unified capture
 
@@ -74,7 +74,7 @@
 
 | Capability ID | CLI type | Durable source type | Delivery | Implementation plan | Status |
 |---|---|---|---|---|---|
-| `add.paper` | `paper` | `paper` | Phase 2A internal | DOI/arXiv canonicalization、Zotero metadata、idempotent Source factory | `Implemented` |
+| `add.paper` | `paper` | `paper` | Phase 2A internal | DOI/arXiv canonicalization、Zotero metadata、idempotent Source factory | `Verified` |
 | `add.web` | `web` | `web` | Phase 2B | URL canonicalization、snapshot provider、hash/locator validation | `Planned` |
 | `add.book` | `book` | `book` | Phase 2B | DOI/ISBN metadata、edition identity、Zotero mapping | `Planned` |
 | `add.repo` | `repo` | `oss` | Phase 2B | configured Git host、project-root resolution、immutable commit、license evidence | `Planned` |
@@ -142,6 +142,7 @@
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-08-28 | Phase 2A 跨平台最终门禁完成 | [CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) 覆盖 Windows/Linux/macOS × Python 3.13/3.14，Phase 2A 命令与内部 Paper capture 标记为 `Verified` |
 | 2026-08-28 | 实现 Phase 2A Paper/Zotero vertical slice | 内部 capture、Source 查询/同步/工作流、JSON schema、wheel 审计和隔离安装通过；公共 `kb add` 保持未注册，跨平台 CI 待确认 |
 | 2026-08-28 | Phase 1 跨平台最终门禁完成 | [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 覆盖 Windows/Linux/macOS × Python 3.13/3.14，所有 Phase 1 命令保持 `Verified` |
 | 2026-08-27 | 建立跨平台 package 与 release foundation，新增 `--version`、`doctor --json`、`update-check` | 三个入口已实现；Phase 1–6 业务命令状态不变 |

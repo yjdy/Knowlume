@@ -6,10 +6,12 @@ Knowlume 是一个 local-first 的个人知识系统：以可读、可迁移的 
 
 ## Current status
 
-Phase 0R（Contract v2）与 Phase 1 均已完成。Phase 2A 的 Paper/Zotero 本地实现、契约、命令、
-完整测试和隔离 wheel 验证已完成，等待 Windows/macOS/Linux × Python 3.13/3.14 CI
-确认后关闭阶段 gate。Vault、parser/scanner、safe writes、Note、relation
-和显式迁移已通过本地、隔离安装，以及 Windows/macOS/Linux × Python 3.13/3.14 的
+Phase 0R（Contract v2）、Phase 1 与 Phase 2A 均已完成。Phase 2A 的 Paper/Zotero 契约、
+内部 capture、Source 命令、完整测试、分发审计和隔离 wheel 已通过
+Windows/macOS/Linux × Python 3.13/3.14 的
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) 与
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) 门禁。Phase 1 的 Vault、
+parser/scanner、safe writes、Note、relation 和显式迁移也已通过
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) 与
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 门禁。统一 capture、search
 和 Web 功能仍按路线图逐阶段实现，所有发布开关保持关闭。
@@ -18,7 +20,7 @@ Phase 0R（Contract v2）与 Phase 1 均已完成。Phase 2A 的 Paper/Zotero �
 Phase 0R  Contract v2                         Complete
 Release   Python package foundation           Implemented
 Phase 1   Vault, domain, parser, safe writes  Complete
-Phase 2A  Paper + Zotero                      In progress (local gates green)
+Phase 2A  Paper + Zotero                      Complete
 Phase 2B  Web, Book, OSS                      Planned
 Phase 3   SQLite projection and search        Planned
 Phase 4   Read-only Web                       Planned
