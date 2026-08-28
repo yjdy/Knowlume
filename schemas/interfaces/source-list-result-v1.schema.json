@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/source-list-result-v1.schema.json",
+  "title": "Knowlume Source list result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["filter", "sources", "count"],
+  "properties": {
+    "filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_type", "workflow_stage", "record_status", "visibility"],
+      "properties": {
+        "source_type": { "enum": [null, "paper", "web", "book", "oss"] },
+        "workflow_stage": { "enum": [null, "inbox", "reading", "processed", "integrated"] },
+        "record_status": { "enum": [null, "active", "archived", "superseded"] },
+        "visibility": { "enum": [null, "private", "public"] }
+      }
+    },
+    "sources": { "type": "array", "items": { "$ref": "#/$defs/sourceSummary" } },
+    "count": { "type": "integer", "minimum": 0 }
+  },
+  "$defs": {
+    "sourceSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "source_type", "title", "visibility", "record_status", "workflow_stage", "created", "updated"],
+      "properties": {
+        "source_id": { "type": "string", "pattern": "^src_[0-9A-HJKMNP-TV-Z]{26}$" },
+        "source_type": { "enum": ["paper", "web", "book", "oss"] },
+        "title": { "type": "string", "minLength": 1 },
+        "visibility": { "enum": ["private", "public"] },
+        "record_status": { "enum": ["active", "archived", "superseded"] },
+        "workflow_stage": { "enum": ["inbox", "reading", "processed", "integrated"] },
+        "created": { "type": "string", "format": "date" },
+        "updated": { "type": "string", "format": "date" }
+      }
+    }
+  }
+}

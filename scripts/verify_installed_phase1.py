@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -27,6 +28,19 @@ def _run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _run_result(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
+    environment = os.environ.copy()
+    environment["PYTHONIOENCODING"] = "cp1252"
+    return subprocess.run(
+        command,
+        cwd=cwd,
+        check=False,
+        capture_output=True,
+        encoding="utf-8",
+        env=environment,
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("wheel", type=Path)
@@ -45,9 +59,9 @@ def main() -> int:
         _run([str(kb), "--version"], cwd=work)
         _run([str(kb), "--help"], cwd=work)
         _run([str(kb), "doctor"], cwd=work)
-        for command in ("init", "scan", "status", "lint", "migrate"):
+        for command in ("init", "scan", "status", "lint", "migrate", "inbox", "process"):
             _run([str(kb), command, "--help"], cwd=work)
-        for group in ("note", "relation"):
+        for group in ("note", "relation", "source"):
             _run([str(kb), group, "--help"], cwd=work)
 
         vault = root / "vault"
@@ -57,6 +71,18 @@ def main() -> int:
         _run([*base, "scan"], cwd=work)
         _run([*base, "status"], cwd=work)
         _run([*base, "lint"], cwd=work)
+        _run([*base, "source", "list", "--json"], cwd=work)
+        _run([*base, "source", "show", SOURCE_ID, "--json"], cwd=work)
+        _run([*base, "inbox", "--json"], cwd=work)
+        missing_extra = _run_result([*base, "source", "sync", SOURCE_ID, "--json"], cwd=work)
+        assert missing_extra.returncode == 5, missing_extra.stderr
+        missing_document = json.loads(missing_extra.stdout)
+        assert missing_document["errors"] == [
+            {
+                "code": "ZOTERO_CAPABILITY_UNAVAILABLE",
+                "message": "Zotero support requires the 'knowlume[zotero]' optional dependency",
+            }
+        ]
         identifiers: dict[str, str] = {}
         for note_type in ("idea", "concept", "synthesis"):
             result = _run([*base, "note", "new", "--type", note_type], cwd=work)
@@ -94,7 +120,14 @@ def main() -> int:
             ],
             cwd=work,
         )
-    print("installed Phase 1 command smoke verified")
+        _run(
+            ["uv", "pip", "install", "--python", str(python), f"{wheel}[zotero]"],
+            cwd=work,
+        )
+        _run([str(python), "-c", "import httpx"], cwd=work)
+        _run([str(kb), "source", "--help"], cwd=work)
+        _run([*base, "source", "list", "--json"], cwd=work)
+    print("installed command smoke through Phase 2A verified with core and Zotero profiles")
     return 0
 
 

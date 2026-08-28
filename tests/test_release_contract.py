@@ -15,9 +15,14 @@ def test_python_distribution_metadata_is_frozen() -> None:
     assert project["requires-python"] == ">=3.13,<3.15"
     assert project["scripts"] == {"kb": "knowlume.cli:app"}
     assert set(project["optional-dependencies"]) == {"web", "zotero", "all"}
-    assert not {"fastapi>=0.115", "jinja2>=3.1", "uvicorn[standard]>=0.34"} & set(
-        project["dependencies"]
-    )
+    assert project["optional-dependencies"]["zotero"] == ["httpx>=0.28.1,<1"]
+    assert "httpx>=0.28.1,<1" in project["optional-dependencies"]["all"]
+    assert not {
+        "fastapi>=0.115",
+        "httpx>=0.28.1,<1",
+        "jinja2>=3.1",
+        "uvicorn[standard]>=0.34",
+    } & set(project["dependencies"])
 
     wheel = config["tool"]["hatch"]["build"]["targets"]["wheel"]
     assert wheel["packages"] == ["src/knowlume"]
@@ -32,6 +37,17 @@ def test_python_distribution_metadata_is_frozen() -> None:
         "pypi-prerelease-enabled": False,
         "pypi-stable-enabled": False,
     }
+    assert config["tool"]["uv"]["index"] == [{"url": "https://pypi.org/simple", "default": True}]
+
+
+def test_lockfile_uses_the_portable_public_package_index() -> None:
+    lockfile = (ROOT / "uv.lock").read_text(encoding="utf-8")
+    registries = {
+        line.strip()
+        for line in lockfile.splitlines()
+        if line.strip().startswith("source = { registry = ")
+    }
+    assert registries == {'source = { registry = "https://pypi.org/simple" }'}
 
 
 def test_release_workflows_cover_required_trust_and_platform_gates() -> None:

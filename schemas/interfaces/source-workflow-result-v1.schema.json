@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/source-workflow-result-v1.schema.json",
+  "title": "Knowlume Source workflow result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source_id", "previous_stage", "current_stage", "changed", "updated"],
+  "properties": {
+    "source_id": { "type": "string", "pattern": "^src_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "previous_stage": { "enum": ["inbox", "reading", "processed", "integrated"] },
+    "current_stage": { "enum": ["inbox", "reading", "processed", "integrated"] },
+    "changed": { "type": "boolean" },
+    "updated": { "type": "string", "format": "date" }
+  }
+}

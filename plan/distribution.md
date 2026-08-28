@@ -20,10 +20,13 @@ The default distribution contains the CLI and core local functionality. Optional
 | Extra | Capability |
 |---|---|
 | `web` | FastAPI/Jinja2/Uvicorn local Web interface |
-| `zotero` | Zotero adapter dependencies when that adapter is implemented |
+| `zotero` | HTTPX transport for the loopback-only Zotero Local API adapter |
 | `all` | every supported optional capability |
 
 Core code must not require an optional dependency merely to import, show help, report versions, inspect bundled assets, or run core tests. A missing extra produces a typed capability diagnostic rather than an import-time crash.
+
+The project resolver uses the official PyPI simple index so `uv.lock` remains portable across local
+machines and CI. Machine-specific mirror URLs must not be committed to the lockfile.
 
 ## Runtime assets
 

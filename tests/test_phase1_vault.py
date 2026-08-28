@@ -147,6 +147,22 @@ def test_atomic_write_detects_conflict_and_preserves_newer_content(tmp_path: Pat
     assert checksum_file(path) == checksum_bytes(b"newer\n")
 
 
+def test_atomic_delete_is_checksum_guarded(tmp_path: Path) -> None:
+    target = tmp_path / "vault"
+    adapter = _init(target)
+    vault = load_vault(target)
+    relative = "notes/ideas/rollback.md"
+    checksum = adapter.atomic_write(vault, relative, b"created\n", None)
+    path = target / relative
+    path.write_bytes(b"newer\n")
+    with pytest.raises(DomainError) as caught:
+        adapter.atomic_delete(vault, relative, checksum)
+    assert caught.value.code == "VAULT_WRITE_CONFLICT"
+    assert path.read_bytes() == b"newer\n"
+    adapter.atomic_delete(vault, relative, checksum_bytes(b"newer\n"))
+    assert not path.exists()
+
+
 @pytest.mark.parametrize("relative", ["../outside.md", "/absolute.md", "notes\\bad.md"])
 def test_atomic_write_rejects_unsafe_relative_paths(tmp_path: Path, relative: str) -> None:
     target = tmp_path / "vault"

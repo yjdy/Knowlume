@@ -15,7 +15,20 @@ Source cards retain durable identity, metadata, and recovery references; they do
 
 ## Paper
 
-Paper sources support DOI, arXiv, Zotero, and ordinary bibliographic identity. Facts cite a human-verifiable page, section, figure, table, or equivalent locator. Zotero identifiers are recovery routes, not domain identity.
+Paper sources support DOI, arXiv, Zotero, and ordinary bibliographic metadata. Facts cite a
+human-verifiable page, section, figure, table, or equivalent locator. A Source ID is the durable
+domain identity. DOI and arXiv are canonical external identifiers; Zotero identifiers are recovery
+routes.
+
+Phase 2A automated capture requires DOI or arXiv after metadata resolution. Existing v2 Sources
+with only a Zotero route remain readable, but the automated service does not create new ones. DOI
+normalization removes labels and DOI URL prefixes, trims whitespace, and lowercases the result.
+arXiv normalization accepts old and new identifier forms, removes labels and URL prefixes, and
+separates an optional version. Duplicate identity uses the versionless arXiv ID.
+
+DOI is preferred when both identifiers exist, while arXiv remains an alias. A match on either
+identifier returns the existing Source. If the identifiers point to different Sources, capture or
+synchronization fails rather than guessing or merging.
 
 ## Web
 
@@ -35,13 +48,47 @@ Temporary clones belong in disposable cache storage. Durable excerpts are Snippe
 
 Recovery covers both the tracked Knowlume vault and external attachment storage such as Zotero. Important attachments should retain adapter identifiers and integrity evidence. Missing attachments produce a typed availability finding without rewriting the Source.
 
+Phase 2A manages at most one primary PDF. Exactly one readable PDF records its Zotero recovery route,
+filename, media type, size, adapter version, and SHA-256. No candidate produces an availability
+warning and does not block bibliographic Source creation. Multiple candidates produce an ambiguity
+warning and no primary attachment is guessed. Supplementary and multi-attachment selection is
+deferred.
+
+An attachment path and attachment body remain disposable and must not enter the Vault. A stored hash
+that no longer matches the recovered bytes is a provenance conflict: ordinary synchronization and
+open operations do not silently accept replacement material or rewrite Fact locators.
+
 ## Adapter boundaries
 
 ### Zotero
 
-- Use a supported API or local service; never access `zotero.sqlite` directly.
-- Resolve metadata and attachments from library/item identifiers.
+- Phase 2A uses the supported loopback Local API, requests API version 3, and performs read
+  operations only. It never accesses `zotero.sqlite` directly.
+- Production configuration cannot redirect the Phase 2A adapter to a non-loopback endpoint. Cloud
+  Web API access, OAuth, and Zotero mutation are deferred.
+- Resolve metadata and a primary attachment from library/item identifiers. Use disposable cache for
+  recovered bytes and verify stored integrity before opening them through the operating system.
 - Translate adapter data into domain values without leaking Zotero internals into the domain layer.
+- Missing optional dependencies, disabled API, timeout, permission failure, missing items, and
+  malformed responses produce typed capability or availability failures rather than partial writes.
+
+### Zotero synchronization ownership
+
+Human-owned Source fields are visibility, record status, workflow stage, tags, and body content.
+Zotero manages bibliographic title, authors, year, DOI, arXiv, canonical URL, and primary-attachment
+metadata. The application manages the Source ID, update time, Zotero item version, synchronization
+time, and a deterministic hash of the normalized Zotero-managed fields.
+
+The synchronization baseline is durable in the Source card. A managed-field hash mismatch detects
+local edits before fetching remote changes. Identity removal or replacement, identifier collision,
+changed attachment bytes, or a concurrent file checksum change stops synchronization. Human-owned
+fields are never overwritten.
+
+When no conflict exists, synchronization updates adapter-owned fields atomically. A no-op is
+successful and byte-preserving. An old Source without a baseline adopts one automatically only when
+its current managed values already equal normalized Zotero metadata; otherwise explicit remote
+adoption is required. Replacing a known attachment hash also requires a separate explicit action and
+reports that Fact locators need review.
 
 ### Obsidian
 

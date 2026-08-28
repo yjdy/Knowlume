@@ -1,0 +1,20 @@
+{
+  "interface_version": 1,
+  "command": "source sync",
+  "success": true,
+  "exit_code": 0,
+  "data": {
+    "source_id": "src_01JSTAG7N9Q3V5X8Y2Z4A6B8F3",
+    "changed": false,
+    "baseline_adopted": false,
+    "attachment_changed": false,
+    "synced_at": "2026-08-28T12:00:00+00:00"
+  },
+  "warnings": [
+    {
+      "code": "PAPER_ATTACHMENT_UNAVAILABLE",
+      "message": "Paper Attachment Unavailable"
+    }
+  ],
+  "errors": []
+}

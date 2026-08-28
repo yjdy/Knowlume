@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/source-sync-result-v1.schema.json",
+  "title": "Knowlume Source sync result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source_id", "changed", "baseline_adopted", "attachment_changed", "synced_at"],
+  "properties": {
+    "source_id": { "type": "string", "pattern": "^src_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "changed": { "type": "boolean" },
+    "baseline_adopted": { "type": "boolean" },
+    "attachment_changed": { "type": "boolean" },
+    "synced_at": { "type": "string", "format": "date-time" }
+  }
+}

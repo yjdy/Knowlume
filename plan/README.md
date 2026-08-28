@@ -23,6 +23,7 @@ The cross-platform Python package and release-engineering foundation is implemen
 | [`roadmap.md`](roadmap.md) | phases, command ownership, delivery gates |
 | [`distribution.md`](distribution.md) | Python packaging, runtime assets, compatibility, release trust |
 | [`phase1-goal.md`](phase1-goal.md) | Phase 1 execution goal, milestones, acceptance checks, and Git rollback boundaries |
+| [`phase2a-goal.md`](phase2a-goal.md) | Phase 2A Paper/Zotero execution goal, milestones, acceptance checks, and Git rollback boundaries |
 | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | v1-to-v2 migration behavior |
 | [`decisions/`](decisions/) | accepted architecture decisions |
 | [`chapter-map.md`](chapter-map.md) | completed historical design migration audit |

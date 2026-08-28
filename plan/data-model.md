@@ -17,6 +17,34 @@ Executable contracts are under [`../schemas/v2/`](../schemas/v2/README.md). Cont
 
 Every object has a permanent typed ID. File, title, heading, and Note type changes preserve IDs. Duplicate IDs block strict lint, migration apply, and publishing. Claim is not a v2 object.
 
+### Paper Source identity and capture eligibility
+
+A Source ID remains the durable identity when an external identifier, adapter route, attachment, or
+filename changes. For Paper Sources, DOI and arXiv are canonical external identifiers used for
+recognition and duplicate detection. Zotero library, item, and attachment keys are recovery routes;
+they are not domain identity.
+
+An existing Contract v2 Source can remain schema-valid with only a Zotero route. Phase 2A automated
+capture is deliberately stricter: resolved metadata must contain DOI or arXiv identity before a new
+Source can be written. This distinction preserves existing files without allowing nondeterministic
+new capture.
+
+When DOI and arXiv are both known, DOI is the preferred external identity and arXiv is an alias.
+Matching either value resolves the existing Source. If the identifiers resolve to different Source
+IDs, the operation stops for human review and never merges them automatically. arXiv version is
+material-recovery metadata rather than part of duplicate identity.
+
+### Source workflow
+
+Source workflow moves explicitly and one step at a time:
+
+```text
+inbox -> reading -> processed -> integrated
+```
+
+Requesting the current stage is idempotent. Skipping a stage, moving backward, or advancing beyond
+`integrated` is invalid. Adapter synchronization does not own or change workflow stage.
+
 ## Note types and maturity
 
 | Type | Meaning | Semantic requirement |
@@ -66,3 +94,8 @@ Canonical relation identity excludes reason, time, and actor. AI may propose a r
 ## Evolution and contract versions
 
 Merge and supersession preserve old objects instead of deleting them. Search and publishing surface or audit superseded dependencies. Contract v1 fixed sections and duplicated frontmatter links are migration inputs only; the active mapping and blockers are defined in [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md).
+
+Phase 2A extends Paper metadata compatibly within Contract v2 and keeps existing v2 Sources
+readable. The accepted semantics and migration boundary are recorded in
+[`ADR-0012`](decisions/0012-phase2a-paper-zotero-design.md); exact machine fields remain owned by
+the versioned schemas.

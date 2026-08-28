@@ -158,6 +158,8 @@ def test_source_free_notes_remain_human_provenance() -> None:
         ("idea-evergreen.md", "NOTE_MATURITY_INVALID"),
         ("idea-mature.md", "NOTE_MATURITY_INVALID"),
         ("missing-human-section.md", "NOTE_HUMAN_SECTION_MISSING"),
+        ("paper-arxiv-version-without-id.md", "FIELD_INVALID"),
+        ("paper-attachment-path.md", "FIELD_INVALID"),
         ("snippet-line-range.md", "SNIPPET_RANGE_INVALID"),
         ("unknown-role.md", "FIELD_INVALID"),
     ],
