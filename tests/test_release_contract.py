@@ -37,6 +37,17 @@ def test_python_distribution_metadata_is_frozen() -> None:
         "pypi-prerelease-enabled": False,
         "pypi-stable-enabled": False,
     }
+    assert config["tool"]["uv"]["index"] == [{"url": "https://pypi.org/simple", "default": True}]
+
+
+def test_lockfile_uses_the_portable_public_package_index() -> None:
+    lockfile = (ROOT / "uv.lock").read_text(encoding="utf-8")
+    registries = {
+        line.strip()
+        for line in lockfile.splitlines()
+        if line.strip().startswith("source = { registry = ")
+    }
+    assert registries == {'source = { registry = "https://pypi.org/simple" }'}
 
 
 def test_release_workflows_cover_required_trust_and_platform_gates() -> None:

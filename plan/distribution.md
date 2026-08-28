@@ -25,6 +25,9 @@ The default distribution contains the CLI and core local functionality. Optional
 
 Core code must not require an optional dependency merely to import, show help, report versions, inspect bundled assets, or run core tests. A missing extra produces a typed capability diagnostic rather than an import-time crash.
 
+The project resolver uses the official PyPI simple index so `uv.lock` remains portable across local
+machines and CI. Machine-specific mirror URLs must not be committed to the lockfile.
+
 ## Runtime assets
 
 Top-level `schemas/` and versioned templates remain authoritative source files. Hatch copies them into `knowlume/_assets/` in the wheel. Installed code resolves assets through `importlib.resources`, validates relative asset names, and never searches a source checkout or current working directory.
