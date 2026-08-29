@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+from click import unstyle
 from test_phase2b_capture import Repositories, Zotero, _item
 from typer.testing import CliRunner
 
@@ -114,7 +115,8 @@ def test_add_help_is_public_and_snippet_group_is_absent() -> None:
     assert root.exit_code == 0 and "add" in root.stdout
     add = runner.invoke(app, ["add", "--help"])
     assert add.exit_code == 0
-    assert "--type" in add.stdout and "--json" in add.stdout
+    help_text = unstyle(add.stdout)
+    assert "--type" in help_text and "--json" in help_text
     assert runner.invoke(app, ["snippet", "--help"]).exit_code == 2
 
 
