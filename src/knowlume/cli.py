@@ -8,7 +8,9 @@ from typing import Annotated, NoReturn
 import typer
 
 from knowlume.adapters.filesystem import FilesystemVault
+from knowlume.adapters.git_remote import GitRemoteResolver
 from knowlume.adapters.zotero_local import ZoteroLocalApi
+from knowlume.application.capture import UnifiedCaptureService
 from knowlume.application.migration import MigrationService
 from knowlume.application.notes import NoteService
 from knowlume.application.relations import ListedRelation, RelationService
@@ -210,6 +212,14 @@ def _source_service() -> SourceService:
     return SourceService(filesystem=FilesystemVault(), zotero=ZoteroLocalApi())
 
 
+def _capture_service() -> UnifiedCaptureService:
+    return UnifiedCaptureService(
+        filesystem=FilesystemVault(),
+        zotero=ZoteroLocalApi(),
+        repositories=GitRemoteResolver(),
+    )
+
+
 def _source_exit_code(error: DomainError) -> int:
     if error.code in {"ADD_INPUT_INVALID", "VAULT_ARGUMENT_CONFLICT"}:
         return 2
@@ -250,6 +260,64 @@ def _success_with_warnings(command: str, data: object, warnings: tuple[str, ...]
         {"code": code, "message": code.replace("_", " ").title()} for code in warnings
     ]
     return render_json(envelope)
+
+
+def _add_exit_code(code: str) -> int:
+    return {
+        "ADD_INPUT_INVALID": 2,
+        "ADD_TYPE_AMBIGUOUS": 3,
+        "ADD_IDENTITY_CONFLICT": 3,
+        "ADD_WRITE_CONFLICT": 4,
+        "ADD_METADATA_UNAVAILABLE": 5,
+    }.get(code, 3)
+
+
+def _exit_add_error(error: DomainError, *, json_output: bool) -> NoReturn:
+    exit_code = _add_exit_code(error.code)
+    if json_output:
+        typer.echo(
+            render_json(
+                error_envelope(
+                    "add",
+                    exit_code=exit_code,
+                    code=error.code,
+                    message=str(error),
+                )
+            )
+        )
+    else:
+        typer.echo(f"{error.code}: {error}", err=True)
+    raise typer.Exit(exit_code)
+
+
+@app.command("add")
+def add_command(
+    ctx: typer.Context,
+    value: Annotated[str, typer.Argument(help="DOI, arXiv, ISBN, Web URL, or repository URL")],
+    requested_type: Annotated[
+        str | None,
+        typer.Option("--type", help="Select paper, web, book, or repo recognition."),
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Capture a Paper, Web page, Book, or repository as a private Source."""
+
+    try:
+        result = _capture_service().add(_resolved_vault(ctx), value, requested_type)
+    except DomainError as error:
+        _exit_add_error(error, json_output=json_output)
+    if json_output:
+        typer.echo(_success_with_warnings("add", result.data(), result.warnings))
+        return
+    action = "Created" if result.created else "Found existing"
+    typer.echo(
+        f"{action} {result.detected_type} Source {result.source_id}: "
+        f"{result.canonical_identity}"
+    )
+    for warning in result.warnings:
+        typer.echo(f"WARNING {warning}", err=True)
 
 
 def _render_relation(relation: ListedRelation) -> str:

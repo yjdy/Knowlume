@@ -30,6 +30,7 @@ def _surface(typer: Typer) -> tuple[set[str], set[str]]:
 def test_registered_cli_inventory_through_phase2a_is_exact() -> None:
     commands, groups = _surface(app)
     assert commands == {
+        "add",
         "doctor",
         "init",
         "inbox",
