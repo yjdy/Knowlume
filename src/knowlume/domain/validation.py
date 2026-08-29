@@ -2,17 +2,22 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from knowlume.domain.isbn import normalize_isbn
 from knowlume.domain.models import (
     AIArtifact,
     AIBlock,
+    BookLocator,
     FactBlock,
     Note,
     NoteBody,
     ObjectDocument,
+    OssLocator,
     RelationShard,
     Snippet,
     Source,
+    WebLocator,
 )
+from knowlume.domain.repository import normalize_repository_host
 from knowlume.domain.values import (
     DomainError,
     NoteType,
@@ -52,6 +57,44 @@ CONTENT_DEPENDENCIES = {
 }
 
 
+def locator_mismatched_fields(locator: object, source: Source) -> tuple[str, ...]:
+    expected_type = locator.__class__.__name__.removesuffix("Locator").lower()
+    if expected_type != source.source_type.value:
+        return ("source_type",)
+    mismatches: list[str] = []
+    if isinstance(locator, WebLocator):
+        snapshot = source.snapshot_ref
+        for field in ("provider", "identifier", "captured_at", "content_hash"):
+            if snapshot is None or getattr(locator.snapshot_ref, field) != getattr(snapshot, field):
+                mismatches.append(f"snapshot_ref.{field}")
+    elif isinstance(locator, BookLocator):
+        if locator.isbn is not None:
+            try:
+                source_isbn = normalize_isbn(source.isbn) if source.isbn else None
+            except DomainError:
+                source_isbn = None
+            if locator.isbn != source_isbn:
+                mismatches.append("isbn")
+        if locator.edition is not None and locator.edition != source.edition:
+            mismatches.append("edition")
+    elif isinstance(locator, OssLocator):
+        source_host: str | None
+        try:
+            source_host = normalize_repository_host(source.repository_host or "")
+            locator_host = normalize_repository_host(locator.repository_host)
+        except DomainError:
+            source_host = source.repository_host
+            locator_host = locator.repository_host
+        for field, actual, expected in (
+            ("repository_host", locator_host, source_host),
+            ("repository_path", locator.repository_path, source.repository_path),
+            ("commit", locator.commit, source.commit),
+        ):
+            if actual != expected:
+                mismatches.append(field)
+    return tuple(mismatches)
+
+
 def validate_object_references(
     document: ObjectDocument, objects: Mapping[ObjectId, ObjectDocument]
 ) -> tuple[DomainError, ...]:
@@ -81,14 +124,14 @@ def validate_object_references(
                                     "FACT_SOURCE_MISSING", f"unknown Source {citation.source_id}"
                                 )
                             )
-                        elif (
-                            citation.locator.__class__.__name__.removesuffix("Locator").lower()
-                            != target.object.source_type.value
+                        elif mismatches := locator_mismatched_fields(
+                            citation.locator, target.object
                         ):
                             errors.append(
                                 DomainError(
                                     "FACT_LOCATOR_MISMATCH",
-                                    "fact locator source type does not match Source",
+                                    "fact locator does not match Source provenance",
+                                    details={"fields": list(mismatches)},
                                 )
                             )
                 elif isinstance(block, AIBlock):
@@ -206,13 +249,13 @@ def validate_relation_shard(
         if (
             relation.locator is not None
             and isinstance(target, Source)
-            and relation.locator.__class__.__name__.removesuffix("Locator").lower()
-            != target.source_type.value
+            and (mismatches := locator_mismatched_fields(relation.locator, target))
         ):
             errors.append(
                 DomainError(
                     "RELATION_LOCATOR_MISMATCH",
-                    "relation locator source type does not match target Source",
+                    "relation locator does not match target Source provenance",
+                    details={"fields": list(mismatches)},
                 )
             )
         if (

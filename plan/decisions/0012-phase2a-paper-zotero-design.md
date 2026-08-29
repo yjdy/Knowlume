@@ -4,6 +4,10 @@
 - Date: 2026-08-28
 - Decision owners: Knowlume maintainers
 
+> Completion boundary clarification: [`ADR-0014`](0014-phase2a-acceptance-and-phase2b-zotero-classification.md)
+> records that production DOI/arXiv candidate search and Zotero Paper/Book item-type classification
+> belong to Phase 2B. Existing exact-reference Phase 2A behavior remains compatible.
+
 ## Context
 
 Phase 2A is the first Source-capture slice. Existing Contract v2 permits Paper recovery through a

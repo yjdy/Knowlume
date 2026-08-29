@@ -37,6 +37,16 @@ explicit public allowlist
 
 Publishing is blocked by private content dependencies, unresolved references, missing stable sections, unreviewed AI, uncited facts, ineligible Sources, unresolved supersession, path escape, unapproved attachments or snippets, and blocking rights findings. A failed build leaves the previous successful staging intact. Only manifest-listed files enter staging, and publishers receive staging plus its manifest rather than the private vault.
 
+Phase 2B project-level OSS Sources record `license: NOASSERTION` because capture does not inspect
+repository content or make a license judgment. They remain private by default and fail closed for
+public use while rights are unresolved. Existing Snippet publication checks remain in force even
+though no Snippet creation command is assigned to a delivery phase.
+
+Phase 2B citation and publication checks also fail closed when a Web Locator does not exactly match
+the Source snapshot, a Book page Locator names ISBN/edition evidence absent from or different from
+the Source, or an OSS Locator names a different host, project path, or commit. Old v2 Web Sources
+without snapshot evidence remain readable but are not public citation dependencies until repaired.
+
 ## Context and external models
 
 Callers choose an explicit trusted-local or public-safe scope. Search results and adapters cannot widen it. Private objects or attachments may leave the machine only when an explicit release policy authorizes every selected item and transitive content dependency.
@@ -48,6 +58,13 @@ The service binds to loopback by default. Host and Origin use allowlists; permis
 ## Logging, Git, and deletion
 
 Logs omit private bodies and attachment contents. Visibility changes do not erase Git history or previous publications. Sensitive-data response must explicitly cover history, backups, staging, published sites, and external caches.
+
+Phase 2B repository discovery is anonymous and uses isolated Git configuration. It disables terminal
+and GUI prompts, credential helpers, interactive credential managers, and system/global URL rewrites;
+credential-bearing URLs are rejected before execution. Public diagnostics omit command details,
+task-local paths, environment values, and remote stderr. Tests inject an offline fake Git command
+instead of contacting public repositories. The complete policy is frozen by
+[`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md).
 
 ## Legal boundary
 

@@ -17,6 +17,11 @@ Executable contracts are under [`../schemas/v2/`](../schemas/v2/README.md). Cont
 
 Every object has a permanent typed ID. File, title, heading, and Note type changes preserve IDs. Duplicate IDs block strict lint, migration apply, and publishing. Claim is not a v2 object.
 
+Contract v2 Snippet objects and `snippet_from` relations remain valid, readable durable data, but no
+production Snippet creation command is assigned to an implementation phase. Reactivating creation
+requires a future accepted ADR; indefinite deferral does not justify deleting or migrating the
+existing contract.
+
 ### Paper Source identity and capture eligibility
 
 A Source ID remains the durable identity when an external identifier, adapter route, attachment, or
@@ -33,6 +38,21 @@ When DOI and arXiv are both known, DOI is the preferred external identity and ar
 Matching either value resolves the existing Source. If the identifiers resolve to different Source
 IDs, the operation stops for human review and never merges them automatically. arXiv version is
 material-recovery metadata rather than part of duplicate identity.
+
+### Source and Locator provenance coherence
+
+The Source is the durable authority for the material version named by a Locator. A Web Locator
+matches the Source snapshot provider, identifier, capture time, and SHA-256. A Book page Locator
+carries at least one normalized ISBN-13 or trimmed edition already present on the Source, and every
+value it carries matches. An OSS Locator matches the Source's normalized host, complete project
+path, and full immutable commit. A Locator never supplies provenance that the Source lacks.
+
+Existing v2 Web Sources without snapshot evidence and existing inconsistent objects remain readable;
+there is no automatic migration. They cannot support a new affected citation or pass public
+dependency closure until their provenance is complete and coherent. Fact and relation validation
+reuse `FACT_LOCATOR_MISMATCH` and `RELATION_LOCATOR_MISMATCH` with mismatched-field details. The
+compatibility boundary is frozen by
+[`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md).
 
 ### Source workflow
 
@@ -55,6 +75,10 @@ Requesting the current stage is idempotent. Skipping a stage, moving backward, o
 | `synthesis` | conclusions across Sources or Notes | mature/public requires at least two `synthesizes` targets |
 
 Maturity is `seed`, `developing`, `mature`, or `evergreen`. Evergreen is not a Note type. Idea may evolve in place to Concept; the Note ID and section IDs remain stable, and frontmatter `type_history` records the transition actor and time.
+
+An overall open-source project note is a Literature Note that `summarizes` the project-level OSS
+Source. It is not a separate Project Note type. Source capture and Note creation remain separate,
+explicit actions.
 
 ## Role-based Note bodies
 
@@ -99,3 +123,10 @@ Phase 2A extends Paper metadata compatibly within Contract v2 and keeps existing
 readable. The accepted semantics and migration boundary are recorded in
 [`ADR-0012`](decisions/0012-phase2a-paper-zotero-design.md); exact machine fields remain owned by
 the versioned schemas.
+
+Phase 2B keeps OSS capture at project level and indefinitely defers Snippet creation without
+changing existing Snippet semantics. The boundary is recorded in
+[`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md).
+Web/Book/OSS provenance coherence and anonymous Git discovery are additive semantic gates recorded
+in [`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md); they do not bump Contract v2
+or configuration v1 and do not trigger an automatic migration.

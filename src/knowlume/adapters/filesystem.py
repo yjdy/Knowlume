@@ -11,6 +11,7 @@ from typing import Any
 from platformdirs import user_data_dir
 
 from knowlume.constants import CONFIGURATION_VERSION, OBJECT_CONTRACT_VERSION
+from knowlume.domain.repository import BUILTIN_REPOSITORY_HOSTS, normalize_repository_host
 from knowlume.domain.values import DomainError
 from knowlume.ports.vault import Vault, VaultConfig
 
@@ -67,7 +68,12 @@ def parse_vault_config(text: str) -> VaultConfig:
         data = tomllib.loads(text)
     except (tomllib.TOMLDecodeError, UnicodeDecodeError) as error:
         raise DomainError("VAULT_INVALID", "knowlume.toml is invalid TOML") from error
-    if set(data) != {"config_version", "object_contract_version", "vault"}:
+    if not {"config_version", "object_contract_version", "vault"} <= set(data) or not set(data) <= {
+        "config_version",
+        "object_contract_version",
+        "vault",
+        "capture",
+    }:
         raise DomainError("VAULT_INVALID", "knowlume.toml has missing or unknown fields")
     if data["config_version"] != CONFIGURATION_VERSION:
         raise DomainError("VAULT_VERSION_UNSUPPORTED", "unsupported Vault configuration version")
@@ -92,7 +98,32 @@ def parse_vault_config(text: str) -> VaultConfig:
                 continue
             if left == right or left in right.parents or right in left.parents:
                 raise DomainError("VAULT_PATH_CONFLICT", "configured Vault roots overlap")
-    return VaultConfig(CONFIGURATION_VERSION, OBJECT_CONTRACT_VERSION, **values)
+    capture = _mapping(data.get("capture", {}), "capture")
+    if set(capture) not in (set(), {"repository_hosts"}):
+        raise DomainError("VAULT_INVALID", "capture table has missing or unknown fields")
+    raw_hosts = capture.get("repository_hosts", [])
+    if not isinstance(raw_hosts, list) or any(not isinstance(item, str) for item in raw_hosts):
+        raise DomainError("VAULT_INVALID", "capture.repository_hosts must be an array of strings")
+    configured: list[str] = []
+    for raw_host in raw_hosts:
+        try:
+            host = normalize_repository_host(raw_host)
+        except DomainError as error:
+            raise DomainError(
+                "VAULT_INVALID", "capture.repository_hosts contains an invalid host"
+            ) from error
+        if host in configured:
+            raise DomainError("VAULT_INVALID", "capture.repository_hosts contains a duplicate host")
+        configured.append(host)
+    effective_hosts = BUILTIN_REPOSITORY_HOSTS + tuple(
+        sorted(host for host in configured if host not in BUILTIN_REPOSITORY_HOSTS)
+    )
+    return VaultConfig(
+        CONFIGURATION_VERSION,
+        OBJECT_CONTRACT_VERSION,
+        **values,
+        repository_hosts=effective_hosts,
+    )
 
 
 def _inside(root: Path, target: Path) -> bool:

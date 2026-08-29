@@ -12,7 +12,8 @@ protocol and does not depend on SQLite.
 
 At the end of the phase:
 
-- DOI and arXiv inputs resolve to stable Paper Source identities;
+- DOI and arXiv inputs are normalized into stable Paper identity requests, and the internal capture
+  service creates an idempotent Source after an injected metadata resolver returns eligible data;
 - repeated capture returns the existing Source ID and creates no duplicate durable file;
 - Zotero metadata can be recovered and synchronized without reading `zotero.sqlite`;
 - one primary PDF can be recovered through Zotero without storing an absolute path or attachment
@@ -22,10 +23,26 @@ At the end of the phase:
 - the public `kb add` command remains absent until all Phase 2B capture backends pass together.
 
 The accepted decisions are frozen by
-[`ADR-0012`](decisions/0012-phase2a-paper-zotero-design.md). Source semantics belong to
+[`ADR-0012`](decisions/0012-phase2a-paper-zotero-design.md), with the completed implementation
+boundary and acceptance evidence clarified by
+[`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md). Source
+semantics belong to
 [`data-model.md`](data-model.md), adapter behavior to
 [`sources-and-adapters.md`](sources-and-adapters.md), future interface behavior to
 [`interfaces.md`](interfaces.md), and sequencing to [`roadmap.md`](roadmap.md).
+
+### Completion clarification
+
+Phase 2A does not include a production DOI/arXiv-to-Zotero search resolver. Its production Zotero
+adapter reads metadata from an exact `ZoteroReference`; tests inject the `PaperMetadataPort` used by
+the internal capture service. Automatic personal-library candidate search and Zotero Paper/Book
+`itemType` classification are Phase 2B work. This clarification does not invalidate Phase 2A or
+retroactively reclassify an existing exact-reference Paper Source.
+
+The original cross-platform and distribution gates remain valid. Direct CLI regression tests now
+also cover every published Source filter, successful and failed open behavior, explicit sync
+approval options, warning envelopes, and the principal human-readable renderers. Phase 2A remains
+Complete/Verified; the `Phase2A` tag is historical and is not moved.
 
 ## 2. Non-negotiable requirements
 
@@ -109,10 +126,10 @@ old/new arXiv forms, optional versions, matching aliases, and split-identity con
 
 ### M2 — Implement the Zotero Local API adapter
 
-Implement a loopback-only API v3 client, library/item mapping, one-primary-PDF selection, disposable
-cache recovery, content hashing, timeout handling, and typed unavailable/permission/malformed-data
-errors. Keep adapter dependencies optional and fail with a capability diagnostic when the Zotero
-extra is absent.
+Implement a loopback-only API v3 client, exact-reference library/item mapping, one-primary-PDF
+selection, disposable cache recovery, content hashing, timeout handling, and typed
+unavailable/permission/malformed-data errors. Keep adapter dependencies optional and fail with a
+capability diagnostic when the Zotero extra is absent.
 
 Completion requires mock-server coverage for disabled API, timeout, permission failure, missing
 item, malformed response, zero/one/multiple PDFs, cache reuse, and hash mismatch.
@@ -178,14 +195,14 @@ status declarations only and must be reverted if supporting evidence is invalida
 The Phase 2A gate requires direct automated evidence for:
 
 - DOI and arXiv normalization, version handling, alias matching, conflict detection, and repeated
-  capture;
+  capture through an injected metadata resolver;
 - rejection of newly captured Zotero-only papers while preserving old readable v2 Sources;
 - Zotero disabled, unavailable, timeout, permission, missing-item, and malformed-response cases;
 - zero, one, and multiple PDF candidates; integrity match, mismatch, and explicit acceptance;
 - adapter-field updates, human-field preservation, first baseline adoption, local edits, identity
   changes, no-op synchronization, checksum conflicts, and interruption recovery;
-- Source list/show/open/sync, inbox, and every workflow transition, including JSON golden output
-  wherever specified;
+- Source list/show/open/sync, inbox, and every workflow transition, including filters, explicit sync
+  approvals, human output, warning behavior, and JSON golden output wherever specified;
 - absence of absolute paths, credentials, attachment bodies, partial writes, SQLite dependency, and
   a registered public `kb add` command;
 - core-wheel operation without Zotero dependencies and installed-wheel behavior from an arbitrary

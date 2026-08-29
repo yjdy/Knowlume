@@ -3,7 +3,7 @@ name: Package smoke
 on:
   workflow_dispatch:
   push:
-    branches: [Phase1]
+    branches: [Phase2B]
   pull_request:
     paths:
       - "pyproject.toml"
@@ -70,7 +70,7 @@ jobs:
           WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )
           python -m pip install pipx
           python -m pipx run --spec "$WHEEL" kb --version
-      - name: Smoke test Phase 1 commands
+      - name: Smoke test commands through Phase 2B
         shell: bash
         run: |
           WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )

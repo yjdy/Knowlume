@@ -4,9 +4,12 @@
 
 ## Current baseline
 
-Phase 0R and Phase 1 are complete. Phase 1 passed local, distribution, isolated-install, and
-Windows/macOS/Linux Python 3.13–3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913)
-and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates.
+Phase 0R, Phase 1, and Phase 2A are complete. Phase 2A passed local, distribution,
+isolated-install, and Windows/macOS/Linux Python 3.13–3.14
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) gates. Phase 1 evidence
+remains at [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856).
 
 The cross-platform Python package and release-engineering foundation is implemented independently of the feature phases. It exposes only verified release diagnostics until Phase 1 commands satisfy their gates.
 
@@ -24,6 +27,7 @@ The cross-platform Python package and release-engineering foundation is implemen
 | [`distribution.md`](distribution.md) | Python packaging, runtime assets, compatibility, release trust |
 | [`phase1-goal.md`](phase1-goal.md) | Phase 1 execution goal, milestones, acceptance checks, and Git rollback boundaries |
 | [`phase2a-goal.md`](phase2a-goal.md) | Phase 2A Paper/Zotero execution goal, milestones, acceptance checks, and Git rollback boundaries |
+| [`phase2b-goal.md`](phase2b-goal.md) | Phase 2B unified Source capture goal, project-level OSS boundary, milestones, and acceptance checks |
 | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | v1-to-v2 migration behavior |
 | [`decisions/`](decisions/) | accepted architecture decisions |
 | [`chapter-map.md`](chapter-map.md) | completed historical design migration audit |

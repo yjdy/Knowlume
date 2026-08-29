@@ -2,9 +2,9 @@
 
 本文档记录所有已规划 `kb` 命令的用途、交付阶段、实现方案、当前状态和验证证据，用于每次 CLI 变更后的对比与验收。
 
-> Last synchronized: 2026-08-28
+> Last synchronized: 2026-08-29
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Phase 2A Complete; commands Verified
+> Current delivery state: Phase 2A and Phase 2B Complete; commands Verified
 
 ## Authority and update rules
 
@@ -65,8 +65,7 @@
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `add` | `kb add INPUT [--type paper\|web\|book\|repo] [--json]` | 自动识别并捕获四类 Source，显式类型只覆盖识别 | Unified router、canonical identity、duplicate check、type adapter、atomic write、add-result v1 | `Planned` | — |
-| `snippet.add` | `kb snippet add` | 保存固定 commit 的受审代码片段 | OSS Source、relative path、inclusive range、license/publication review | `Planned` | — |
+| `add` | `kb add INPUT [--type paper\|web\|book\|repo] [--json]` | 自动识别并捕获四类 Source，显式类型只覆盖识别 | Unified router、canonical identity、duplicate check、type adapter、atomic write、add-result v1 | `Verified` | `tests/test_phase2b_cli.py`; complete suite; isolated wheel smoke; [CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661); [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33252123610) |
 
 ### `kb add` type capability matrix
 
@@ -74,10 +73,16 @@
 
 | Capability ID | CLI type | Durable source type | Delivery | Implementation plan | Status |
 |---|---|---|---|---|---|
-| `add.paper` | `paper` | `paper` | Phase 2A internal | DOI/arXiv canonicalization、Zotero metadata、idempotent Source factory | `Verified` |
-| `add.web` | `web` | `web` | Phase 2B | URL canonicalization、snapshot provider、hash/locator validation | `Planned` |
-| `add.book` | `book` | `book` | Phase 2B | DOI/ISBN metadata、edition identity、Zotero mapping | `Planned` |
-| `add.repo` | `repo` | `oss` | Phase 2B | configured Git host、project-root resolution、immutable commit、license evidence | `Planned` |
+| `add.paper` | `paper` | `paper` | Phase 2A internal foundation; Phase 2B resolver | DOI/arXiv exact candidate search、itemType classification、Paper metadata and attachment recovery | `Verified` |
+| `add.web` | `web` | `web` | Phase 2B | URL canonicalization、exact Zotero webpage and immutable HTML/XHTML snapshot evidence | `Verified` |
+| `add.book` | `book` | `book` | Phase 2B | DOI/ISBN metadata、edition identity、Zotero mapping | `Verified` |
+| `add.repo` | `repo` | `oss` | Phase 2B | configured Git host、isolated anonymous remote HEAD resolution、immutable commit、`license: NOASSERTION`；整体项目笔记复用 Literature Note | `Verified` |
+
+## Deferred commands
+
+| ID | Reserved command | Description | Reconsideration gate | Status | Verification |
+|---|---|---|---|---|---|
+| `snippet.add` | `kb snippet add` | Contract v2 Snippet 保持可读，但不提供创建入口 | 无期限延期且不归属任何阶段；仅在新的 accepted ADR 验证用例并冻结内容恢复、路径/行范围、许可证、发布审批、幂等和事务规则后重新规划 | `Deferred` | — |
 
 ## Phase 3 — Projection and search
 
@@ -142,6 +147,9 @@
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-08-29 | 完成 Phase 2B 统一 Source capture | `kb add` 四条 backend、Book edition/config 契约、Zotero 精确分类与 Web snapshot、匿名 Git HEAD、幂等/冲突写入和 OSS→Literature Note 已通过本地、分发、隔离安装及[跨平台 CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661)；状态更新为 `Verified` |
+| 2026-08-29 | 勘误 Phase 2A capture 边界并回补 CLI 验收 | Phase 2A 保持 Complete/Verified：内部 Paper capture 依赖可注入 metadata resolver，生产 DOI/arXiv Zotero 搜索归 Phase 2B；`tests/test_phase2a_cli.py` 直接覆盖 Source filters、open 成功、sync 审批参数、warnings 和主要 human/JSON 输出；ADR-0014 冻结完整公开诊断 |
+| 2026-08-29 | 收紧 Phase 2B OSS 范围并无期限延期 Snippet 创建 | `add.repo` 仅捕获仓库根和远端 HEAD 的项目级 OSS Source；整体项目笔记复用已验证的 Literature Note；`snippet.add` 改为未分配阶段的 `Deferred`，现有 Contract v2 Snippet 仍可读 |
 | 2026-08-28 | Phase 2A 跨平台最终门禁完成 | [CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) 覆盖 Windows/Linux/macOS × Python 3.13/3.14，Phase 2A 命令与内部 Paper capture 标记为 `Verified` |
 | 2026-08-28 | 实现 Phase 2A Paper/Zotero vertical slice | 内部 capture、Source 查询/同步/工作流、JSON schema、wheel 审计和隔离安装通过；公共 `kb add` 保持未注册，跨平台 CI 待确认 |
 | 2026-08-28 | Phase 1 跨平台最终门禁完成 | [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 覆盖 Windows/Linux/macOS × Python 3.13/3.14，所有 Phase 1 命令保持 `Verified` |

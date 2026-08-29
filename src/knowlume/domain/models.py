@@ -85,10 +85,21 @@ class BookLocator:
     location: str | None = None
 
     def __post_init__(self) -> None:
+        from knowlume.domain.isbn import normalize_isbn
+
         if not any((self.chapter, self.page, self.location)):
             raise DomainError("LOCATOR_INVALID", "book locator needs a position")
         if self.page is not None and not (self.edition or self.isbn):
             raise DomainError("LOCATOR_INVALID", "book page locator needs edition or ISBN")
+        if self.edition is not None and (
+            not self.edition or self.edition != self.edition.strip()
+        ):
+            raise DomainError("LOCATOR_INVALID", "book edition must be a trimmed string")
+        if self.isbn is not None:
+            try:
+                object.__setattr__(self, "isbn", normalize_isbn(self.isbn))
+            except DomainError as error:
+                raise DomainError("LOCATOR_INVALID", "book ISBN is invalid") from error
 
 
 @dataclass(frozen=True)
@@ -226,6 +237,7 @@ class Source:
     attachment_size: int | None = None
     attachment_sha256: str | None = None
     isbn: str | None = None
+    edition: str | None = None
     doi: str | None = None
     arxiv_id: str | None = None
     arxiv_version: int | None = None
@@ -270,6 +282,12 @@ class Source:
             r"(?:[a-z-]+(?:\.[a-z]{2})?/\d{7}|\d{4}\.\d{4,5})", self.arxiv_id
         ):
             raise DomainError("FIELD_INVALID", "arXiv identity must be normalized")
+        if self.edition is not None and (
+            self.source_type is not SourceType.BOOK
+            or not self.edition
+            or self.edition != self.edition.strip()
+        ):
+            raise DomainError("FIELD_INVALID", "edition is valid only as a trimmed Book field")
         if self.attachment_media_type not in {None, "application/pdf"}:
             raise DomainError("FIELD_INVALID", "primary attachment must be a PDF")
         if self.attachment_filename is not None and (
