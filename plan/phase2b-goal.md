@@ -1,8 +1,8 @@
 # Phase 2B execution goal: Unified Source capture
 
-> **Status:** M0 and M0A complete; M1 contract work is next; Phase 2B production work not started
+> **Status:** M0, M0A, and M0B complete; M1 contract work is next; Phase 2B production work not started
 > **Target branch:** `Phase2B`
-> **Baseline commit:** `59988c3694cda5b028fbd4ffd8d1ad2323b86f06`
+> **Baseline commit:** `49a4615293739795e2be78ca1b70f9928848d7f2`
 > **Baseline state:** branch tracks `origin/Phase2B`; this goal does not authorize Git operations
 
 ## 1. Current foundation and authority
@@ -25,6 +25,7 @@ This goal is subordinate to the machine contracts and follows:
 - [`ADR-0009`](decisions/0009-unified-add-command.md);
 - [`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md);
 - [`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md);
+- [`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md);
 - [`interfaces.md`](interfaces.md);
 - [`data-model.md`](data-model.md);
 - [`sources-and-adapters.md`](sources-and-adapters.md);
@@ -125,6 +126,12 @@ Credentials, query strings, fragments, empty project names, and non-root provide
 invalid. Canonical URL, repository host/path, and identity must be derived from the same normalized
 value.
 
+Configured repository hosts extend the built-in `github.com` and `gitlab.com` set. A missing section
+or empty configured list keeps those defaults. Configuration accepts bare DNS hostnames only,
+normalizes them to lowercase IDNA A-labels after removing one terminal root-domain dot, rejects
+scheme, credentials, port, path, wildcard, IP literal, `localhost`, whitespace, empty values, and
+normalized duplicates, and matches the complete hostname without subdomain inheritance.
+
 ### 3.3 Zotero scope
 
 - Use only Zotero's supported read-only Local API; never read `zotero.sqlite`.
@@ -146,8 +153,9 @@ and [Zotero API basics](https://www.zotero.org/support/dev/web_api/v3/basics).
 
 ### 3.4 Web snapshot
 
-- Match one exact Zotero top-level webpage item and exactly one recoverable HTML/XHTML snapshot
-  attachment.
+- Match one exact Zotero top-level `webpage` item and exactly one recoverable child snapshot whose
+  `itemType` is `attachment`, `parentItem` matches the webpage item key, `linkMode` is
+  `imported_url`, and `contentType` is `text/html` or `application/xhtml+xml`.
 - `snapshot_ref.provider` is `zotero`.
 - `snapshot_ref.identifier` is:
 
@@ -155,14 +163,20 @@ and [Zotero API basics](https://www.zotero.org/support/dev/web_api/v3/basics).
   user/0/<parent-item-key>/<attachment-key>
   ```
 
-- `captured_at` comes from the attachment `dateAdded`. Missing or malformed values fail; current
-  time is never substituted.
+- Source `captured_at` and `snapshot_ref.captured_at` are identical and come from attachment
+  `dateAdded`. Missing or malformed values fail; current time is never substituted.
 - SHA-256 is calculated from the recovered attachment bytes.
+- Empty attachment bytes are ineligible.
 - Zero or multiple eligible snapshots return metadata-unavailable and write nothing.
 - Snapshot bytes are used only to calculate integrity evidence; they are not persisted in the
   Vault.
 - Repeating a canonical Web URL returns the first accepted Source and does not refresh or replace
   its snapshot in Phase 2B.
+- Existing v2 Web Sources without `snapshot_ref` remain readable, scannable, listable, and showable;
+  Schema does not make the field globally required and there is no migration or rewrite.
+- A Web Locator exactly matches the Source snapshot provider, identifier, capture time, and SHA-256.
+  An old Source without coherent snapshot evidence cannot support a new Web citation or pass public
+  dependency closure until repaired by a future reviewed workflow.
 
 ### 3.5 Book and edition
 
@@ -175,6 +189,13 @@ Contract v2 Source gains one backward-compatible optional `edition` field:
 - a DOI-only Book can be captured, but a page Locator remains invalid until an edition or ISBN is
   present;
 - existing v2 files remain valid and require no automatic migration.
+
+ISBN comparison uses canonical ISBN-13. Edition comparison uses the complete case-sensitive string
+after trimming outer whitespace. A Book page Locator carries at least one ISBN or edition already
+present on the Source; every value it carries must match, and it cannot introduce evidence absent
+from the Source. If the Source has both values, the Locator may carry one, but both must match when
+both are present. Fact and relation validation reuse `FACT_LOCATOR_MISMATCH` and
+`RELATION_LOCATOR_MISMATCH` with mismatched-field details.
 
 Book capture maps title, authors, year, ISBN, DOI, edition, canonical URL when present, and Zotero
 recovery fields. Phase 2B does not extend `source sync` to Books.
@@ -190,21 +211,30 @@ repository_hosts = ["github.com", "gitlab.com"]
 
 Rules:
 
-- absence of the section defaults to `github.com` and `gitlab.com`;
-- host values are unique normalized hostnames without scheme, port, path, credentials, wildcard,
-  or whitespace;
+- absence of the section or an empty list defaults to `github.com` and `gitlab.com`; configured hosts
+  extend rather than replace this set;
+- host values are unique normalized bare DNS hostnames without scheme, port, path, credentials,
+  wildcard, IP literal, `localhost`, or whitespace;
+- host normalization lowercases, applies IDNA A-label conversion, removes one terminal root-domain
+  dot, and rejects duplicates after normalization;
+- matching uses the complete hostname and does not inherit configured permission to subdomains;
 - configured self-hosted Git hosts and nested GitLab-style groups are recognized automatically;
 - explicit `--type repo` may select another self-hosted HTTP(S) Git server, but still requires a
   generic root-shaped path and successful remote-HEAD resolution;
 - public input is an HTTP(S) repository-root URL only;
-- GitHub `/blob/` and `/tree/` routes and GitLab `/-/` file/tree routes are rejected;
+- GitHub roots contain exactly two path segments. GitLab and configured hosts accept nested project
+  paths with at least two segments. GitHub `/blob/` and `/tree/` routes and GitLab `/-/` routes are
+  rejected;
 - credentials, queries, fragments, file/subdirectory paths, local paths, SCP syntax, and explicit
   revision input are rejected;
 - use read-only remote-reference discovery, such as `git ls-remote --symref URL HEAD`, to obtain the
   default branch and a 40- or 64-character lowercase full commit;
-- disable interactive credential prompts; unavailable Git, authentication requirements,
-  inaccessible repositories, malformed refs, symbolic-ref loops, and unborn HEAD return typed
-  capability/metadata failures;
+- use disposable isolated Git configuration and a rejecting platform askpass helper; disable terminal
+  and GUI prompts, credential helpers, interactive credential managers, and system/global URL
+  rewrites;
+- unavailable Git, authentication requirements, inaccessible repositories, malformed refs,
+  symbolic-ref loops, and unborn HEAD return typed capability/metadata failures without exposing
+  commands, task-local paths, environment values, or remote stderr;
 - title defaults deterministically to the final repository path component after removing `.git`;
 - the Source records canonical URL, repository host, full project path, default branch, commit, and
   `license: NOASSERTION`;
@@ -212,6 +242,10 @@ Rules:
   license evidence;
 - an unchanged remote HEAD returns the existing Source; a later HEAD commit creates a distinct
   immutable Source.
+- any OSS Locator exactly matches the Source normalized host, complete project path, and full commit;
+  Fact and relation mismatches reuse the existing locator-mismatch findings.
+- tests use an injectable command runner and platform-native fake Git executable and never contact a
+  public repository.
 
 The mutable repository URL is an intake route. The full commit, not the branch or live URL alone,
 is the durable provenance identity.
@@ -341,10 +375,45 @@ tag, or release operations.
 - Human and JSON errors use the same frozen exit code; warnings have direct human and JSON evidence.
 - Targeted Phase 2A tests, the complete repository suite, Ruff, and mypy pass.
 
-**Git commit:** Yes — P2B-C1A
+**Completed checkpoint:** P2B-C1A at `49a4615293739795e2be78ca1b70f9928848d7f2`
 
 ```text
 test(phase2a): reconcile capture and CLI acceptance evidence
+```
+
+### M0B — Freeze provenance coherence and anonymous Git policy — Complete
+
+**Requirements**
+
+- Accept ADR-0015 and link ADR-0013/0014 to its clarification without rewriting their historical
+  decisions.
+- Synchronize the data model, source/adapter, interface, security/publishing, roadmap, navigation,
+  and this execution goal.
+- Freeze the Web new-capture versus old-v2 compatibility boundary, Book/OSS Source–Locator
+  coherence, configured-host normalization and exact matching, anonymous Git isolation, and offline
+  installed-wheel test policy.
+- Keep Contract v2 and configuration v1 version numbers unchanged and record that no migration is
+  triggered.
+
+**Limits**
+
+- Documentation and accepted decisions only; no Schema, template, fixture, production-code, or CLI
+  registration changes.
+- Do not reopen Phase 2A, move its tag, begin M1, or alter Snippet scope.
+- P2B-C1B remains reserved for a production defect exposed by M0A and is not reused.
+
+**Completion conditions**
+
+- Every new Web snapshot eligibility field and legacy compatibility consequence is explicit.
+- Book and OSS Locator equality rules have no implementation choice left open.
+- Host defaults, extension, normalization, exact matching, and invalid forms are deterministic.
+- Git cannot use ambient credentials or URL rewrites, and all Git tests are offline.
+- Internal documentation links, the complete repository suite, Ruff, and mypy pass.
+
+**Completed checkpoint:** P2B-C1C
+
+```text
+docs(contract): freeze phase 2b provenance and git policy
 ```
 
 ### M1 — Extend current contracts and configuration
@@ -358,6 +427,10 @@ test(phase2a): reconcile capture and CLI acceptance evidence
 - Update current Source/config templates and bundled resource inputs where applicable.
 - Add valid and invalid Book edition and repository-host configuration fixtures.
 - Add source-specific Locator coherence fixtures/tests needed by Book, Web, and OSS capture.
+- Keep `snapshot_ref` optional in the global Web Source Schema while enforcing complete evidence for
+  new capture and affected citations in application/domain semantics.
+- Extend existing Fact/relation locator-mismatch findings with mismatched-field details; do not add a
+  parallel finding vocabulary.
 - Establish failing contract/parser tests before production parsing changes.
 
 **Limits**
@@ -371,8 +444,11 @@ test(phase2a): reconcile capture and CLI acceptance evidence
 
 - Old and new valid fixtures pass.
 - Edition type/source restrictions, whitespace boundaries, page-locator ISBN/edition requirements,
-  duplicate/invalid/wildcard repository hosts, and unsafe host forms have negative evidence.
-- Config without `[capture]` resolves the default host set deterministically.
+  Source/Locator mismatches, duplicate/invalid/wildcard repository hosts, and unsafe host forms have
+  negative evidence.
+- Old Web Sources without snapshots remain readable; new Web capture cannot produce one.
+- Config without `[capture]` and config with an empty host list resolve the default host set
+  deterministically; configured hosts extend defaults and do not authorize subdomains.
 - Bundled assets match top-level authorities byte for byte.
 
 **Git commit:** Yes — P2B-C2
@@ -392,6 +468,8 @@ feat(contract): add book edition and repository host config
 - Convert valid ISBN-10 to canonical ISBN-13.
 - Recognize default and configured repository hosts automatically; permit an explicit repo override
   for another HTTP(S) host only when generic root and later adapter validation can succeed.
+- Apply exact complete-host matching after lowercase IDNA normalization and terminal-dot removal;
+  never infer configured subdomains.
 - Output the raw input, explicit requested type, normalized input kind, and the unresolved candidate
   required by the next adapter boundary.
 - Keep DOI as a DOI candidate until Zotero classification; keep repo as a normalized repo candidate
@@ -411,6 +489,8 @@ feat(contract): add book edition and repository host config
 - Four candidate paths, every override shape, invalid ISBN, credential-bearing URL, unknown host
   defaulting to Web, explicit unknown-host repo selection, known non-root repo URL, and URL
   canonicalization goldens pass.
+- Repository-host goldens cover built-in extension, empty config, IDNA/case/terminal-dot equivalence,
+  exact subdomain rejection, GitHub two-segment roots, and nested GitLab/configured paths.
 - Equivalent accepted input produces one normalized candidate; invalid forms fail deterministically.
 - CLI `repo` is represented internally as durable `oss`.
 
@@ -434,7 +514,9 @@ feat(capture): add unified recognition and canonical identities
 - Before mapping a new Source, accept only the ADR-0014 Paper whitelist or top-level `book` and reject
   missing/unsupported types without guessing.
 - Map top-level Book metadata including ISBN, DOI, edition, and recovery reference.
-- Select exactly one Web HTML/XHTML snapshot, recover its bytes transiently, and calculate SHA-256.
+- Select exactly one top-level `webpage` and one child `imported_url` HTML/XHTML attachment with
+  matching parent, parseable `dateAdded`, and non-empty recoverable bytes; recover bytes transiently
+  and calculate SHA-256.
 - Translate unavailable service, timeout, permission, missing item/attachment, malformed response,
   and missing optional dependency into typed capability/metadata failures.
 
@@ -442,6 +524,8 @@ feat(capture): add unified recognition and canonical identities
 
 - No Zotero Cloud API, group-library search, write request, or private SQLite access.
 - No snapshot or attachment body in durable files.
+- Do not make `snapshot_ref` globally required for old v2 Web Sources or retroactively invalidate
+  their read/list/show behavior.
 - No `bookSection` support.
 - Do not extend `source sync` to Web or Book.
 - Do not apply the new item-type whitelist retroactively to exact-reference synchronization of an
@@ -454,9 +538,12 @@ feat(capture): add unified recognition and canonical identities
   `bookSection`, unknown type, and missing `itemType`.
 - Explicit Paper/Book tests cover missing, multiple, and type-incompatible candidates plus absent
   adapter capability.
-- Zero, one, and multiple eligible Web snapshots have tests.
-- Missing/malformed `dateAdded`, bad attachment bytes, timeouts, missing HTTPX, and malformed payloads
-  fail without writes.
+- Zero, one, and multiple eligible Web snapshots have tests, including wrong `itemType`, parent,
+  `linkMode`, and MIME type.
+- Missing/malformed `dateAdded`, empty/unrecoverable attachment bytes, timeouts, missing HTTPX, and
+  malformed payloads fail without writes.
+- New Source and snapshot capture times are equal; Web Locator provider, identifier, capture time, and
+  hash coherence has positive and field-by-field negative evidence.
 - Paper Phase 2A capture, open, and sync behavior has no regression.
 
 **Git commit:** Yes — P2B-C4
@@ -471,7 +558,10 @@ feat(zotero): resolve paper book and web capture metadata
 
 - Resolve GitHub, GitLab, configured self-hosted hosts, and nested group project roots.
 - Use a narrow Git command port and adapter to discover symbolic default HEAD and its full commit.
-- Disable interactive Git credential prompts and sanitize typed failures.
+- Use disposable isolated Git configuration and a rejecting askpass helper; disable terminal/GUI
+  prompts, credential helpers, interactive credential managers, and system/global URL rewrites.
+- Sanitize typed failures so command details, task-local paths, environment values, and remote stderr
+  cannot reach durable files or the public envelope.
 - Construct metadata only from normalized URL and remote refs: deterministic title, canonical URL,
   host, project path, default branch, full commit, and `license: NOASSERTION`.
 - Keep the command runner injectable so tests do not depend on the public internet.
@@ -482,15 +572,22 @@ feat(zotero): resolve paper book and web capture metadata
   license inspection.
 - No arbitrary commit/branch/tag input and no branch name in canonical identity.
 - Do not persist command lines containing secrets, local paths, remote output, or environment data.
+- Do not use ambient system/global Git configuration, credential helpers, askpass success paths, or
+  authenticated remotes.
 - Monorepo subdirectories are not separate repo Sources.
 
 **Completion conditions**
 
-- GitHub, nested GitLab, configured host, `.git`/trailing-slash normalization, and default HEAD pass.
+- GitHub, nested GitLab, configured host, exact subdomain handling, `.git`/trailing-slash
+  normalization, and default HEAD pass.
 - SHA-1 and SHA-256 full object IDs are accepted; abbreviated/mixed-case/invalid IDs fail.
 - Detached/malformed/unborn HEAD, missing Git, prompt-required authentication, timeout,
   inaccessible repository, and ambiguous project root produce typed failures.
-- Tests use fakes and temporary local bare remotes; no test requires a public network.
+- Unit and application tests use an injectable command fake. Installed-wheel smoke injects an
+  executable `git` shim on POSIX and `git.cmd` on Windows through temporary `PATH`; no test requires
+  a public network.
+- Tests assert the exact permitted argv/environment policy and cover success, missing Git, nonzero
+  exit, malformed response, authentication requirement, and redaction.
 - Tests prove that the adapter never invokes clone, checkout, fetch, show, cat-file, or file reads.
 
 **Git commit:** Yes — P2B-C5
@@ -513,6 +610,8 @@ feat(capture): add project-level repository resolver
   DOI collisions to `ADD_IDENTITY_CONFLICT` rather than a write conflict.
 - Create Web, Book, and OSS Sources in their existing v2 locations through current templates.
 - Freeze the first Web snapshot for a canonical URL.
+- Validate Book, Web, and OSS Source–Locator coherence before transaction commit whenever the
+  capture operation creates or validates affected durable dependencies.
 - Run a complete scan after every write and roll back on scan failure.
 - Reuse expected-checksum conflicts and recoverable transaction behavior.
 
@@ -529,6 +628,8 @@ feat(capture): add project-level repository resolver
 - Repeated repo capture with unchanged HEAD returns the same ID; changed HEAD creates a different
   Source.
 - Every failure leaves the Vault byte-identical and transaction/lock state recoverable and clean.
+- Legacy Web Sources without snapshots remain readable, while attempts to use them as new/public Web
+  citations fail closed without durable changes.
 - The same unified service invokes all four backends and returns one result type.
 - An explicit override produces equal `requested_type` and `detected_type`; automatic capture records
   the final adapter-resolved type.
@@ -611,8 +712,8 @@ feat(cli): expose phase 2b unified source capture
 
 - Run the complete tests, Ruff, mypy, build, and distribution audit.
 - Keep the Phase 2A M0A command-level acceptance suite in the complete regression gate.
-- Extend wheel smoke for `kb add --help`, a repo adapter fixture, absent `kb snippet`, and missing
-  Zotero-extra behavior.
+- Extend wheel smoke for `kb add --help`, an offline platform-native fake-Git repo fixture, absent
+  `kb snippet`, and missing Zotero-extra behavior.
 - Verify Paper, Book, and Web adapter wiring in an isolated `knowlume[zotero]` environment.
 - Run installed CLI checks outside the source checkout.
 - Record local evidence without declaring Phase 2B Complete.
@@ -627,6 +728,8 @@ feat(cli): expose phase 2b unified source capture
 
 - Every local check in section 7 passes.
 - Distribution contents and bundled assets pass audit.
+- Installed repo smoke proves Git argv/environment isolation, error redaction, and absence of public
+  network access on Windows and POSIX runners.
 - Git diff contains no generated, private, absolute-path, or unrelated content.
 - The checkpoint commit leaves a clean working tree.
 
@@ -694,12 +797,15 @@ validation and publishing checks. Only creation is deferred.
 - All four recognition paths and all explicit overrides have command-level evidence.
 - DOI candidate classification covers all accepted Paper types, top-level `book`, zero/multiple or
   mixed exact candidates, unsupported/missing item types, and explicit override failures.
-- ISBN checksum/conversion, Web URL canonicalization, configured host validation,
+- ISBN checksum/conversion, Web URL canonicalization, configured host extension/exact matching,
   and repository-root parsing follow the frozen rules.
 - `add-result-v1` success JSON exactly matches golden fixtures.
-- Book page Locator without ISBN/edition fails.
-- Web Locator points to the Source's actual immutable snapshot reference.
+- Book page Locator without ISBN/edition, with evidence absent from the Source, or with a mismatched
+  normalized ISBN/edition fails.
+- Old Web Sources without snapshots remain readable; new captures require complete evidence. Web
+  Locator provider, identifier, capture time, and hash exactly match the Source snapshot.
 - OSS Source records normalized host/path, default branch, full commit, and `NOASSERTION` only.
+- OSS Locator host/path/commit exactly match the Source.
 - Repo capture followed by Literature Note creation produces exactly one `summarizes` relation.
 - No public or application Snippet creator exists; existing v2 Snippet fixtures still pass.
 - Every added Schema field has valid and invalid fixtures; old v2 fixtures remain valid.
@@ -720,8 +826,10 @@ validation and publishing checks. Only creation is deferred.
 
 - Vault contains no absolute path, credential, token, webpage/attachment body, repository body,
   clone, cache, or command log.
-- Credential-bearing URLs, unknown/non-root repo shapes, and unsafe configured hosts are rejected.
-- Git credential prompting is disabled and failure messages do not echo secrets.
+- Credential-bearing URLs, unknown/non-root repo shapes, unsafe configured hosts, and automatic
+  subdomain inheritance are rejected.
+- Git credential prompting, helpers, interactive managers, and system/global URL rewrites are
+  disabled; failure messages do not echo secrets, paths, environment values, or remote stderr.
 - Zotero is read-only throughout.
 - New Sources and Literature Notes are private.
 - Project-level OSS uses `license: NOASSERTION`; unresolved rights remain blocked for publication.
@@ -732,6 +840,7 @@ validation and publishing checks. Only creation is deferred.
 - Core wheel imports, shows all help, and runs repo/core paths without the Zotero extra.
 - Isolated `knowlume[zotero]` loads Paper, Book, and Web adapters.
 - Missing Git returns a typed capability diagnostic rather than an import crash.
+- Installed repo smoke uses a platform-native fake Git command and never accesses a public network.
 - Internal Zotero/Git/scan/invariant diagnostics do not leak through the public `kb add` envelope.
 - Wheel Schema/Template bytes match top-level authority.
 - Wheel excludes tests, plans, fixtures, Vaults, caches, repository data, and private files.

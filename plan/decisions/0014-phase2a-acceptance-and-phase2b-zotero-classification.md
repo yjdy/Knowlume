@@ -4,6 +4,9 @@
 - Date: 2026-08-29
 - Decision owners: Knowlume maintainers
 
+> Phase 2B Web/Book/OSS provenance coherence and anonymous Git resolution are frozen separately by
+> [`ADR-0015`](0015-phase2b-provenance-and-anonymous-git.md).
+
 ## Context
 
 Phase 2A delivered DOI/arXiv normalization, an internal Paper capture service behind an injectable

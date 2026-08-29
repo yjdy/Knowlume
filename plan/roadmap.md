@@ -98,24 +98,30 @@ Phase 2B follows [`phase2b-goal.md`](phase2b-goal.md),
 [`ADR-0009`](decisions/0009-unified-add-command.md), and
 [`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md), with Zotero
 classification and override behavior frozen by
-[`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md). It is complete
+[`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md), and provenance
+coherence, repository-host matching, anonymous Git isolation, and offline verification frozen by
+[`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md). It is complete
 only when all of the following are directly proven:
 
 - one public `kb add` command releases Paper, Web, Book, and repo paths together with deterministic
   recognition, explicit override, canonical identity, versioned JSON, and typed failures;
 - new Paper capture accepts only the ADR-0014 scholarly item-type whitelist, new Book capture accepts
   only top-level `book`, and existing exact-reference Paper Sources remain compatible;
-- Web capture records one recoverable Zotero snapshot with capture time and SHA-256, while Book
-  capture preserves valid ISBN/DOI and edition identity;
-- repo capture accepts only configured HTTP(S) project-root URLs, discovers the remote default HEAD
-  read-only, and records the full immutable commit without cloning or reading repository content;
+- new Web capture records one exact recoverable Zotero `imported_url` HTML/XHTML child snapshot with
+  capture time and SHA-256; old v2 Web Sources without snapshot evidence remain readable but cannot
+  support new/public citations;
+- Book capture preserves valid ISBN/DOI and edition identity, and Book/Web/OSS locators match the
+  provenance recorded by their Source;
+- repo capture accepts only normalized credential-free HTTP(S) project-root URLs, extends the
+  built-in hosts through exact configured-host matching, discovers the remote default HEAD with
+  anonymous isolated Git, and records the full immutable commit without cloning or reading content;
 - an unchanged repo HEAD is idempotent, while a changed HEAD creates a distinct immutable OSS
   Source;
 - the existing verified Literature Note command creates an overall project note and the required
   `summarizes` relation for an OSS Source;
 - every adapter, identity, conflict, scanner, and transaction failure is write-free or rolls back;
 - core-only and Zotero-extra isolated installations, distribution audit, full tests, static checks,
-  and supported-platform CI all pass before status changes.
+  offline fake-Git smoke, and supported-platform CI all pass before status changes.
 
 Phase 2B does not extend `source sync` to Book or Web Sources and does not create repository files,
 license evidence, Snippets, or a Project Note type.

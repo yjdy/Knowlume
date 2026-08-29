@@ -39,6 +39,21 @@ Matching either value resolves the existing Source. If the identifiers resolve t
 IDs, the operation stops for human review and never merges them automatically. arXiv version is
 material-recovery metadata rather than part of duplicate identity.
 
+### Source and Locator provenance coherence
+
+The Source is the durable authority for the material version named by a Locator. A Web Locator
+matches the Source snapshot provider, identifier, capture time, and SHA-256. A Book page Locator
+carries at least one normalized ISBN-13 or trimmed edition already present on the Source, and every
+value it carries matches. An OSS Locator matches the Source's normalized host, complete project
+path, and full immutable commit. A Locator never supplies provenance that the Source lacks.
+
+Existing v2 Web Sources without snapshot evidence and existing inconsistent objects remain readable;
+there is no automatic migration. They cannot support a new affected citation or pass public
+dependency closure until their provenance is complete and coherent. Fact and relation validation
+reuse `FACT_LOCATOR_MISMATCH` and `RELATION_LOCATOR_MISMATCH` with mismatched-field details. The
+compatibility boundary is frozen by
+[`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md).
+
 ### Source workflow
 
 Source workflow moves explicitly and one step at a time:
@@ -112,3 +127,6 @@ the versioned schemas.
 Phase 2B keeps OSS capture at project level and indefinitely defers Snippet creation without
 changing existing Snippet semantics. The boundary is recorded in
 [`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md).
+Web/Book/OSS provenance coherence and anonymous Git discovery are additive semantic gates recorded
+in [`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md); they do not bump Contract v2
+or configuration v1 and do not trigger an automatic migration.

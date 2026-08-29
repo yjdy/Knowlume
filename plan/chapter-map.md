@@ -15,7 +15,7 @@ The original design was audited and split into active thematic documents. The fr
 | Post-baseline package distribution | [`distribution.md`](distribution.md) | Complete |
 | Phase 1 Vault configuration and transaction protocol | [`decisions/0011-phase1-vault-and-transaction-contracts.md`](decisions/0011-phase1-vault-and-transaction-contracts.md) | Complete |
 | Phase 2A Paper identity, Zotero, attachment, synchronization, workflow design, and acceptance clarification | [`phase2a-goal.md`](phase2a-goal.md), [`ADR-0012`](decisions/0012-phase2a-paper-zotero-design.md), [`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md) | Design ownership recorded |
-| Phase 2B unified Source capture, Zotero classification, project-level OSS boundary, Literature Note reuse, and deferred Snippet creation | [`phase2b-goal.md`](phase2b-goal.md), [`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md), [`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md) | Design ownership recorded |
+| Phase 2B unified Source capture, Zotero classification, provenance coherence, anonymous Git resolution, project-level OSS boundary, Literature Note reuse, and deferred Snippet creation | [`phase2b-goal.md`](phase2b-goal.md), [`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md), [`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md), [`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md) | Design ownership recorded |
 
 ## Completion checks
 

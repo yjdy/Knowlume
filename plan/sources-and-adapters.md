@@ -43,31 +43,70 @@ boundaries are frozen by
 
 A live URL and `captured_at` alone cannot support a durable fact. A web snapshot reference contains a provider, opaque identifier, capture time, and content hash; adapters interpret the provider-specific identifier. Public facts require both an eligible public Source and a recoverable snapshot reference.
 
+Existing v2 Web Sources without `snapshot_ref` remain readable, scannable, listable, and showable.
+The backward-compatible Source schema does not make the field globally required and Phase 2B does
+not migrate or rewrite old files. Such a Source cannot support a new Web citation or pass public
+dependency closure until complete snapshot evidence exists.
+
+New Phase 2B Web capture requires exactly one exact top-level Zotero `webpage` and one recoverable
+child attachment whose item type is `attachment`, parent key matches the webpage, link mode is
+`imported_url`, content type is `text/html` or `application/xhtml+xml`, `dateAdded` is parseable, and
+bytes are non-empty. Source and snapshot capture times are identical, and SHA-256 is calculated from
+the recovered bytes. A Web Locator must exactly match the Source snapshot provider, identifier,
+capture time, and hash.
+
 Phase 2B freezes the first accepted snapshot for a canonical URL. Repeated capture returns the
-existing Source without replacing snapshot identity or bytes. Web snapshot replacement and Web
-`source sync` are deferred.
+existing Source without replacing snapshot identity or bytes. Web snapshot repair, replacement, and
+Web `source sync` are deferred. These compatibility and coherence rules are frozen by
+[`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md).
 
 ## Book
 
-Books use ISBN, DOI, Zotero, or another stable bibliographic identity. Any locator that uses page numbers must also identify the edition or ISBN so pagination is unambiguous.
+Books use ISBN, DOI, Zotero, or another stable bibliographic identity. ISBN-10 is validated and
+normalized to ISBN-13; edition is compared as a complete case-sensitive string after trimming outer
+whitespace. Any Locator that uses page numbers must identify at least one of ISBN or edition, and
+every value it carries must exist on and match the Source. A Locator cannot introduce version
+evidence absent from the Source. A DOI-only Book remains capturable but cannot support a page
+Locator until the Source gains ISBN or edition evidence.
 
-Phase 2B captures Book metadata but does not extend `source sync` beyond its Phase 2A Paper scope.
+The same rule applies to Fact and relation locators. Mismatches reuse `FACT_LOCATOR_MISMATCH` and
+`RELATION_LOCATOR_MISMATCH` with field details. Phase 2B captures Book metadata but does not extend
+`source sync` beyond its Phase 2A Paper scope. See
+[`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md).
 
 ## Open-source software
 
 An OSS source identifies the host, full repository path, and immutable commit. Repository paths may contain nested GitLab groups. Branch names are display metadata and never replace a commit.
 
-Phase 2B accepts only credential-free HTTP(S) repository-root URLs. GitHub, GitLab, and configured
-hosts are recognized automatically; `--type repo` can select another self-hosted Git server but
-cannot bypass project-root or remote-HEAD validation. The adapter resolves the current default
-remote HEAD through read-only Git reference discovery and stores the full commit. It rejects
-query/fragment values, blob/tree/file/subdirectory routes, and arbitrary revision input. An
-unchanged HEAD returns the existing Source; a changed HEAD is a different immutable Source identity.
+Phase 2B accepts only credential-free HTTP(S) repository-root URLs. The optional configured host set
+extends the built-in `github.com` and `gitlab.com` hosts. Bare DNS hostnames are normalized to
+lowercase IDNA A-labels with one terminal root-domain dot removed, and matching is exact: a configured
+parent does not authorize a subdomain. Scheme, port, path, wildcard, IP literal, `localhost`,
+whitespace, and normalized duplicates are invalid configuration values.
+
+GitHub roots contain exactly owner and repository segments. GitLab and configured hosts accept
+nested project paths of at least two segments. `--type repo` can select another self-hosted Git
+server but cannot bypass generic project-root or remote-HEAD validation. Provider file/tree routes,
+query/fragment values, credentials, local/SSH/SCP inputs, and arbitrary revision syntax are rejected.
+One terminal `.git` and trailing slash may be normalized away.
+
+The adapter resolves the current default remote HEAD through an isolated, read-only Git reference
+command and stores the full commit. It disables credential helpers, prompts, askpass success paths,
+interactive credential managers, and system/global URL rewrites. Authentication-required and other
+unavailable or malformed results become typed metadata failures without exposing command, path,
+environment, or remote stderr details. An unchanged HEAD returns the existing Source; a changed HEAD
+is a different immutable Source identity.
 
 The Phase 2B adapter does not clone, read repository files or blobs, analyze code, or inspect
 license files. The existing required `license` field is `NOASSERTION`; no license-evidence field is
 added. Full clones remain disposable-only state for any future feature and are not part of this
 capture path.
+
+Any OSS Locator must match the Source's normalized host, complete project path, and full commit.
+Fact and relation mismatches reuse the existing locator-mismatch finding codes. Git command tests use
+an injectable runner, and installed-wheel tests use a temporary platform-native fake Git executable;
+Phase 2B tests never contact a public repository. These rules are frozen by
+[`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md).
 
 An overall project note is the existing Literature Note linked to the OSS Source by `summarizes`.
 Contract v2 Snippets and `snippet_from` relations remain readable, but Snippet creation is

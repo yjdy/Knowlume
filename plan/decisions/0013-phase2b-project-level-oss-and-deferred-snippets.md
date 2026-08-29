@@ -7,6 +7,10 @@
 > Zotero search, Paper/Book item-type classification, explicit override shapes, and the completed
 > Phase 2A acceptance boundary are frozen by
 > [`ADR-0014`](0014-phase2a-acceptance-and-phase2b-zotero-classification.md).
+>
+> Phase 2B Web/Book/OSS provenance coherence, repository-host matching, anonymous Git isolation,
+> and offline Git verification are clarified by
+> [`ADR-0015`](0015-phase2b-provenance-and-anonymous-git.md).
 
 ## Context
 

@@ -101,6 +101,14 @@ through read-only remote-reference discovery; it does not clone or read reposito
 files, clipboard bodies, batch input, and arbitrary historical repo revisions are outside the first
 command contract.
 
+Configured repository hosts extend the built-in `github.com` and `gitlab.com` set and match the
+complete normalized hostname; parent-host configuration never authorizes a subdomain. Missing or
+empty host configuration retains the built-ins. Phase 2B Git discovery is anonymous and isolated:
+it disables prompts, credential helpers, interactive credential managers, askpass success paths,
+and system/global URL rewrites. Authentication-required or malformed discovery is reported as
+`ADD_METADATA_UNAVAILABLE` without exposing command, path, environment, or remote stderr details.
+Installed-command tests use a platform-native fake Git executable and never require a public network.
+
 The capture flow is `normalize -> recognize -> metadata resolve -> canonical identity -> duplicate check -> Source construction -> adapter snapshot/sync -> atomic write -> scan`. Repo capture necessarily resolves remote HEAD before its commit-qualified identity lookup. Once the Phase 3 projection exists, a successful capture also requests an index refresh, but index availability is never a Phase 2B write prerequisite. `--type` does not bypass metadata, canonicalization, schema, snapshot, or safety checks. Any ambiguity or failure leaves no Source card, relation, or partial update. Repeated capture of the same canonical identity succeeds with the existing Source ID and `created: false`.
 
 Phase 2B repo capture creates a private project-level OSS Source with `license: NOASSERTION`; it does
@@ -109,6 +117,15 @@ later HEAD commit is a different canonical Source. To write an overall project n
 `kb note new --type literature --source SOURCE_ID`; capture does not create a Note automatically and
 no Project Note type is introduced. Repeated Web capture preserves the first accepted snapshot, and
 Phase 2B does not extend `source sync` to Web or Book Sources.
+
+New Web capture requires one exact top-level Zotero `webpage` and one non-empty, recoverable
+`imported_url` HTML/XHTML child attachment with matching parent and parseable `dateAdded`. The Source
+and snapshot capture times are equal and the snapshot hash covers recovered bytes. Old v2 Web Sources
+without snapshot evidence remain readable, but cannot support a new Web citation or public closure.
+Web Locator snapshot fields, Book page ISBN/edition, and OSS host/path/commit must match their Source;
+Fact and relation mismatches retain the existing locator-mismatch findings. These interface and
+compatibility boundaries are frozen by
+[`ADR-0015`](decisions/0015-phase2b-provenance-and-anonymous-git.md).
 
 ### Phase 2A Source interface
 
