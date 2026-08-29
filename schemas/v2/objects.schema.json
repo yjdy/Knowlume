@@ -87,6 +87,7 @@
         "attachment_size": { "type": "integer", "minimum": 1 },
         "attachment_sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
         "isbn": { "type": "string", "minLength": 10 },
+        "edition": { "type": "string", "minLength": 1, "pattern": "^\\S(?:.*\\S)?$" },
         "doi": { "type": "string", "minLength": 3 },
         "arxiv_id": { "type": "string", "pattern": "^(?:[a-z-]+(?:\\.[a-z]{2})?/\\d{7}|\\d{4}\\.\\d{4,5})$" },
         "arxiv_version": { "type": "integer", "minimum": 1 },
@@ -103,6 +104,7 @@
         { "if": { "properties": { "source_type": { "const": "paper" } } }, "then": { "anyOf": [{ "required": ["canonical_url"] }, { "required": ["doi"] }, { "required": ["zotero_key"] }] } },
         { "if": { "properties": { "source_type": { "const": "web" } } }, "then": { "required": ["canonical_url", "captured_at"] } },
         { "if": { "properties": { "source_type": { "const": "book" } } }, "then": { "anyOf": [{ "required": ["isbn"] }, { "required": ["doi"] }, { "required": ["zotero_key"] }, { "required": ["canonical_url"] }] } },
+        { "if": { "required": ["edition"] }, "then": { "properties": { "source_type": { "const": "book" } } } },
         { "if": { "properties": { "source_type": { "const": "oss" } } }, "then": { "required": ["canonical_url", "repository_host", "repository_path", "commit", "license"] } }
       ]
     },

@@ -8,3 +8,6 @@ snippets = "snippets"
 ai_artifacts = "ai/artifacts"
 relations = "relations"
 state = ".knowlume"
+
+[capture]
+repository_hosts = []

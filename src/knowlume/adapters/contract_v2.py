@@ -264,6 +264,7 @@ def _parse_source(data: dict[str, Any]) -> Source:
         "attachment_size",
         "attachment_sha256",
         "isbn",
+        "edition",
         "doi",
         "arxiv_id",
         "arxiv_version",
@@ -322,6 +323,7 @@ def _parse_source(data: dict[str, Any]) -> Source:
         else None,
         attachment_sha256=_optional_string(data.get("attachment_sha256"), "attachment_sha256"),
         isbn=_optional_string(data.get("isbn"), "isbn"),
+        edition=_optional_string(data.get("edition"), "edition"),
         doi=_optional_string(data.get("doi"), "doi"),
         arxiv_id=_optional_string(data.get("arxiv_id"), "arxiv_id"),
         arxiv_version=_integer(data["arxiv_version"], "arxiv_version")
@@ -669,6 +671,7 @@ def _object_data(obj: DurableObject) -> dict[str, Any]:
             "attachment_size",
             "attachment_sha256",
             "isbn",
+            "edition",
             "doi",
             "arxiv_id",
             "arxiv_version",

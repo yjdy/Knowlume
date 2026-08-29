@@ -10,4 +10,4 @@ relations = "relations"
 state = ".knowlume"
 
 [capture]
-repository_hosts = []
+repository_hosts = ["Git.Example.COM.", "bücher.example"]

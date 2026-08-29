@@ -20,6 +20,18 @@
         "relations": { "$ref": "#/$defs/relativePath" },
         "state": { "$ref": "#/$defs/relativePath" }
       }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repository_hosts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/repositoryHost" },
+          "uniqueItems": true,
+          "default": []
+        }
+      }
     }
   },
   "$defs": {
@@ -27,6 +39,11 @@
       "type": "string",
       "minLength": 1,
       "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"
+    },
+    "repositoryHost": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!localhost\\.?$)(?!.*\\s)(?!.*[/:@*\\[\\]])(?=.{1,253}\\.?$)[^.]+(?:\\.[^.]+)+\\.?$"
     }
   }
 }

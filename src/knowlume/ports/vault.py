@@ -15,6 +15,7 @@ class VaultConfig:
     ai_artifacts: str
     relations: str
     state: str
+    repository_hosts: tuple[str, ...] = ("github.com", "gitlab.com")
 
 
 @dataclass(frozen=True)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 import json
 import tomllib
 from pathlib import Path, PurePosixPath
@@ -28,6 +29,22 @@ def _config_semantic_errors(document: dict[str, Any]) -> list[str]:
         for right in paths[index + 1 :]:
             if left == right or left in right.parents or right in left.parents:
                 errors.append(f"configured Vault roots overlap: {left} and {right}")
+    hosts: set[str] = set()
+    capture = document.get("capture", {})
+    for value in capture.get("repository_hosts", []):
+        try:
+            host = value.removesuffix(".").encode("idna").decode("ascii").lower()
+            ipaddress.ip_address(host)
+        except UnicodeError:
+            errors.append(f"repository host is not valid IDNA: {value}")
+            continue
+        except ValueError:
+            pass
+        else:
+            errors.append(f"repository host is an IP literal: {value}")
+        if host in hosts:
+            errors.append(f"duplicate repository host: {host}")
+        hosts.add(host)
     return errors
 
 
@@ -42,6 +59,11 @@ def test_portable_config_schema_template_and_positive_fixture() -> None:
     assert template == fixture
     assert _errors(template, schema) == []
     assert _config_semantic_errors(template) == []
+    extended = tomllib.loads(
+        (ROOT / "tests/fixtures/config/v1/valid/repository-hosts.toml").read_text(encoding="utf-8")
+    )
+    assert _errors(extended, schema) == []
+    assert _config_semantic_errors(extended) == []
 
 
 def test_invalid_portable_config_fixtures_fail_for_the_intended_reason() -> None:
@@ -54,6 +76,9 @@ def test_invalid_portable_config_fixtures_fail_for_the_intended_reason() -> None
     assert all(results.values())
     assert any("1 was expected" in error for error in results["unsupported-version.toml"])
     assert any("overlap" in error for error in results["overlapping-roots.toml"])
+    assert any(
+        "duplicate repository host" in error for error in results["duplicate-repository-host.toml"]
+    )
 
 
 def test_transaction_manifest_schema_and_fixtures() -> None:

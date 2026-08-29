@@ -76,7 +76,7 @@ def test_scan_is_deterministic_and_healthy_for_all_valid_v2_fixtures(tmp_path: P
     assert first.healthy
     assert first.findings == ()
     assert first.object_counts() == {
-        "source": 6,
+        "source": 8,
         "note": 5,
         "snippet": 1,
         "ai_artifact": 2,
@@ -95,6 +95,8 @@ def test_scan_is_deterministic_and_healthy_for_all_valid_v2_fixtures(tmp_path: P
         ("missing-human-section.md", "NOTE_HUMAN_SECTION_MISSING"),
         ("paper-arxiv-version-without-id.md", "FIELD_INVALID"),
         ("paper-attachment-path.md", "FIELD_INVALID"),
+        ("paper-source-edition.md", "FIELD_INVALID"),
+        ("book-source-edition-whitespace.md", "FIELD_INVALID"),
         ("snippet-line-range.md", "SNIPPET_RANGE_INVALID"),
         ("unknown-role.md", "FIELD_INVALID"),
     ],
@@ -158,7 +160,7 @@ def test_scan_status_and_lint_commands_share_scanner_results(
     _copy_valid_vault(vault)
     scan = runner.invoke(app, ["--vault", str(vault.root), "scan"])
     assert scan.exit_code == 0
-    assert "14 objects" in scan.stdout
+    assert "16 objects" in scan.stdout
     status = runner.invoke(app, ["--vault", str(vault.root), "status"])
     assert status.exit_code == 0
     assert "Vault is healthy" in status.stdout

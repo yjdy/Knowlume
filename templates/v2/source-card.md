@@ -11,6 +11,7 @@ created: "<YYYY-MM-DD>"
 updated: "<YYYY-MM-DD>"
 canonical_url: "<canonical URL>"
 doi: "<normalized DOI, if known>"
+# Book Sources may add: edition: "<book edition, if known>"
 arxiv_id: "<versionless arXiv ID, if known>"
 arxiv_version: 1
 zotero_library_type: user
