@@ -8,18 +8,25 @@ import os
 import re
 import tempfile
 from collections.abc import Mapping
+from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol, cast
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from platformdirs import user_cache_dir
 
+from knowlume.domain.capture import canonicalize_web_url
+from knowlume.domain.isbn import normalize_isbn
+from knowlume.domain.models import SnapshotRef
 from knowlume.domain.paper import PaperIdentity, normalize_arxiv, normalize_doi
 from knowlume.domain.values import DomainError
 from knowlume.ports.zotero import (
     AttachmentSelection,
     PaperMetadata,
     PrimaryAttachment,
+    WebSnapshotMetadata,
+    ZoteroItem,
     ZoteroReference,
 )
 
@@ -114,6 +121,18 @@ def _sha256_file(path: Path) -> tuple[str, int]:
             digest.update(chunk)
             size += len(chunk)
     return f"sha256:{digest.hexdigest()}", size
+
+
+def _isbn_values(value: str) -> tuple[str, ...]:
+    normalized: list[str] = []
+    for candidate in re.split(r"[,;\n]", value):
+        try:
+            isbn = normalize_isbn(candidate)
+        except DomainError:
+            continue
+        if isbn not in normalized:
+            normalized.append(isbn)
+    return tuple(normalized)
 
 
 class ZoteroLocalApi:
@@ -214,6 +233,164 @@ class ZoteroLocalApi:
             canonical_url=url,
             zotero=reference,
             item_version=version,
+        )
+
+    def _capture_item(self, value: object) -> ZoteroItem:
+        document = _mapping(value, "item")
+        key = cast(str, _string(document.get("key"), "item key"))
+        if not _KEY_RE.fullmatch(key):
+            raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero item key is invalid")
+        version = _version(document.get("version"), "item version")
+        data = _mapping(document.get("data"), "item data")
+        item_type = _string(data.get("itemType"), "item type", required=False) or None
+        title = cast(str, _string(data.get("title"), "title"))
+        doi = None
+        if raw_doi := _string(data.get("DOI"), "DOI", required=False):
+            try:
+                doi = normalize_doi(raw_doi)
+            except DomainError:
+                doi = None
+        extra = _string(data.get("extra"), "extra", required=False) or ""
+        url = _string(data.get("url"), "URL", required=False) or None
+        arxiv = None
+        match = re.search(r"(?im)^\s*arxiv\s*:\s*(\S+)\s*$", extra)
+        arxiv_value = match.group(1) if match else (url if url and "arxiv.org/" in url else None)
+        if arxiv_value:
+            try:
+                arxiv = normalize_arxiv(arxiv_value)
+            except DomainError:
+                arxiv = None
+        isbn = None
+        if raw_isbn := _string(data.get("ISBN"), "ISBN", required=False):
+            isbn_values = _isbn_values(raw_isbn)
+            isbn = isbn_values[0] if isbn_values else None
+        creators = data.get("creators", [])
+        if not isinstance(creators, list):
+            raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero creators are invalid")
+        authors: list[str] = []
+        for creator_value in creators:
+            creator = _mapping(creator_value, "creator")
+            if creator.get("creatorType") not in {"author", None}:
+                continue
+            name = creator.get("name")
+            if not isinstance(name, str) or not name.strip():
+                name = " ".join(
+                    part.strip()
+                    for part in (creator.get("firstName"), creator.get("lastName"))
+                    if isinstance(part, str) and part.strip()
+                )
+            if isinstance(name, str) and name.strip():
+                authors.append(name.strip())
+        date_value = _string(data.get("date"), "date", required=False) or ""
+        year_match = re.search(r"\b(1\d{3}|2\d{3}|3\d{3})\b", date_value)
+        edition = _string(data.get("edition"), "edition", required=False) or None
+        return ZoteroItem(
+            reference=ZoteroReference("user", "0", key),
+            item_type=item_type,
+            title=title,
+            authors=tuple(authors),
+            year=int(year_match.group(1)) if year_match else None,
+            doi=doi,
+            arxiv=arxiv,
+            isbn=isbn,
+            edition=edition,
+            canonical_url=url,
+            item_version=version,
+        )
+
+    def exact_candidates(self, kind: str, value: str) -> tuple[ZoteroItem, ...]:
+        if kind not in {"doi", "arxiv", "isbn", "url"}:
+            raise DomainError("ZOTERO_REFERENCE_INVALID", "unsupported Zotero search identity")
+        query = value
+        matches: list[ZoteroItem] = []
+        start = 0
+        while True:
+            parameters = urlencode(
+                {"q": query, "qmode": "everything", "limit": 100, "start": start}
+            )
+            response = self._request(f"users/0/items/top?{parameters}")
+            if not isinstance(response, list):
+                raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero search response is invalid")
+            for raw in response:
+                item = self._capture_item(raw)
+                exact = False
+                if kind == "doi":
+                    exact = item.doi is not None and str(item.doi) == value
+                elif kind == "arxiv":
+                    exact = item.arxiv is not None and item.arxiv.base_id == value
+                elif kind == "isbn":
+                    document = _mapping(raw, "item")
+                    data = _mapping(document.get("data"), "item data")
+                    raw_isbn = _string(data.get("ISBN"), "ISBN", required=False) or ""
+                    exact = value in _isbn_values(raw_isbn)
+                    if exact:
+                        item = replace(item, isbn=value)
+                elif item.canonical_url:
+                    try:
+                        exact = canonicalize_web_url(item.canonical_url) == value
+                    except DomainError:
+                        exact = False
+                if exact:
+                    matches.append(item)
+            if len(response) < 100:
+                break
+            start += 100
+        return tuple(matches)
+
+    def web_snapshot(self, item: ZoteroItem) -> WebSnapshotMetadata:
+        if (
+            item.item_type != "webpage"
+            or item.reference.library_type != "user"
+            or item.reference.library_id != "0"
+        ):
+            raise DomainError("ZOTERO_ITEM_UNAVAILABLE", "Zotero Web metadata is unavailable")
+        response = self._request(f"users/0/items/{item.reference.item_key}/children")
+        if not isinstance(response, list):
+            raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero children response is invalid")
+        eligible: list[tuple[str, datetime]] = []
+        for raw in response:
+            child = _mapping(raw, "child item")
+            data = _mapping(child.get("data"), "child item data")
+            if (
+                data.get("itemType") != "attachment"
+                or data.get("parentItem") != item.reference.item_key
+                or data.get("linkMode") != "imported_url"
+                or data.get("contentType") not in {"text/html", "application/xhtml+xml"}
+            ):
+                continue
+            key = cast(str, _string(child.get("key"), "attachment key"))
+            if not _KEY_RE.fullmatch(key):
+                raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero attachment key is invalid")
+            raw_date = cast(str, _string(data.get("dateAdded"), "attachment dateAdded"))
+            try:
+                captured_at = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+            except ValueError as error:
+                raise DomainError(
+                    "ZOTERO_RESPONSE_INVALID", "Zotero dateAdded is invalid"
+                ) from error
+            if captured_at.tzinfo is None:
+                raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero dateAdded lacks a timezone")
+            eligible.append((key, captured_at))
+        if len(eligible) != 1:
+            raise DomainError("ZOTERO_ITEM_UNAVAILABLE", "exactly one Web snapshot is required")
+        attachment_key, captured_at = eligible[0]
+        body = cast(bytes, self._request(f"users/0/items/{attachment_key}/file", binary=True))
+        if not body:
+            raise DomainError("ZOTERO_ITEM_UNAVAILABLE", "Web snapshot bytes are unavailable")
+        snapshot = SnapshotRef(
+            "zotero",
+            f"user/0/{item.reference.item_key}/{attachment_key}",
+            captured_at,
+            f"sha256:{hashlib.sha256(body).hexdigest()}",
+        )
+        canonical_url = canonicalize_web_url(item.canonical_url or "")
+        return WebSnapshotMetadata(
+            item.reference,
+            item.title,
+            canonical_url,
+            item.item_version,
+            captured_at,
+            snapshot,
         )
 
     def primary_attachment(self, reference: ZoteroReference) -> AttachmentSelection:
