@@ -37,6 +37,11 @@ explicit public allowlist
 
 Publishing is blocked by private content dependencies, unresolved references, missing stable sections, unreviewed AI, uncited facts, ineligible Sources, unresolved supersession, path escape, unapproved attachments or snippets, and blocking rights findings. A failed build leaves the previous successful staging intact. Only manifest-listed files enter staging, and publishers receive staging plus its manifest rather than the private vault.
 
+Phase 2B project-level OSS Sources record `license: NOASSERTION` because capture does not inspect
+repository content or make a license judgment. They remain private by default and fail closed for
+public use while rights are unresolved. Existing Snippet publication checks remain in force even
+though no Snippet creation command is assigned to a delivery phase.
+
 ## Context and external models
 
 Callers choose an explicit trusted-local or public-safe scope. Search results and adapters cannot widen it. Private objects or attachments may leave the machine only when an explicit release policy authorizes every selected item and transitive content dependency.

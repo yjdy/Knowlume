@@ -34,15 +34,37 @@ synchronization fails rather than guessing or merging.
 
 A live URL and `captured_at` alone cannot support a durable fact. A web snapshot reference contains a provider, opaque identifier, capture time, and content hash; adapters interpret the provider-specific identifier. Public facts require both an eligible public Source and a recoverable snapshot reference.
 
+Phase 2B freezes the first accepted snapshot for a canonical URL. Repeated capture returns the
+existing Source without replacing snapshot identity or bytes. Web snapshot replacement and Web
+`source sync` are deferred.
+
 ## Book
 
 Books use ISBN, DOI, Zotero, or another stable bibliographic identity. Any locator that uses page numbers must also identify the edition or ISBN so pagination is unambiguous.
+
+Phase 2B captures Book metadata but does not extend `source sync` beyond its Phase 2A Paper scope.
 
 ## Open-source software
 
 An OSS source identifies the host, full repository path, and immutable commit. Repository paths may contain nested GitLab groups. Branch names are display metadata and never replace a commit.
 
-Temporary clones belong in disposable cache storage. Durable excerpts are Snippets with a Source, immutable commit, relative path, valid inclusive line range, license evidence, and explicit publication approval.
+Phase 2B accepts only credential-free HTTP(S) repository-root URLs. GitHub, GitLab, and configured
+hosts are recognized automatically; `--type repo` can select another self-hosted Git server but
+cannot bypass project-root or remote-HEAD validation. The adapter resolves the current default
+remote HEAD through read-only Git reference discovery and stores the full commit. It rejects
+query/fragment values, blob/tree/file/subdirectory routes, and arbitrary revision input. An
+unchanged HEAD returns the existing Source; a changed HEAD is a different immutable Source identity.
+
+The Phase 2B adapter does not clone, read repository files or blobs, analyze code, or inspect
+license files. The existing required `license` field is `NOASSERTION`; no license-evidence field is
+added. Full clones remain disposable-only state for any future feature and are not part of this
+capture path.
+
+An overall project note is the existing Literature Note linked to the OSS Source by `summarizes`.
+Contract v2 Snippets and `snippet_from` relations remain readable, but Snippet creation is
+indefinitely deferred and has no assigned phase. A future creation workflow requires a new accepted
+ADR covering content recovery, path/range safety, license review, publication approval, and atomic
+writes.
 
 ## Attachment durability
 
@@ -101,3 +123,7 @@ Git history behavior is defined in [storage, index, and search](storage-index-se
 ## Legal boundary
 
 Automated checks collect license, copyright, redistribution, and attribution evidence. They do not provide legal advice; uncertain rights require human review.
+
+Phase 2B project-level OSS capture performs no automated license-file inspection and records
+`NOASSERTION`; publication therefore remains fail-closed until rights are resolved by a future
+reviewed workflow.

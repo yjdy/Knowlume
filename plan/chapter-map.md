@@ -15,6 +15,7 @@ The original design was audited and split into active thematic documents. The fr
 | Post-baseline package distribution | [`distribution.md`](distribution.md) | Complete |
 | Phase 1 Vault configuration and transaction protocol | [`decisions/0011-phase1-vault-and-transaction-contracts.md`](decisions/0011-phase1-vault-and-transaction-contracts.md) | Complete |
 | Phase 2A Paper identity, Zotero, attachment, synchronization, and workflow design | [`phase2a-goal.md`](phase2a-goal.md), [`ADR-0012`](decisions/0012-phase2a-paper-zotero-design.md) | Design ownership recorded |
+| Phase 2B unified Source capture, project-level OSS boundary, Literature Note reuse, and deferred Snippet creation | [`phase2b-goal.md`](phase2b-goal.md), [`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md) | Design ownership recorded |
 
 ## Completion checks
 

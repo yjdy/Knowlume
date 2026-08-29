@@ -22,7 +22,7 @@ kb note new --type idea|literature|concept|synthesis [--source SOURCE_ID]
 kb note show ID                   kb note evolve ID --to concept
 kb relation add FROM_ID TO_ID --type TYPE [--section SECTION_ID]
 kb relation remove FROM_ID TO_ID --type TYPE [--section SECTION_ID]
-kb relation list ID              kb snippet add
+kb relation list ID
 kb grep QUERY                     kb search QUERY
 kb get ID                         kb context QUERY
 kb related ID                     kb backlinks ID
@@ -38,6 +38,10 @@ kb doctor                         kb serve
 ```
 
 The unique command-to-phase-to-gate matrix is maintained in the [roadmap](roadmap.md).
+
+`kb snippet add` is a reserved but unimplemented idea, not part of the public command surface. It is
+indefinitely deferred with no assigned phase. Existing Contract v2 Snippet files remain readable;
+any future creation command requires a new accepted ADR before syntax is published or registered.
 
 ## Vault discovery
 
@@ -68,9 +72,16 @@ Recognition is non-interactive and follows this order:
 5. repository URL on a known or configured Git host -> repo;
 6. another HTTP(S) URL -> web.
 
-Unavailable or ambiguous DOI metadata requires `--type`; it is never guessed. Unknown self-hosted Git URLs default to web unless the host is configured. An explicit `--type repo` still requires adapter-backed resolution of a canonical project root. Local files, clipboard bodies, and batch input are outside the first command contract.
+Unavailable or ambiguous DOI metadata requires `--type`; it is never guessed. Unknown self-hosted Git URLs default to web unless the host is configured. An explicit `--type repo` still requires adapter-backed resolution of a canonical project root. Repo input is an HTTP(S) project-root URL without credentials, query, fragment, blob/tree/file/subdirectory route, or revision selector. The adapter resolves the remote default HEAD to a full immutable commit through read-only remote-reference discovery; it does not clone or read repository content. Local files, clipboard bodies, batch input, and arbitrary historical repo revisions are outside the first command contract.
 
-The capture flow is `normalize -> recognize -> metadata resolve -> canonical identity -> duplicate check -> Source construction -> adapter snapshot/sync -> atomic write -> scan`. Once the Phase 3 projection exists, a successful capture also requests an index refresh, but index availability is never a Phase 2B write prerequisite. `--type` does not bypass metadata, canonicalization, schema, snapshot, license, or safety checks. Any ambiguity or failure leaves no Source card, relation, or partial update. Repeated capture of the same canonical identity succeeds with the existing Source ID and `created: false`.
+The capture flow is `normalize -> recognize -> metadata resolve -> canonical identity -> duplicate check -> Source construction -> adapter snapshot/sync -> atomic write -> scan`. Repo capture necessarily resolves remote HEAD before its commit-qualified identity lookup. Once the Phase 3 projection exists, a successful capture also requests an index refresh, but index availability is never a Phase 2B write prerequisite. `--type` does not bypass metadata, canonicalization, schema, snapshot, or safety checks. Any ambiguity or failure leaves no Source card, relation, or partial update. Repeated capture of the same canonical identity succeeds with the existing Source ID and `created: false`.
+
+Phase 2B repo capture creates a private project-level OSS Source with `license: NOASSERTION`; it does
+not inspect license files or repository bodies. An unchanged remote HEAD is idempotent, while a
+later HEAD commit is a different canonical Source. To write an overall project note, the user runs
+`kb note new --type literature --source SOURCE_ID`; capture does not create a Note automatically and
+no Project Note type is introduced. Repeated Web capture preserves the first accepted snapshot, and
+Phase 2B does not extend `source sync` to Web or Book Sources.
 
 ### Phase 2A Source interface
 

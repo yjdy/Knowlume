@@ -36,7 +36,7 @@ Publishing remains blocked until the release owner controls the normalized PyPI 
 | 0R — Contract v2 | ADRs, versioned schemas/templates/fixtures, migration report, projection DDL, contract/link tests | v1 remains executable; v2 positive/negative and migration cases pass; DDL and interface surfaces are frozen |
 | 1 — Vault and core | vault discovery, domain values, parser/scanner/lint, safe single/multi-file writes, Note creation/evolution | ID/section round-trip, typed errors, conflict detection, and crash recovery pass on Windows/Linux |
 | 2A — Paper/Zotero slice | internal paper capture service, DOI/arXiv canonicalization, read-only Zotero Local API, one-primary-PDF recovery, Source query/sync/workflow | capture is canonical, idempotent, conflict-safe, and failure-atomic; attachment recovery has integrity evidence without tracked absolute paths; planned Source commands pass; no public `kb add` is exposed |
-| 2B — Unified capture | web/book/OSS adapters, snapshots, edition identity, immutable commits, snippet/license review, public `kb add` router | all four recognition paths, explicit override, idempotency, failure atomicity, and add-result JSON pass alongside source-specific locator/publication fixtures |
+| 2B — Unified capture | web/book adapters, immutable Web snapshots, Book edition identity, project-level OSS Sources pinned to remote HEAD commits, Literature Note handoff, public `kb add` router | all four recognition paths, explicit override, idempotency, failure atomicity, add-result JSON, repository-root/HEAD resolution, and OSS Source-to-Literature-Note integration pass |
 | 3 — Projection/search | SQLite rebuild/index, FTS, bilingual normalization, context assembly | deleting SQLite and rebuilding is deterministic; every FTS hit returns to durable segment/section |
 | 4 — Read-only Web | loopback Dashboard, Sources, Notes, Search, health views | Web and CLI share services and business rules; Web has no mutations |
 | 5 — Automation/AI | machine context, AI review/promotion, explicit scopes, doctor | AI cannot cross review, privacy, or provenance boundaries |
@@ -52,7 +52,8 @@ Publishing remains blocked until the release owner controls the normalized PyPI 
 | `--version`, package `doctor`, `update-check` | Release foundation | command tests, wheel resource/content audit, and isolated install smoke pass |
 | `init`, `scan`, `status`, `lint`, `note new/show/evolve`, `relation add/remove/list`, `migrate` | 1 | vault, parser, identity, atomicity, conflict, recovery, and migration tests |
 | paper capture application service, `source list/show/open/sync`, `inbox`, `process` | 2A | canonical DOI/arXiv identity, loopback Zotero recovery, synchronization ownership/conflicts, primary-PDF integrity, explicit workflow transitions, and no public add command |
-| `add`, `snippet add` | 2B | four-type recognition, override, add-result JSON, failure atomicity, snapshot, edition, commit/range, and license checks |
+| `add` | 2B | four-type recognition, override, add-result JSON, failure atomicity, snapshot, edition, project-root/immutable-HEAD resolution, and OSS Source-to-Literature-Note integration |
+| `snippet add` | Unassigned / Deferred | no implementation until a future accepted ADR validates the use case and freezes content recovery, path/range, license, publication, idempotency, and transaction behavior |
 | `grep`, `search`, `index`, `get`, `context` | 3 | deterministic projection and result-to-file explanation |
 | `serve` read views | 4 | shared-service parity and local-service security |
 | `ai list/review/promote`, automation JSON, extended `doctor` adapter probes | 5 | promotion audit and explicit-scope tests |
@@ -87,9 +88,33 @@ following are directly proven:
 Phase 2B recognition, public `kb add`, Web/Book/OSS adapters, cloud Zotero access, multi-attachment
 selection, and Phase 3 projection/search remain outside this gate.
 
+## Phase 2B executable gate
+
+Phase 2B follows [`phase2b-goal.md`](phase2b-goal.md),
+[`ADR-0009`](decisions/0009-unified-add-command.md), and
+[`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md). It is complete only
+when all of the following are directly proven:
+
+- one public `kb add` command releases Paper, Web, Book, and repo paths together with deterministic
+  recognition, explicit override, canonical identity, versioned JSON, and typed failures;
+- Web capture records one recoverable Zotero snapshot with capture time and SHA-256, while Book
+  capture preserves valid ISBN/DOI and edition identity;
+- repo capture accepts only configured HTTP(S) project-root URLs, discovers the remote default HEAD
+  read-only, and records the full immutable commit without cloning or reading repository content;
+- an unchanged repo HEAD is idempotent, while a changed HEAD creates a distinct immutable OSS
+  Source;
+- the existing verified Literature Note command creates an overall project note and the required
+  `summarizes` relation for an OSS Source;
+- every adapter, identity, conflict, scanner, and transaction failure is write-free or rolls back;
+- core-only and Zotero-extra isolated installations, distribution audit, full tests, static checks,
+  and supported-platform CI all pass before status changes.
+
+Phase 2B does not extend `source sync` to Book or Web Sources and does not create repository files,
+license evidence, Snippets, or a Project Note type.
+
 ## Deferred scope
 
-Phase 7 includes vector/RAG implementation, MCP, graph databases/visualization, multi-agent memory, native readers/reference managers, browser extensions, and cloud synchronization. Full OSS clones, private attachment collections, generated public output, and direct AI modification of trusted facts are never default durable content.
+Phase 7 includes vector/RAG implementation, MCP, graph databases/visualization, multi-agent memory, native readers/reference managers, browser extensions, and cloud synchronization. Snippet creation is unassigned and indefinitely deferred; existing Contract v2 Snippets remain readable, and any future creation workflow requires a new accepted ADR. Full OSS clones, private attachment collections, generated public output, and direct AI modification of trusted facts are never default durable content.
 
 ## Acceptance dimensions
 
