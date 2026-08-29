@@ -1,7 +1,7 @@
 # Phase 2B execution goal: Unified Source capture
 
-> **Status:** M1–M8 checkpoint commits created with local gates passing; M9 remote CI is next;
-> Phase 2B is not Complete
+> **Status:** Complete — local, distribution, isolated-install, and supported-platform feature gates
+> are green; the status-only completion commit must pass the same required CI before handoff
 > **Target branch:** `Phase2B`
 > **Implementation baseline commit:** `85aa27acaa34626be74eafc9b04a24ed78d5c3fd`
 > **Baseline state:** branch tracks `origin/Phase2B`; commit and push were explicitly authorized
@@ -749,6 +749,12 @@ not mutate a Vault. This evidence does not replace the required checkpoint commi
 supported-platform CI.
 
 ### M9 — Pass remote CI and mark Phase 2B complete
+
+**Feature-gate evidence:** commit `6c419fcafc2dece59db5793f6ee792e22f283625` passed
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33252123610) on the required platform and
+Python matrix. P2B-C10 records the completion status; its own required workflows remain the final
+handoff gate.
 
 **Requirements**
 

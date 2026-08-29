@@ -7,14 +7,17 @@ Each phase starts only after the preceding executable gate is green. Thematic do
 
 ## Current state
 
-Phase 0R, Phase 1, and Phase 2A are complete. Phase 2A passed local, distribution,
+Phase 0R, Phase 1, Phase 2A, and Phase 2B are complete. Phase 2B passed local, distribution,
+isolated-install, and Windows/macOS/Linux Python 3.13–3.14
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33252123610) gates. Phase 2A passed local, distribution,
 isolated-install, and Windows/macOS/Linux Python 3.13–3.14
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) and
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) gates. Phase 1 passed
 local, distribution, isolated-install, and
 Windows/macOS/Linux Python 3.13–3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913)
-and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates. Database,
-unified capture/search, and Web work remain in their later phases; publication gates remain closed.
+and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates. Database/search
+and read-only Web work remain in their later phases; publication gates remain closed.
 
 ## Release track
 
@@ -125,6 +128,11 @@ only when all of the following are directly proven:
 
 Phase 2B does not extend `source sync` to Book or Web Sources and does not create repository files,
 license evidence, Snippets, or a Project Note type.
+
+This gate is Complete. Commit `6c419fcafc2dece59db5793f6ee792e22f283625` passed the required
+Windows/macOS/Linux × Python 3.13/3.14
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33252123610) workflows.
 
 ## Deferred scope
 

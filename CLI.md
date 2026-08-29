@@ -4,7 +4,7 @@
 
 > Last synchronized: 2026-08-29
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Phase 2A Complete/Verified; Phase 2B implemented locally, remote CI pending
+> Current delivery state: Phase 2A and Phase 2B Complete; commands Verified
 
 ## Authority and update rules
 
@@ -65,7 +65,7 @@
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `add` | `kb add INPUT [--type paper\|web\|book\|repo] [--json]` | 自动识别并捕获四类 Source，显式类型只覆盖识别 | Unified router、canonical identity、duplicate check、type adapter、atomic write、add-result v1 | `Implemented` | Phase 2B command tests, complete local suite, distribution audit, and isolated wheel smoke pass; remote CI pending |
+| `add` | `kb add INPUT [--type paper\|web\|book\|repo] [--json]` | 自动识别并捕获四类 Source，显式类型只覆盖识别 | Unified router、canonical identity、duplicate check、type adapter、atomic write、add-result v1 | `Verified` | `tests/test_phase2b_cli.py`; complete suite; isolated wheel smoke; [CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661); [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33252123610) |
 
 ### `kb add` type capability matrix
 
@@ -73,10 +73,10 @@
 
 | Capability ID | CLI type | Durable source type | Delivery | Implementation plan | Status |
 |---|---|---|---|---|---|
-| `add.paper` | `paper` | `paper` | Phase 2A internal foundation; Phase 2B resolver | DOI/arXiv exact candidate search、itemType classification、Paper metadata and attachment recovery | `Implemented` |
-| `add.web` | `web` | `web` | Phase 2B | URL canonicalization、exact Zotero webpage and immutable HTML/XHTML snapshot evidence | `Implemented` |
-| `add.book` | `book` | `book` | Phase 2B | DOI/ISBN metadata、edition identity、Zotero mapping | `Implemented` |
-| `add.repo` | `repo` | `oss` | Phase 2B | configured Git host、isolated anonymous remote HEAD resolution、immutable commit、`license: NOASSERTION`；整体项目笔记复用 Literature Note | `Implemented` |
+| `add.paper` | `paper` | `paper` | Phase 2A internal foundation; Phase 2B resolver | DOI/arXiv exact candidate search、itemType classification、Paper metadata and attachment recovery | `Verified` |
+| `add.web` | `web` | `web` | Phase 2B | URL canonicalization、exact Zotero webpage and immutable HTML/XHTML snapshot evidence | `Verified` |
+| `add.book` | `book` | `book` | Phase 2B | DOI/ISBN metadata、edition identity、Zotero mapping | `Verified` |
+| `add.repo` | `repo` | `oss` | Phase 2B | configured Git host、isolated anonymous remote HEAD resolution、immutable commit、`license: NOASSERTION`；整体项目笔记复用 Literature Note | `Verified` |
 
 ## Deferred commands
 
@@ -147,7 +147,7 @@
 
 | Date | Change | Comparison result |
 |---|---|---|
-| 2026-08-29 | 实现 Phase 2B 统一 Source capture | `kb add` 四条 backend、Book edition/config 契约、Zotero 精确分类与 Web snapshot、匿名 Git HEAD、幂等/冲突写入和 OSS→Literature Note 已通过本地完整、分发及隔离安装门禁；状态保持 `Implemented`，等待远端 CI |
+| 2026-08-29 | 完成 Phase 2B 统一 Source capture | `kb add` 四条 backend、Book edition/config 契约、Zotero 精确分类与 Web snapshot、匿名 Git HEAD、幂等/冲突写入和 OSS→Literature Note 已通过本地、分发、隔离安装及[跨平台 CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661)；状态更新为 `Verified` |
 | 2026-08-29 | 勘误 Phase 2A capture 边界并回补 CLI 验收 | Phase 2A 保持 Complete/Verified：内部 Paper capture 依赖可注入 metadata resolver，生产 DOI/arXiv Zotero 搜索归 Phase 2B；`tests/test_phase2a_cli.py` 直接覆盖 Source filters、open 成功、sync 审批参数、warnings 和主要 human/JSON 输出；ADR-0014 冻结完整公开诊断 |
 | 2026-08-29 | 收紧 Phase 2B OSS 范围并无期限延期 Snippet 创建 | `add.repo` 仅捕获仓库根和远端 HEAD 的项目级 OSS Source；整体项目笔记复用已验证的 Literature Note；`snippet.add` 改为未分配阶段的 `Deferred`，现有 Contract v2 Snippet 仍可读 |
 | 2026-08-28 | Phase 2A 跨平台最终门禁完成 | [CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) 覆盖 Windows/Linux/macOS × Python 3.13/3.14，Phase 2A 命令与内部 Paper capture 标记为 `Verified` |

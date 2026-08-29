@@ -6,22 +6,26 @@ Knowlume 是一个 local-first 的个人知识系统：以可读、可迁移的 
 
 ## Current status
 
-Phase 0R（Contract v2）、Phase 1 与 Phase 2A 均已完成。Phase 2A 的 Paper/Zotero 契约、
+Phase 0R（Contract v2）、Phase 1、Phase 2A 与 Phase 2B 均已完成。Phase 2B 的统一
+Paper/Web/Book/repo capture、不可变 Web snapshot、Book edition、匿名 Git HEAD、OSS→Literature
+Note 工作流和安装后隔离门禁已通过 Windows/macOS/Linux × Python 3.13/3.14 的
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661) 与
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33252123610)。Phase 2A 的 Paper/Zotero 契约、
 内部 capture、Source 命令、完整测试、分发审计和隔离 wheel 已通过
 Windows/macOS/Linux × Python 3.13/3.14 的
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) 与
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) 门禁。Phase 1 的 Vault、
 parser/scanner、safe writes、Note、relation 和显式迁移也已通过
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) 与
-[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 门禁。统一 capture、search
-和 Web 功能仍按路线图逐阶段实现，所有发布开关保持关闭。
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 门禁。SQLite search 和
+只读 Web 功能仍按路线图逐阶段实现，所有发布开关保持关闭。
 
 ```text
 Phase 0R  Contract v2                         Complete
 Release   Python package foundation           Implemented
 Phase 1   Vault, domain, parser, safe writes  Complete
 Phase 2A  Paper + Zotero                      Complete
-Phase 2B  Web, Book, OSS                      Planned
+Phase 2B  Unified capture: Web, Book, OSS     Complete
 Phase 3   SQLite projection and search        Planned
 Phase 4   Read-only Web                       Planned
 Phase 5   Automation and AI promotion         Planned
