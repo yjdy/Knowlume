@@ -73,7 +73,7 @@
 
 | Capability ID | CLI type | Durable source type | Delivery | Implementation plan | Status |
 |---|---|---|---|---|---|
-| `add.paper` | `paper` | `paper` | Phase 2A internal | DOI/arXiv canonicalization、Zotero metadata、idempotent Source factory | `Verified` |
+| `add.paper` | `paper` | `paper` | Phase 2A internal foundation; Phase 2B resolver | Phase 2A 已验证 DOI/arXiv canonicalization、可注入 metadata port、精确 Zotero 引用与幂等 Source factory；生产级候选搜索和 Paper/Book itemType 分类属于 Phase 2B | `In progress` |
 | `add.web` | `web` | `web` | Phase 2B | URL canonicalization、snapshot provider、hash/locator validation | `Planned` |
 | `add.book` | `book` | `book` | Phase 2B | DOI/ISBN metadata、edition identity、Zotero mapping | `Planned` |
 | `add.repo` | `repo` | `oss` | Phase 2B | configured Git host、project-root validation、read-only remote HEAD resolution、immutable commit、`license: NOASSERTION`；整体项目笔记复用 Literature Note | `Planned` |
@@ -147,6 +147,7 @@
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-08-29 | 勘误 Phase 2A capture 边界并回补 CLI 验收 | Phase 2A 保持 Complete/Verified：内部 Paper capture 依赖可注入 metadata resolver，生产 DOI/arXiv Zotero 搜索归 Phase 2B；`tests/test_phase2a_cli.py` 直接覆盖 Source filters、open 成功、sync 审批参数、warnings 和主要 human/JSON 输出；ADR-0014 冻结完整公开诊断 |
 | 2026-08-29 | 收紧 Phase 2B OSS 范围并无期限延期 Snippet 创建 | `add.repo` 仅捕获仓库根和远端 HEAD 的项目级 OSS Source；整体项目笔记复用已验证的 Literature Note；`snippet.add` 改为未分配阶段的 `Deferred`，现有 Contract v2 Snippet 仍可读 |
 | 2026-08-28 | Phase 2A 跨平台最终门禁完成 | [CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) 覆盖 Windows/Linux/macOS × Python 3.13/3.14，Phase 2A 命令与内部 Paper capture 标记为 `Verified` |
 | 2026-08-28 | 实现 Phase 2A Paper/Zotero vertical slice | 内部 capture、Source 查询/同步/工作流、JSON schema、wheel 审计和隔离安装通过；公共 `kb add` 保持未注册，跨平台 CI 待确认 |

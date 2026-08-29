@@ -72,7 +72,34 @@ Recognition is non-interactive and follows this order:
 5. repository URL on a known or configured Git host -> repo;
 6. another HTTP(S) URL -> web.
 
-Unavailable or ambiguous DOI metadata requires `--type`; it is never guessed. Unknown self-hosted Git URLs default to web unless the host is configured. An explicit `--type repo` still requires adapter-backed resolution of a canonical project root. Repo input is an HTTP(S) project-root URL without credentials, query, fragment, blob/tree/file/subdirectory route, or revision selector. The adapter resolves the remote default HEAD to a full immutable commit through read-only remote-reference discovery; it does not clone or read repository content. Local files, clipboard bodies, batch input, and arbitrary historical repo revisions are outside the first command contract.
+Unavailable or ambiguous DOI metadata requires `--type`; it is never guessed. New Paper capture
+accepts only top-level Zotero `journalArticle`, `conferencePaper`, `preprint`, `thesis`, `report`, or
+`manuscript` items. New Book capture accepts only top-level `book`; `bookSection`, missing
+`itemType`, and every other type are ineligible. Existing exact-reference Phase 2A Paper Sources
+remain readable and synchronizable without retroactive classification.
+
+Explicit types accept these input shapes:
+
+| Explicit type | Accepted shape | Incompatible shape |
+|---|---|---|
+| `paper` | DOI or arXiv identifier/URL | `ADD_INPUT_INVALID` (2) |
+| `book` | DOI or checksum-valid ISBN | `ADD_INPUT_INVALID` (2) |
+| `web` | credential-free HTTP(S) URL | `ADD_INPUT_INVALID` (2) |
+| `repo` | credential-free HTTP(S) repository-root candidate | `ADD_INPUT_INVALID` (2) |
+
+Automatic DOI capture returns `ADD_TYPE_AMBIGUOUS` when zero, multiple, mixed-type, or unsupported
+exact candidates prevent classification. After explicit `--type paper` or `--type book`, missing,
+multiple, or incompatible candidates return `ADD_METADATA_UNAVAILABLE` instead. These rules are
+frozen by
+[`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md).
+
+Unknown self-hosted Git URLs default to web unless the host is configured. An explicit
+`--type repo` still requires adapter-backed resolution of a canonical project root. Repo input is an
+HTTP(S) project-root URL without credentials, query, fragment, blob/tree/file/subdirectory route,
+or revision selector. The adapter resolves the remote default HEAD to a full immutable commit
+through read-only remote-reference discovery; it does not clone or read repository content. Local
+files, clipboard bodies, batch input, and arbitrary historical repo revisions are outside the first
+command contract.
 
 The capture flow is `normalize -> recognize -> metadata resolve -> canonical identity -> duplicate check -> Source construction -> adapter snapshot/sync -> atomic write -> scan`. Repo capture necessarily resolves remote HEAD before its commit-qualified identity lookup. Once the Phase 3 projection exists, a successful capture also requests an index refresh, but index availability is never a Phase 2B write prerequisite. `--type` does not bypass metadata, canonicalization, schema, snapshot, or safety checks. Any ambiguity or failure leaves no Source card, relation, or partial update. Repeated capture of the same canonical identity succeeds with the existing Source ID and `created: false`.
 
@@ -153,6 +180,7 @@ The principal `kb add` diagnostics are fixed as:
 |---|---:|---|
 | `ADD_INPUT_INVALID` | 2 | input has no accepted identifier or URL shape |
 | `ADD_TYPE_AMBIGUOUS` | 3 | source type cannot be selected without `--type` |
+| `ADD_IDENTITY_CONFLICT` | 3 | canonical aliases or Paper/Book classification point to different Sources |
 | `ADD_METADATA_UNAVAILABLE` | 5 | required metadata or capture adapter is unavailable |
 | `ADD_WRITE_CONFLICT` | 4 | durable state changed before the atomic write |
 
@@ -183,15 +211,26 @@ Phase 2A uses these typed diagnostics:
 | `PAPER_ATTACHMENT_UNAVAILABLE` | warning | capture/sync found no readable primary PDF |
 | `PAPER_ATTACHMENT_AMBIGUOUS` | warning | capture/sync found more than one primary-PDF candidate and selected none |
 | `PAPER_ATTACHMENT_CHANGED` | 4 | recovered bytes do not match the durable attachment hash |
+| `PAPER_ATTACHMENT_ACCEPTED_LOCATORS_REVIEW` | warning | changed PDF bytes were explicitly accepted and existing Fact locators require review |
+| `SOURCE_NOT_FOUND` | 3 | requested Source ID does not exist |
+| `SOURCE_TYPE_UNSUPPORTED` | 3 | the requested Source operation does not support that Source type |
+| `SOURCE_SYNC_ADOPTION_INVALID` | 3 | remote adoption was requested for a Source that already has a baseline |
 | `SOURCE_SYNC_LOCAL_MODIFIED` | 4 | current adapter-managed fields do not match their durable baseline |
 | `SOURCE_SYNC_BASELINE_REQUIRED` | 4 | a legacy Source differs from Zotero and requires explicit remote adoption |
+| `SOURCE_SYNC_INVALID` | 3 | the synchronized Source failed post-write scanner validation and was restored |
 | `SOURCE_WORKFLOW_INVALID` | 3 | requested Source stage skips, regresses, or advances beyond the workflow |
 | `ZOTERO_CAPABILITY_UNAVAILABLE` | 5 | the optional `knowlume[zotero]` transport dependency is not installed |
 | `ZOTERO_API_UNAVAILABLE` | 5 | the Zotero Local API is disabled, unreachable, or returned an unexpected failure |
+| `ZOTERO_PERMISSION_DENIED` | 5 | the Zotero Local API refused read access |
 | `ZOTERO_ITEM_UNAVAILABLE` | 5 | the recorded Zotero item or requested attachment cannot be recovered |
+| `ZOTERO_REFERENCE_INVALID` | 5 | the durable Zotero recovery reference cannot be represented by the supported API |
+| `ZOTERO_RESPONSE_INVALID` | 5 | Zotero returned malformed or structurally invalid metadata |
 
 Expected-checksum failures continue to use the Phase 1 `VAULT_WRITE_CONFLICT` diagnostic rather
-than introducing a Source-specific duplicate.
+than introducing a Source-specific duplicate. Phase 1 Vault, object-ID, field, parser, and security
+diagnostics remain applicable by reference and are not duplicated here. `ZOTERO_ENDPOINT_UNSAFE`
+and `PAPER_CAPTURE_INVALID` are internal construction/invariant diagnostics; a future public
+`kb add` path must translate them into the stable `ADD_*` vocabulary.
 
 `kb --version` reports package and independent contract/projection/parser versions without resolving a vault. `kb doctor` currently validates the Python runtime and bundled release assets; later phases extend it with vault and adapter capability probes without changing its command identity.
 

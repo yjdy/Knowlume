@@ -4,6 +4,10 @@
 - Date: 2026-08-29
 - Decision owners: Knowlume maintainers
 
+> Zotero search, Paper/Book item-type classification, explicit override shapes, and the completed
+> Phase 2A acceptance boundary are frozen by
+> [`ADR-0014`](0014-phase2a-acceptance-and-phase2b-zotero-classification.md).
+
 ## Context
 
 Phase 2B must complete the unified Paper, Web, Book, and OSS Source intake promised by

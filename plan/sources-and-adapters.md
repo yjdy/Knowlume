@@ -30,6 +30,15 @@ DOI is preferred when both identifiers exist, while arXiv remains an alias. A ma
 identifier returns the existing Source. If the identifiers point to different Sources, capture or
 synchronization fails rather than guessing or merging.
 
+Phase 2A resolves only an exact stored Zotero reference in production; its internal capture service
+receives metadata through an injected port. Phase 2B adds production personal-library candidate
+search. For new unified capture, Paper accepts only top-level `journalArticle`, `conferencePaper`,
+`preprint`, `thesis`, `report`, and `manuscript` items. Book accepts only top-level `book`.
+`bookSection`, a missing type, and every other type are not guessed. Existing exact-reference Paper
+Sources remain readable and synchronizable without retroactive item-type reclassification. These
+boundaries are frozen by
+[`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md).
+
 ## Web
 
 A live URL and `captured_at` alone cannot support a durable fact. A web snapshot reference contains a provider, opaque identifier, capture time, and content hash; adapters interpret the provider-specific identifier. Public facts require both an eligible public Source and a recoverable snapshot reference.
@@ -93,6 +102,8 @@ open operations do not silently accept replacement material or rewrite Fact loca
 - Translate adapter data into domain values without leaking Zotero internals into the domain layer.
 - Missing optional dependencies, disabled API, timeout, permission failure, missing items, and
   malformed responses produce typed capability or availability failures rather than partial writes.
+- Phase 2B quick search is only a candidate reducer: enumerate all pages, re-normalize returned
+  identifiers, apply exact matching, and then enforce the accepted Paper/Book item-type boundary.
 
 ### Zotero synchronization ownership
 

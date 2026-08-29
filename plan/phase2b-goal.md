@@ -1,8 +1,8 @@
 # Phase 2B execution goal: Unified Source capture
 
-> **Status:** Ready for implementation — authority documents frozen, production work not started  
-> **Target branch:** `Phase2B`  
-> **Baseline commit:** `7d266d6c7198f5c537b74e05676e762b44742a4c`  
+> **Status:** M0 and M0A complete; M1 contract work is next; Phase 2B production work not started
+> **Target branch:** `Phase2B`
+> **Baseline commit:** `59988c3694cda5b028fbd4ffd8d1ad2323b86f06`
 > **Baseline state:** branch tracks `origin/Phase2B`; this goal does not authorize Git operations
 
 ## 1. Current foundation and authority
@@ -13,8 +13,9 @@ Phase 0R, Phase 1, and Phase 2A are complete. Phase 2B directly reuses:
 - Phase 1 Vault discovery, scanner, atomic writes, conflict detection, and recoverable transactions;
 - the verified `kb note new --type literature --source SOURCE_ID` workflow and its atomic
   `summarizes` relation;
-- Phase 2A DOI/arXiv normalization, Paper capture service, read-only Zotero Local API adapter,
-  attachment integrity checks, Source queries, and Paper synchronization;
+- Phase 2A DOI/arXiv normalization, injectable Paper metadata port, internal Paper capture service,
+  exact-reference read-only Zotero Local API adapter, attachment integrity checks, Source queries,
+  and Paper synchronization; production DOI/arXiv candidate search remains Phase 2B work;
 - the existing `add-result-v1` JSON contract and unified CLI error/envelope framework;
 - wheel resource packaging, isolated installation, and cross-platform CI.
 
@@ -23,6 +24,7 @@ This goal is subordinate to the machine contracts and follows:
 - [`roadmap.md`](roadmap.md);
 - [`ADR-0009`](decisions/0009-unified-add-command.md);
 - [`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md);
+- [`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md);
 - [`interfaces.md`](interfaces.md);
 - [`data-model.md`](data-model.md);
 - [`sources-and-adapters.md`](sources-and-adapters.md);
@@ -87,6 +89,20 @@ unknown self-hosted Git host defaults to Web unless configured or explicitly sel
 `--type repo`. Explicit repo selection still requires successful project-root and remote-HEAD
 resolution.
 
+Explicit override shapes are fixed:
+
+| `--type` | Accepted input | Incompatible input |
+|---|---|---|
+| `paper` | DOI or arXiv identifier/URL | `ADD_INPUT_INVALID` (2) |
+| `book` | DOI or checksum-valid ISBN | `ADD_INPUT_INVALID` (2) |
+| `web` | credential-free HTTP(S) URL | `ADD_INPUT_INVALID` (2) |
+| `repo` | credential-free HTTP(S) repository-root candidate | `ADD_INPUT_INVALID` (2) |
+
+For an automatic DOI, zero, multiple, mixed-type, or unsupported exact Zotero candidates return
+`ADD_TYPE_AMBIGUOUS`. With explicit `--type paper` or `--type book`, zero, multiple, or
+type-incompatible exact candidates return `ADD_METADATA_UNAVAILABLE`. An override never converts an
+ineligible Zotero item into eligible metadata.
+
 ### 3.2 Canonical identities
 
 - Paper: prefer `doi:<normalized-doi>`; otherwise `arxiv:<base-id>`.
@@ -117,8 +133,12 @@ value.
 - Zotero quick search only narrows candidates. Returned candidates are normalized again and matched
   exactly by DOI, arXiv, ISBN, or URL.
 - Zero or multiple exact candidates fail. Never choose the first item.
-- Paper accepts the supported scholarly item types already owned by Phase 2A.
-- Book accepts only a top-level Zotero `book`; `bookSection` is out of scope.
+- New Paper capture accepts only top-level Zotero `journalArticle`, `conferencePaper`, `preprint`,
+  `thesis`, `report`, and `manuscript` items.
+- Book accepts only a top-level Zotero `book`; `bookSection`, missing `itemType`, and every other type
+  are out of scope.
+- Existing exact-reference Phase 2A Paper Sources remain readable and synchronizable without
+  retroactive item-type classification.
 - Zotero HTTP remains in the `zotero` extra and must not be imported eagerly by the core wheel.
 
 Implementation follows the official [Zotero Local API](https://www.zotero.org/support/dev/web_api/v3/local_api)
@@ -235,6 +255,7 @@ is the durable provenance identity.
 - Preserve principal diagnostics and exits:
   - `ADD_INPUT_INVALID` -> 2;
   - `ADD_TYPE_AMBIGUOUS` -> 3;
+  - `ADD_IDENTITY_CONFLICT` -> 3;
   - `ADD_METADATA_UNAVAILABLE` -> 5;
   - `ADD_WRITE_CONFLICT` -> 4.
 - Recognition, Zotero, snapshot, Git-ref, Schema, scan, conflict, and interruption failures leave no
@@ -262,7 +283,7 @@ Every milestone must pass its own checks before its checkpoint commit. The commi
 execution requirements, but this document does not itself authorize stage, commit, push, PR, merge,
 tag, or release operations.
 
-### M0 — Freeze the revised Phase 2B decision
+### M0 — Freeze the revised Phase 2B decision — Complete
 
 **Requirements**
 
@@ -283,10 +304,47 @@ tag, or release operations.
 - OSS identity, remote-HEAD behavior, note handoff, and refresh boundaries have no open decision.
 - Internal documentation links and whitespace checks pass.
 
-**Git commit:** Yes — P2B-C1
+**Completed checkpoint:** P2B-C1 at `59988c3694cda5b028fbd4ffd8d1ad2323b86f06`
 
 ```text
-docs(contract): freeze project-level phase 2b capture
+项目级 OSS Source，复用 Literature Note 做整体项目笔记，并把 Snippet 创建能力无期限延期
+```
+
+### M0A — Reconcile Phase 2A acceptance evidence — Complete
+
+**Requirements**
+
+- Accept ADR-0014 and link ADR-0012/0013 to its clarification without rewriting their historical
+  decisions.
+- Correct the Phase 2A goal so it claims an injectable metadata port and exact-reference Zotero
+  adapter, not a production DOI/arXiv candidate-search resolver.
+- Keep Phase 2A Complete/Verified and record an explicit acceptance erratum; do not move the
+  `Phase2A` tag or rewrite history.
+- Freeze every Phase 2A Source-command error/warning and exit or warning severity in
+  `interfaces.md`; reference shared Phase 1 diagnostics instead of duplicating them.
+- Add direct CLI evidence for all four `source list` filters, successful and failed `source open`,
+  `source sync --adopt-remote`, `source sync --accept-attachment-change`, warning envelopes, and
+  principal human-readable Source/workflow output.
+
+**Limits**
+
+- This checkpoint changes decisions, active documentation, CLI tests, and test fixtures only.
+- Do not change production code unless a new command-level test exposes a real wiring defect.
+- If a production defect is exposed, fix it in a separate P2B-C1B checkpoint and rerun M0A.
+- Do not change object/config Schemas, register `kb add`, or begin a Phase 2B backend.
+
+**Completion conditions**
+
+- The Phase 2A completion wording matches the executable dependency-injection and exact-reference
+  paths.
+- Every registered Phase 2A Source option has direct command-level evidence.
+- Human and JSON errors use the same frozen exit code; warnings have direct human and JSON evidence.
+- Targeted Phase 2A tests, the complete repository suite, Ruff, and mypy pass.
+
+**Git commit:** Yes — P2B-C1A
+
+```text
+test(phase2a): reconcile capture and CLI acceptance evidence
 ```
 
 ### M1 — Extend current contracts and configuration
@@ -323,30 +381,37 @@ docs(contract): freeze project-level phase 2b capture
 feat(contract): add book edition and repository host config
 ```
 
-### M2 — Implement unified recognition and identity
+### M2 — Implement pure recognition candidates and normalization
 
 **Requirements**
 
-- Add one recognizer, canonical-identity service, capture backend ports, and unified result model.
+- Add one pure recognizer, normalized input values, capture candidate types, and capture backend
+  ports.
 - Implement DOI, arXiv, ISBN-10/13, Web URL, and repository-root normalization.
 - Enforce the frozen recognition order and all explicit `--type` combinations.
 - Convert valid ISBN-10 to canonical ISBN-13.
 - Recognize default and configured repository hosts automatically; permit an explicit repo override
   for another HTTP(S) host only when generic root and later adapter validation can succeed.
-- Map internal success to the existing `add-result-v1` fields.
+- Output the raw input, explicit requested type, normalized input kind, and the unresolved candidate
+  required by the next adapter boundary.
+- Keep DOI as a DOI candidate until Zotero classification; keep repo as a normalized repo candidate
+  until remote HEAD is resolved.
+- Produce canonical URL, ISBN, and arXiv values when they are derivable without external I/O.
 
 **Limits**
 
 - This layer performs no Zotero, network, Git, or Vault I/O.
+- This layer does not produce final DOI Paper/Book classification, commit-qualified repo identity,
+  Source ID, `created`, or a complete `add-result-v1` success object.
 - Do not infer a type from title text, URL keywords outside frozen provider routes, or result order.
 - Do not accept local repository paths, SSH/SCP URLs, or revision syntax.
 
 **Completion conditions**
 
-- Four positive paths, every override, DOI ambiguity, invalid ISBN, credential-bearing URL, unknown
-  host defaulting to Web, explicit unknown-host repo selection, known non-root repo URL, and URL
+- Four candidate paths, every override shape, invalid ISBN, credential-bearing URL, unknown host
+  defaulting to Web, explicit unknown-host repo selection, known non-root repo URL, and URL
   canonicalization goldens pass.
-- Equivalent accepted input produces one canonical identity input; invalid forms fail deterministically.
+- Equivalent accepted input produces one normalized candidate; invalid forms fail deterministically.
 - CLI `repo` is represented internally as durable `oss`.
 
 **Git commit:** Yes — P2B-C3
@@ -355,13 +420,19 @@ feat(contract): add book edition and repository host config
 feat(capture): add unified recognition and canonical identities
 ```
 
-### M3 — Extend Zotero Paper, Book, and Web resolution
+### M3 — Implement Zotero search, classification, and capture metadata resolution
 
 **Requirements**
 
 - Implement read-only top-level item search in personal library `users/0`.
-- Re-normalize and exactly match all candidates after quick search.
-- Reuse the Phase 2A Paper resolver and primary-PDF integrity behavior.
+- Follow pagination to enumerate the complete quick-search candidate set, then re-normalize and
+  exactly match all candidates.
+- Implement the production `PaperMetadataPort` for DOI/arXiv capture using that exact candidate
+  search.
+- Reuse Phase 2A DOI/arXiv normalization, Paper Source construction, primary-PDF integrity, and
+  exact-reference item mapping; do not claim that Phase 2A already supplied candidate search.
+- Before mapping a new Source, accept only the ADR-0014 Paper whitelist or top-level `book` and reject
+  missing/unsupported types without guessing.
 - Map top-level Book metadata including ISBN, DOI, edition, and recovery reference.
 - Select exactly one Web HTML/XHTML snapshot, recover its bytes transiently, and calculate SHA-256.
 - Translate unavailable service, timeout, permission, missing item/attachment, malformed response,
@@ -373,10 +444,16 @@ feat(capture): add unified recognition and canonical identities
 - No snapshot or attachment body in durable files.
 - No `bookSection` support.
 - Do not extend `source sync` to Web or Book.
+- Do not apply the new item-type whitelist retroactively to exact-reference synchronization of an
+  existing Phase 2A Paper Source.
 
 **Completion conditions**
 
 - Zero, one, and multiple exact item candidates have tests.
+- Automatic DOI tests cover all six Paper types, top-level `book`, mixed Paper/Book candidates,
+  `bookSection`, unknown type, and missing `itemType`.
+- Explicit Paper/Book tests cover missing, multiple, and type-incompatible candidates plus absent
+  adapter capability.
 - Zero, one, and multiple eligible Web snapshots have tests.
 - Missing/malformed `dateAdded`, bad attachment bytes, timeouts, missing HTTPX, and malformed payloads
   fail without writes.
@@ -428,9 +505,12 @@ feat(capture): add project-level repository resolver
 
 - Compose recognition, metadata resolution, identity index, Source construction, adapters, and
   Vault writes in one unified application service.
+- Form final `detected_type`, durable `source_type`, canonical identity, Source ID, and
+  `add-result-v1` only after the candidate's required metadata or remote resolution succeeds.
 - For identities derivable before adapter access, look up duplicates before unnecessary external
   work. Repo capture first resolves HEAD because commit is part of identity.
-- Converge DOI/arXiv and DOI/ISBN aliases on one Source and stop on split identity.
+- Converge DOI/arXiv and DOI/ISBN aliases on one Source; translate split aliases and cross-Paper/Book
+  DOI collisions to `ADD_IDENTITY_CONFLICT` rather than a write conflict.
 - Create Web, Book, and OSS Sources in their existing v2 locations through current templates.
 - Freeze the first Web snapshot for a canonical URL.
 - Run a complete scan after every write and roll back on scan failure.
@@ -450,6 +530,8 @@ feat(capture): add project-level repository resolver
   Source.
 - Every failure leaves the Vault byte-identical and transaction/lock state recoverable and clean.
 - The same unified service invokes all four backends and returns one result type.
+- An explicit override produces equal `requested_type` and `detected_type`; automatic capture records
+  the final adapter-resolved type.
 
 **Git commit:** Yes — P2B-C6
 
@@ -492,6 +574,10 @@ test(capture): verify oss literature note workflow
 
 - Register `kb add` only after all four backend and integration gates pass.
 - Implement human-readable output, `--json`, add-result goldens, typed errors, and fixed exits.
+- Translate adapter construction, Zotero/Git transport, response, scan, and invariant failures into
+  the stable `ADD_*` vocabulary; do not expose internal adapter codes through `kb add`.
+- Use `ADD_IDENTITY_CONFLICT` (3) for semantic alias collisions and reserve
+  `ADD_WRITE_CONFLICT` (4) for concurrent durable changes.
 - Ensure expected failures have no traceback and do not expose debug data, paths, credentials, or
   remote command details.
 - Update `CLI.md` to `Implemented`; do not mark `Verified` yet.
@@ -505,8 +591,10 @@ test(capture): verify oss literature note workflow
 
 **Completion conditions**
 
-- Four CLI paths, all overrides, duplicate capture, changed repo HEAD, JSON goldens, major exits,
-  help text, and stdout/stderr separation pass.
+- Four CLI paths, all overrides, duplicate capture, changed repo HEAD, JSON goldens, every stable
+  `ADD_*` exit, help text, and stdout/stderr separation pass.
+- Human and JSON modes map the same failure to the same exit code; warning envelopes have golden
+  evidence.
 - Core-only wheel help and repo path load without Zotero dependencies.
 - Paper, Book, and Web return typed capability failure when the Zotero extra is absent.
 - `kb snippet` remains absent.
@@ -522,6 +610,7 @@ feat(cli): expose phase 2b unified source capture
 **Requirements**
 
 - Run the complete tests, Ruff, mypy, build, and distribution audit.
+- Keep the Phase 2A M0A command-level acceptance suite in the complete regression gate.
 - Extend wheel smoke for `kb add --help`, a repo adapter fixture, absent `kb snippet`, and missing
   Zotero-extra behavior.
 - Verify Paper, Book, and Web adapter wiring in an isolated `knowlume[zotero]` environment.
@@ -603,7 +692,9 @@ validation and publishing checks. Only creation is deferred.
 ### Function and contract
 
 - All four recognition paths and all explicit overrides have command-level evidence.
-- DOI ambiguity, ISBN checksum/conversion, Web URL canonicalization, configured host validation,
+- DOI candidate classification covers all accepted Paper types, top-level `book`, zero/multiple or
+  mixed exact candidates, unsupported/missing item types, and explicit override failures.
+- ISBN checksum/conversion, Web URL canonicalization, configured host validation,
   and repository-root parsing follow the frozen rules.
 - `add-result-v1` success JSON exactly matches golden fixtures.
 - Book page Locator without ISBN/edition fails.
@@ -619,6 +710,8 @@ validation and publishing checks. Only creation is deferred.
 - The same repo and unchanged HEAD are idempotent; a changed full HEAD commit creates a different
   Source.
 - External aliases that point to different Source IDs never auto-merge.
+- Split aliases and cross-Paper/Book DOI collisions return `ADD_IDENTITY_CONFLICT` (3), while
+  concurrent file changes return `ADD_WRITE_CONFLICT` (4).
 - Source and Note/relation conflicts do not overwrite user changes.
 - Adapter, scanner, and transaction failures leave no partial durable files.
 - `.knowlume/transactions` and write locks are clean after recovery.
@@ -639,6 +732,7 @@ validation and publishing checks. Only creation is deferred.
 - Core wheel imports, shows all help, and runs repo/core paths without the Zotero extra.
 - Isolated `knowlume[zotero]` loads Paper, Book, and Web adapters.
 - Missing Git returns a typed capability diagnostic rather than an import crash.
+- Internal Zotero/Git/scan/invariant diagnostics do not leak through the public `kb add` envelope.
 - Wheel Schema/Template bytes match top-level authority.
 - Wheel excludes tests, plans, fixtures, Vaults, caches, repository data, and private files.
 - Installed CLI works outside the source checkout.

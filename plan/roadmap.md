@@ -65,7 +65,10 @@ This matrix is the only delivery-batch authority.
 ## Phase 2A executable gate
 
 Phase 2A follows [`phase2a-goal.md`](phase2a-goal.md) and
-[`ADR-0012`](decisions/0012-phase2a-paper-zotero-design.md). It is complete only when all of the
+[`ADR-0012`](decisions/0012-phase2a-paper-zotero-design.md), with its completed production boundary
+and acceptance evidence clarified by
+[`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md). It is complete
+only when all of the
 following are directly proven:
 
 - DOI/arXiv normalization, version handling, alias matching, split-identity conflict, and repeated
@@ -85,18 +88,23 @@ following are directly proven:
 - the complete repository, type, lint, package audit, isolated-install, and supported-platform CI
   gates pass before any status is changed.
 
-Phase 2B recognition, public `kb add`, Web/Book/OSS adapters, cloud Zotero access, multi-attachment
+Phase 2B production DOI/arXiv candidate search, Paper/Book classification, public `kb add`,
+Web/Book/OSS adapters, cloud Zotero access, multi-attachment
 selection, and Phase 3 projection/search remain outside this gate.
 
 ## Phase 2B executable gate
 
 Phase 2B follows [`phase2b-goal.md`](phase2b-goal.md),
 [`ADR-0009`](decisions/0009-unified-add-command.md), and
-[`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md). It is complete only
-when all of the following are directly proven:
+[`ADR-0013`](decisions/0013-phase2b-project-level-oss-and-deferred-snippets.md), with Zotero
+classification and override behavior frozen by
+[`ADR-0014`](decisions/0014-phase2a-acceptance-and-phase2b-zotero-classification.md). It is complete
+only when all of the following are directly proven:
 
 - one public `kb add` command releases Paper, Web, Book, and repo paths together with deterministic
   recognition, explicit override, canonical identity, versioned JSON, and typed failures;
+- new Paper capture accepts only the ADR-0014 scholarly item-type whitelist, new Book capture accepts
+  only top-level `book`, and existing exact-reference Paper Sources remain compatible;
 - Web capture records one recoverable Zotero snapshot with capture time and SHA-256, while Book
   capture preserves valid ISBN/DOI and edition identity;
 - repo capture accepts only configured HTTP(S) project-root URLs, discovers the remote default HEAD
