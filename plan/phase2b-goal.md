@@ -1,9 +1,10 @@
 # Phase 2B execution goal: Unified Source capture
 
-> **Status:** M0, M0A, and M0B complete; M1 contract work is next; Phase 2B production work not started
+> **Status:** M1–M8 checkpoint commits created with local gates passing; M9 remote CI is next;
+> Phase 2B is not Complete
 > **Target branch:** `Phase2B`
-> **Baseline commit:** `49a4615293739795e2be78ca1b70f9928848d7f2`
-> **Baseline state:** branch tracks `origin/Phase2B`; this goal does not authorize Git operations
+> **Implementation baseline commit:** `85aa27acaa34626be74eafc9b04a24ed78d5c3fd`
+> **Baseline state:** branch tracks `origin/Phase2B`; commit and push were explicitly authorized
 
 ## 1. Current foundation and authority
 
@@ -738,6 +739,14 @@ feat(cli): expose phase 2b unified source capture
 ```text
 test: pass phase 2b local and distribution gates
 ```
+
+**Local evidence recorded 2026-08-29 (uncommitted working tree):** the complete pytest gate passes
+with 397 passed and 3 skipped, and Ruff and mypy pass; wheel/sdist build and distribution audit pass;
+core-only and Zotero-extra isolated installation smoke passes outside the checkout with an offline
+platform-native fake Git command that checks the permitted arguments/environment and redacted
+failure paths; the package lifecycle smoke confirms install, upgrade, downgrade, and uninstall do
+not mutate a Vault. This evidence does not replace the required checkpoint commits or M9
+supported-platform CI.
 
 ### M9 — Pass remote CI and mark Phase 2B complete
 
