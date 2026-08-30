@@ -74,6 +74,7 @@ def test_release_workflows_cover_required_trust_and_platform_gates() -> None:
     assert "actions/setup-python@v6" in smoke
     assert "python-version: ${{ matrix.python }}" in smoke
     assert "scripts/verify_installed_phase1.py" in smoke
+    assert "scripts/verify_installed_phase3.py" in smoke
     assert "scripts/verify_install_lifecycle.py" in smoke
     assert "scripts/release_plan.py" in release
     assert "if: needs.release-plan.outputs.testpypi == 'true'" in release

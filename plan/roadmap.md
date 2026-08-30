@@ -16,8 +16,10 @@ isolated-install, and Windows/macOS/Linux Python 3.13–3.14
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) gates. Phase 1 passed
 local, distribution, isolated-install, and
 Windows/macOS/Linux Python 3.13–3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913)
-and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates. Database/search
-and read-only Web work remain in their later phases; publication gates remain closed.
+and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates. Phase 3
+projection/search behavior is implemented under ADR-0016 and has passed local and isolated-package
+gates; its required cross-platform remote gates remain pending. Read-only Web remains in its later
+phase, and publication gates remain closed.
 
 ## Release track
 
@@ -133,6 +135,36 @@ This gate is Complete. Commit `6c419fcafc2dece59db5793f6ee792e22f283625` passed 
 Windows/macOS/Linux × Python 3.13/3.14
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661) and
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33252123610) workflows.
+
+## Phase 3 executable gate
+
+Phase 3 follows [`phase3-goal.md`](phase3-goal.md) and
+[`ADR-0016`](decisions/0016-phase3-deterministic-projection-search-context.md). It is complete only
+when all of the following are directly proven:
+
+- `grep` and `get` work without SQLite and return only relative, traceable locations;
+- deleting the state-directory database and rebuilding produces an equivalent normalized projection
+  with deterministic segment IDs and complete object, section, citation, relation, and tag rows;
+- incremental build produces the same final rows as rebuild and detects concurrent durable changes;
+- tokenizer v1 handles English, mixed text, and the frozen Han unigram/bigram rules identically for
+  documents and literal queries;
+- missing, stale, incompatible, corrupt, and busy indexes fail with typed behavior and no hidden
+  repair from search/context;
+- FTS filtering, BM25 ordering, deterministic tie-breaks, default AI/supersession exclusions, and
+  result-to-file/section explanation pass;
+- context requires an explicit scope, respects its result/character bounds, excludes AI, and audits
+  every public-safe returned dependency without claiming Phase 6B publication readiness;
+- all seven commands have versioned JSON result schemas, golden output, and command-level evidence;
+- durable mutations remain successful when optional refresh fails, while stale index state remains
+  observable;
+- the complete repository, static checks, distribution audit, isolated-install tests, and
+  Windows/macOS/Linux Python 3.13-3.14 CI pass before status changes;
+- release gates remain closed until feature CI is green and normalized PyPI project-name control is
+  proven; opening them does not authorize a tag or publication.
+
+Phase 3 does not implement semantic/vector search, Web UI, AI review, Snippet creation, Git history,
+or Phase 6B publishing. Its detailed milestone and Git rollback boundaries are owned only by the
+execution goal.
 
 ## Deferred scope
 

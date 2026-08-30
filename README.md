@@ -17,8 +17,10 @@ Windows/macOS/Linux × Python 3.13/3.14 的
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) 门禁。Phase 1 的 Vault、
 parser/scanner、safe writes、Note、relation 和显式迁移也已通过
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) 与
-[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 门禁。SQLite search 和
-只读 Web 功能仍按路线图逐阶段实现，所有发布开关保持关闭。
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 门禁。Phase 3 的
+deterministic SQLite projection、双语 literal FTS、index-independent grep/get 和 scoped context
+已完成本地完整测试、分发审计及 Python 3.13/3.14 隔离 wheel 验证；跨平台远程门禁仍待执行，
+所有发布开关保持关闭。只读 Web 功能继续按路线图实现。
 
 ```text
 Phase 0R  Contract v2                         Complete
@@ -26,7 +28,7 @@ Release   Python package foundation           Implemented
 Phase 1   Vault, domain, parser, safe writes  Complete
 Phase 2A  Paper + Zotero                      Complete
 Phase 2B  Unified capture: Web, Book, OSS     Complete
-Phase 3   SQLite projection and search        Planned
+Phase 3   SQLite projection/search/context    Implemented; remote gates pending
 Phase 4   Read-only Web                       Planned
 Phase 5   Automation and AI promotion         Planned
 Phase 6A  Evolution and history               Planned
@@ -74,13 +76,14 @@ uv venv --python 3.14 .venv
 uv sync --all-extras
 ```
 
-当前可执行的 Phase 1–2A 命令可从完整账本查看；以下命令可快速检查安装、初始化 vault
-和浏览 Source：
+当前可执行的 Phase 1–2B 命令可从完整账本查看；以下命令可快速检查安装、初始化 vault、
+捕获和浏览 Source：
 
 ```powershell
 uv run --no-sync kb --version
 uv run --no-sync kb init PATH
 uv run --no-sync kb --vault PATH scan
+uv run --no-sync kb --vault PATH add INPUT --json
 uv run --no-sync kb --vault PATH source list
 uv run --no-sync kb --vault PATH inbox
 uv run --no-sync kb update-check
@@ -106,6 +109,7 @@ uv run --no-sync pytest -p no:cacheprovider
 - [Security and publishing](plan/security-publishing.md)
 - [Distribution and releases](plan/distribution.md)
 - [Roadmap](plan/roadmap.md)
+- [Phase 3 execution goal](plan/phase3-goal.md)
 - [Accepted decisions](plan/decisions/)
 - [v1→v2 migration](plan/migrations/v1-to-v2.md)
 
