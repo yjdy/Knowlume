@@ -11,3 +11,8 @@ Interface contracts have independent versions from durable object and projection
 - `source-show-result-v1.schema.json`: normalized Source lookup results.
 - `source-sync-result-v1.schema.json`: Zotero synchronization outcomes.
 - `source-workflow-result-v1.schema.json`: explicit Source workflow transition outcomes.
+- `grep-result-v1.schema.json`: index-independent durable-file navigation hits.
+- `get-result-v1.schema.json`: normalized generic object lookup with citations and relations.
+- `index-result-v1.schema.json`: build, rebuild, and read-only status results.
+- `search-result-v1.schema.json`: ranked, traceable FTS results and explicit filters.
+- `context-result-v1.schema.json`: scoped, grouped context with exclusions and character bounds.

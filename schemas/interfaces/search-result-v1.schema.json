@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://knowlume.dev/schemas/interfaces/search-result-v1.schema.json",
+  "title": "Knowlume search result v1", "type": "object", "additionalProperties": false,
+  "required": ["query", "scope", "filters", "limit", "index_versions", "hits", "count"],
+  "properties": {
+    "query": {"type": "string", "minLength": 1}, "scope": {"enum": ["trusted-local", "public-safe"]},
+    "limit": {"type": "integer", "minimum": 1, "maximum": 200}, "count": {"type": "integer", "minimum": 0, "maximum": 200},
+    "filters": {"type": "object", "additionalProperties": false, "required": ["kind", "subtype", "visibility", "record_status", "workflow_stage", "maturity", "review_status", "tags", "role"], "properties": {
+      "kind": {"enum": [null, "source", "note", "snippet", "ai_artifact"]}, "subtype": {"enum": [null, "paper", "web", "book", "oss", "idea", "literature", "concept", "synthesis", "summary", "extraction", "relation_candidate", "draft"]},
+      "visibility": {"enum": [null, "private", "public"]}, "record_status": {"enum": [null, "active", "archived", "superseded"]},
+      "workflow_stage": {"enum": [null, "inbox", "reading", "processed", "integrated"]}, "maturity": {"enum": [null, "seed", "developing", "mature", "evergreen"]},
+      "review_status": {"enum": [null, "unreviewed", "accepted", "rejected", "promoted"]}, "tags": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+      "role": {"enum": [null, "source", "human", "fact", "ai", "evolution", "snippet"]}
+    }},
+    "index_versions": {"type": "object", "additionalProperties": false, "required": ["projection", "tokenizer", "segment_algorithm"], "properties": {"projection": {"type": "integer", "minimum": 1}, "tokenizer": {"type": "integer", "minimum": 1}, "segment_algorithm": {"type": "integer", "minimum": 1}}},
+    "hits": {"type": "array", "maxItems": 200, "items": {"$ref": "#/$defs/hit"}}
+  },
+  "allOf": [{"if": {"properties": {"scope": {"const": "public-safe"}}}, "then": {"properties": {"hits": {"items": {"$ref": "#/$defs/publicHit"}}}}}],
+  "$defs": {
+    "objectId": {"type": "string", "pattern": "^(src|note|snip|ai)_[0-9A-HJKMNP-TV-Z]{26}$"}, "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).+"},
+    "hit": {"type": "object", "additionalProperties": false, "required": ["classification", "path", "object_id", "section_id", "segment_id", "ordinal", "title", "snippet", "score", "tags", "visibility", "record_status", "citations"], "properties": {
+      "classification": {"type": "object", "additionalProperties": false, "required": ["kind", "subtype", "role"], "properties": {"kind": {"enum": ["source", "note", "snippet", "ai_artifact"]}, "subtype": {"enum": [null, "paper", "web", "book", "oss", "idea", "literature", "concept", "synthesis", "summary", "extraction", "relation_candidate", "draft"]}, "role": {"enum": ["source", "human", "fact", "ai", "evolution", "snippet"]}}},
+      "path": {"$ref": "#/$defs/path"}, "object_id": {"$ref": "#/$defs/objectId"}, "section_id": {"oneOf": [{"type": "string", "pattern": "^sec_[a-z0-9][a-z0-9_-]{2,63}$"}, {"type": "null"}]},
+      "segment_id": {"type": "string", "pattern": "^seg_[0-9a-f]{64}$"}, "ordinal": {"type": "integer", "minimum": 0}, "title": {"type": "string", "minLength": 1}, "snippet": {"type": "string"}, "score": {"type": "number"},
+      "tags": {"type": "array", "items": {"type": "string"}}, "visibility": {"enum": ["private", "public"]}, "record_status": {"enum": ["active", "archived", "superseded"]},
+      "citations": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["source_id", "locator"], "properties": {"source_id": {"type": "string", "pattern": "^src_[0-9A-HJKMNP-TV-Z]{26}$"}, "locator": {"type": "object"}}}},
+      "public_audit": {"type": "object", "additionalProperties": false, "required": ["eligible"], "properties": {"eligible": {"const": true}}}
+    }},
+    "publicHit": {"allOf": [{"$ref": "#/$defs/hit"}, {"required": ["public_audit"]}]}
+  }
+}

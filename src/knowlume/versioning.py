@@ -12,6 +12,7 @@ from knowlume.constants import (
     PARSER_VERSION,
     PROJECTION_VERSION,
     RELATION_SCHEMA_VERSION,
+    TOKENIZER_VERSION,
     TRANSACTION_VERSION,
 )
 
@@ -24,6 +25,7 @@ class VersionReport(TypedDict):
     interface: int
     projection: int
     parser: int
+    tokenizer: int
     configuration: int
     transaction: int
 
@@ -44,6 +46,7 @@ def version_report() -> VersionReport:
         "interface": INTERFACE_VERSION,
         "projection": PROJECTION_VERSION,
         "parser": PARSER_VERSION,
+        "tokenizer": TOKENIZER_VERSION,
         "configuration": CONFIGURATION_VERSION,
         "transaction": TRANSACTION_VERSION,
     }
@@ -56,5 +59,6 @@ def format_version_report() -> str:
         f"(object={report['object_contract']}, locator={report['locator']}, "
         f"relation={report['relation_schema']}, interface={report['interface']}, "
         f"projection={report['projection']}, parser={report['parser']}, "
+        f"tokenizer={report['tokenizer']}, "
         f"configuration={report['configuration']}, transaction={report['transaction']})"
     )
