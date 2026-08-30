@@ -3,21 +3,25 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import Annotated, NoReturn
+from typing import Annotated, Any, NoReturn, cast
 
 import typer
 
 from knowlume.adapters.filesystem import FilesystemVault
 from knowlume.adapters.git_remote import GitRemoteResolver
+from knowlume.adapters.sqlite_projection import SQLiteProjection
 from knowlume.adapters.zotero_local import ZoteroLocalApi
 from knowlume.application.capture import UnifiedCaptureService
+from knowlume.application.indexing import IndexRefreshService
 from knowlume.application.migration import MigrationService
 from knowlume.application.notes import NoteService
+from knowlume.application.query import QueryService, get_object, grep_vault
 from knowlume.application.relations import ListedRelation, RelationService
 from knowlume.application.scanning import Finding, changed_paths, scan_vault
 from knowlume.application.sources import SourceService
 from knowlume.application.vault import VaultService
 from knowlume.doctor import doctor_report
+from knowlume.domain.search import ContextScope, SearchFilters
 from knowlume.domain.values import DomainError
 from knowlume.envelope import error_envelope, render_json, success_envelope
 from knowlume.ports.vault import Vault
@@ -33,9 +37,11 @@ app = typer.Typer(
 note_app = typer.Typer(help="Create, show, and evolve Notes.", no_args_is_help=True)
 relation_app = typer.Typer(help="Add, remove, and list durable relations.", no_args_is_help=True)
 source_app = typer.Typer(help="List, show, open, and synchronize Sources.", no_args_is_help=True)
+index_app = typer.Typer(help="Build and inspect the disposable search index.", no_args_is_help=True)
 app.add_typer(note_app, name="note")
 app.add_typer(relation_app, name="relation")
 app.add_typer(source_app, name="source")
+app.add_typer(index_app, name="index")
 
 
 def _configure_cli_streams() -> None:
@@ -92,6 +98,12 @@ def _exit_with_domain_error(error: DomainError) -> NoReturn:
         exit_code = 6
     elif error.code == "CHANGED_FILES_UNAVAILABLE" or error.code.startswith("ZOTERO_"):
         exit_code = 5
+    elif error.code in {"INDEX_NOT_FOUND"}:
+        exit_code = 5
+    elif error.code in {"INDEX_SOURCE_CHANGED", "INDEX_BUSY"}:
+        exit_code = 4
+    elif error.code == "SEARCH_QUERY_INVALID":
+        exit_code = 2
     typer.echo(f"{error.code}: {error}", err=True)
     raise typer.Exit(exit_code)
 
@@ -220,6 +232,51 @@ def _capture_service() -> UnifiedCaptureService:
     )
 
 
+def _projection() -> SQLiteProjection:
+    return SQLiteProjection()
+
+
+def _query_service() -> QueryService:
+    return QueryService(_projection())
+
+
+def _refresh_warning(vault: Vault, *, changed: bool = True) -> tuple[str, ...]:
+    if not changed or not isinstance(vault, Vault):
+        return ()
+    return IndexRefreshService(_projection()).after_mutation(vault, changed=changed)
+
+
+def _render_warnings(warnings: tuple[str, ...]) -> None:
+    for warning in warnings:
+        typer.echo(f"WARNING {warning}", err=True)
+
+
+def _phase3_exit_code(code: str) -> int:
+    return {
+        "SEARCH_QUERY_INVALID": 2,
+        "INDEX_INCOMPATIBLE": 3,
+        "INDEX_CORRUPT": 3,
+        "INDEX_SOURCE_INVALID": 3,
+        "OBJECT_NOT_FOUND": 3,
+        "INDEX_SOURCE_CHANGED": 4,
+        "INDEX_BUSY": 4,
+        "INDEX_NOT_FOUND": 5,
+    }.get(code, 3)
+
+
+def _exit_phase3_error(error: DomainError, *, command: str, json_output: bool) -> NoReturn:
+    exit_code = _phase3_exit_code(error.code)
+    if json_output:
+        typer.echo(
+            render_json(
+                error_envelope(command, exit_code=exit_code, code=error.code, message=str(error))
+            )
+        )
+    else:
+        typer.echo(f"{error.code}: {error}", err=True)
+    raise typer.Exit(exit_code)
+
+
 def _source_exit_code(error: DomainError) -> int:
     if error.code in {"ADD_INPUT_INVALID", "VAULT_ARGUMENT_CONFLICT"}:
         return 2
@@ -305,19 +362,19 @@ def add_command(
     """Capture a Paper, Web page, Book, or repository as a private Source."""
 
     try:
-        result = _capture_service().add(_resolved_vault(ctx), value, requested_type)
+        vault = _resolved_vault(ctx)
+        result = _capture_service().add(vault, value, requested_type)
     except DomainError as error:
         _exit_add_error(error, json_output=json_output)
+    warnings = result.warnings + _refresh_warning(vault, changed=result.created)
     if json_output:
-        typer.echo(_success_with_warnings("add", result.data(), result.warnings))
+        typer.echo(_success_with_warnings("add", result.data(), warnings))
         return
     action = "Created" if result.created else "Found existing"
     typer.echo(
-        f"{action} {result.detected_type} Source {result.source_id}: "
-        f"{result.canonical_identity}"
+        f"{action} {result.detected_type} Source {result.source_id}: {result.canonical_identity}"
     )
-    for warning in result.warnings:
-        typer.echo(f"WARNING {warning}", err=True)
+    _render_warnings(warnings)
 
 
 def _render_relation(relation: ListedRelation) -> str:
@@ -342,10 +399,12 @@ def note_new(
     """Create a private Note from a bundled Contract v2 template."""
 
     try:
-        object_id = _note_service().create(_resolved_vault(ctx), note_type, source_id_value=source)
+        vault = _resolved_vault(ctx)
+        object_id = _note_service().create(vault, note_type, source_id_value=source)
     except DomainError as error:
         _exit_with_domain_error(error)
     typer.echo(str(object_id))
+    _render_warnings(_refresh_warning(vault))
 
 
 @note_app.command("show")
@@ -370,10 +429,12 @@ def note_evolve(
     """Evolve an Idea to Concept without changing durable identities."""
 
     try:
-        evolved_id = _note_service().evolve(_resolved_vault(ctx), object_id, target)
+        vault = _resolved_vault(ctx)
+        evolved_id = _note_service().evolve(vault, object_id, target)
     except DomainError as error:
         _exit_with_domain_error(error)
     typer.echo(str(evolved_id))
+    _render_warnings(_refresh_warning(vault))
 
 
 @relation_app.command("add")
@@ -390,8 +451,9 @@ def relation_add(
     """Add one canonical relation to its owning shard."""
 
     try:
+        vault = _resolved_vault(ctx)
         relation = _relation_service().add(
-            _resolved_vault(ctx),
+            vault,
             from_id,
             to_id,
             relation_type,
@@ -400,6 +462,7 @@ def relation_add(
     except DomainError as error:
         _exit_with_domain_error(error)
     typer.echo(_render_relation(relation))
+    _render_warnings(_refresh_warning(vault))
 
 
 @relation_app.command("remove")
@@ -416,8 +479,9 @@ def relation_remove(
     """Remove exactly one relation by its canonical key."""
 
     try:
+        vault = _resolved_vault(ctx)
         relation = _relation_service().remove(
-            _resolved_vault(ctx),
+            vault,
             from_id,
             to_id,
             relation_type,
@@ -426,6 +490,7 @@ def relation_remove(
     except DomainError as error:
         _exit_with_domain_error(error)
     typer.echo(_render_relation(relation))
+    _render_warnings(_refresh_warning(vault))
 
 
 @relation_app.command("list")
@@ -542,21 +607,22 @@ def source_sync(
     """Synchronize Zotero-managed fields with durable conflict checks."""
 
     try:
+        vault = _resolved_vault(ctx)
         result = _source_service().sync(
-            _resolved_vault(ctx),
+            vault,
             source_id,
             adopt_remote=adopt_remote,
             accept_attachment_change=accept_attachment_change,
         )
     except DomainError as error:
         _exit_source_error(error, command="source sync", json_output=json_output)
+    warnings = result.warnings + _refresh_warning(vault, changed=result.changed)
     if json_output:
-        typer.echo(_success_with_warnings("source sync", result.data(), result.warnings))
+        typer.echo(_success_with_warnings("source sync", result.data(), warnings))
         return
     action = "updated" if result.changed else "unchanged"
     typer.echo(f"Source {source_id} is {action}.")
-    for warning in result.warnings:
-        typer.echo(f"WARNING {warning}", err=True)
+    _render_warnings(warnings)
 
 
 @app.command("inbox")
@@ -594,16 +660,223 @@ def process_command(
     """Advance a Source by one explicit workflow stage."""
 
     try:
-        result = _source_service().process(_resolved_vault(ctx), source_id, target)
+        vault = _resolved_vault(ctx)
+        result = _source_service().process(vault, source_id, target)
     except DomainError as error:
         _exit_source_error(error, command="process", json_output=json_output)
+    warnings = _refresh_warning(vault, changed=result.changed)
     if json_output:
-        typer.echo(render_json(success_envelope("process", result.data())))
+        typer.echo(_success_with_warnings("process", result.data(), warnings))
         return
     typer.echo(
         f"{source_id}: {result.previous_stage.value} -> {result.current_stage.value}"
         f" ({'changed' if result.changed else 'unchanged'})"
     )
+    _render_warnings(warnings)
+
+
+@app.command("grep")
+def grep_command(
+    ctx: typer.Context,
+    query: Annotated[str, typer.Argument(help="Literal text to find in durable files")],
+    limit: Annotated[int, typer.Option("--limit", help="Maximum hits (1-200).")] = 20,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Find literal text in configured durable object and relation roots."""
+
+    try:
+        result = grep_vault(_resolved_vault(ctx), query, limit)
+    except DomainError as error:
+        _exit_phase3_error(error, command="grep", json_output=json_output)
+    if json_output:
+        typer.echo(render_json(success_envelope("grep", result)))
+        return
+    for hit in cast(list[dict[str, Any]], result["hits"]):
+        typer.echo(f"{hit['path']}:{hit['line']}:{hit['column']}: {hit['excerpt']}")
+    typer.echo(f"{result['count']} hit(s).")
+
+
+@app.command("get")
+def get_command(
+    ctx: typer.Context,
+    object_id: Annotated[str, typer.Argument(help="Permanent object ID")],
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Resolve a permanent object ID without using SQLite."""
+
+    try:
+        result = get_object(_resolved_vault(ctx), object_id)
+    except DomainError as error:
+        _exit_phase3_error(error, command="get", json_output=json_output)
+    if json_output:
+        typer.echo(render_json(success_envelope("get", result)))
+        return
+    typer.echo(f"{result['object_id']} {result['path']} {result['checksum']}")
+    body = result["body"]
+    typer.echo(body if isinstance(body, str) else json.dumps(body, ensure_ascii=False, indent=2))
+
+
+def _run_index(ctx: typer.Context, operation: str, json_output: bool) -> None:
+    try:
+        vault = _resolved_vault(ctx)
+        result = (
+            _projection().status(vault)
+            if operation == "status"
+            else _projection().build(vault, rebuild=operation == "rebuild")
+        )
+    except DomainError as error:
+        _exit_phase3_error(error, command=f"index {operation}", json_output=json_output)
+    if json_output:
+        typer.echo(render_json(success_envelope(f"index {operation}", result)))
+        return
+    counts = cast(dict[str, int], result["counts"])
+    changed = cast(list[str], result["changed_paths"])
+    typer.echo(
+        f"Index is {result['state']}: {counts['objects']} objects, "
+        f"{counts['segments']} segments."
+    )
+    if changed:
+        typer.echo(f"{len(changed)} changed path(s).")
+
+
+@index_app.command("build")
+def index_build(
+    ctx: typer.Context,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Create a missing index or incrementally refresh a compatible one."""
+
+    _run_index(ctx, "build", json_output)
+
+
+@index_app.command("rebuild")
+def index_rebuild(
+    ctx: typer.Context,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Atomically replace the index from a healthy Vault snapshot."""
+
+    _run_index(ctx, "rebuild", json_output)
+
+
+@index_app.command("status")
+def index_status(
+    ctx: typer.Context,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Classify index health without creating or repairing it."""
+
+    _run_index(ctx, "status", json_output)
+
+
+@app.command("search")
+def search_command(
+    ctx: typer.Context,
+    query: Annotated[str, typer.Argument(help="Literal bilingual search query")],
+    kind: Annotated[str | None, typer.Option("--kind")] = None,
+    subtype: Annotated[str | None, typer.Option("--subtype")] = None,
+    visibility: Annotated[str | None, typer.Option("--visibility")] = None,
+    record_status: Annotated[str | None, typer.Option("--record-status")] = None,
+    workflow_stage: Annotated[str | None, typer.Option("--workflow-stage")] = None,
+    maturity: Annotated[str | None, typer.Option("--maturity")] = None,
+    review_status: Annotated[str | None, typer.Option("--review-status")] = None,
+    tag: Annotated[list[str] | None, typer.Option("--tag")] = None,
+    role: Annotated[str | None, typer.Option("--role")] = None,
+    scope: Annotated[str, typer.Option("--scope")] = ContextScope.TRUSTED_LOCAL.value,
+    limit: Annotated[int, typer.Option("--limit")] = 20,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Search a fresh compatible deterministic projection."""
+
+    try:
+        selected_scope = ContextScope(scope)
+        filters = SearchFilters(
+            kind,
+            subtype,
+            visibility,
+            record_status,
+            workflow_stage,
+            maturity,
+            review_status,
+            tuple(tag or ()),
+            role,
+        )
+        result = _query_service().search(
+            _resolved_vault(ctx), query, filters, selected_scope, limit
+        )
+    except DomainError as error:
+        _exit_phase3_error(error, command="search", json_output=json_output)
+    except ValueError:
+        _exit_phase3_error(
+            DomainError("SEARCH_QUERY_INVALID", "unsupported search scope"),
+            command="search",
+            json_output=json_output,
+        )
+    if json_output:
+        typer.echo(render_json(success_envelope("search", result)))
+        return
+    for hit in cast(list[dict[str, Any]], result["hits"]):
+        section = f"#{hit['section_id']}" if hit["section_id"] else ""
+        classification = cast(dict[str, Any], hit["classification"])
+        typer.echo(
+            f"{hit['object_id']}{section} [{classification['role']}] "
+            f"{hit['title']}: {hit['snippet']}"
+        )
+    typer.echo(f"{result['count']} hit(s).")
+
+
+@app.command("context")
+def context_command(
+    ctx: typer.Context,
+    query: Annotated[str, typer.Argument(help="Literal bilingual context query")],
+    scope: Annotated[str, typer.Option("--scope", help="Required trust scope")],
+    limit: Annotated[int, typer.Option("--limit")] = 20,
+    max_chars: Annotated[int, typer.Option("--max-chars")] = 12_000,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
+) -> None:
+    """Assemble bounded, cited context under an explicit trust scope."""
+
+    try:
+        selected_scope = ContextScope(scope)
+        result = _query_service().context(
+            _resolved_vault(ctx), query, selected_scope, limit, max_chars
+        )
+    except DomainError as error:
+        _exit_phase3_error(error, command="context", json_output=json_output)
+    except ValueError:
+        _exit_phase3_error(
+            DomainError("SEARCH_QUERY_INVALID", "unsupported context scope"),
+            command="context",
+            json_output=json_output,
+        )
+    if json_output:
+        typer.echo(render_json(success_envelope("context", result)))
+        return
+    labels = (
+        ("sources", "Sources"),
+        ("facts", "Facts"),
+        ("human_notes", "Human Notes"),
+        ("snippets", "Snippets"),
+    )
+    for key, label in labels:
+        typer.echo(f"{label}:")
+        for item in result["groups"][key]:  # type: ignore[index]
+            typer.echo(f"- {item['object_id']}: {item['snippet']}")
+    typer.echo(f"{result['character_count']} characters; {result['excluded_count']} excluded.")
 
 
 @app.command("migrate")
@@ -637,6 +910,12 @@ def migrate_command(
     typer.echo(json.dumps(report.data(), ensure_ascii=False, indent=2))
     if apply and not report.apply_allowed:
         raise typer.Exit(3)
+    if apply and report.apply_allowed:
+        try:
+            vault = VaultService(FilesystemVault()).discover(explicit=root)
+        except DomainError:
+            return
+        _render_warnings(_refresh_warning(vault))
 
 
 def _exit_with_update_error(error: UpdateCheckError, json_output: bool) -> NoReturn:
