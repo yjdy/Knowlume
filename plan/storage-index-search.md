@@ -31,16 +31,42 @@ Fact citations use a separate table so one content segment can retain multiple S
 
 Rebuilds are deterministic and transactional. Parse failures are reported and cannot silently erase durable knowledge. Concurrent file changes are detected before a projection is committed.
 
+Phase 3 stores the disposable database at `<vault>/<configured state>/kb.sqlite`. `index build`
+creates it when absent and otherwise applies a checksum-based incremental transaction. `index
+rebuild` validates a sibling temporary database before atomic replacement. Incompatible or corrupt
+state is never silently replaced by a read or incremental command. The complete lifecycle, segment
+algorithm, compatibility metadata, and diagnostics are frozen by
+[`ADR-0016`](decisions/0016-phase3-deterministic-projection-search-context.md).
+
+Note blocks are the stable input boundary for segments. Non-Note bodies use a reserved
+projection-only `__body__` section key which is rendered as no durable section. Generated segment IDs
+are deterministic for one segment-algorithm version but are disposable and never valid relation
+targets. Rebuild determinism means equivalent normalized rows and stable IDs, not byte-identical
+SQLite page layout or operational timestamps.
+
 ## Search surfaces
 
-- File search is the index-independent diagnostic baseline.
-- FTS search supports filters for object subtype, maturity/review state, visibility, record/supersession state, tags, and provenance role.
+- File search and permanent-ID retrieval are index-independent trusted-local diagnostic baselines.
+- FTS search supports filters for object kind/subtype, maturity/review state, visibility,
+  record/supersession state, workflow stage, tags, and provenance role.
 - Results are classified as Facts, Human Ideas/Interpretations, AI Inference, Evolution, or Snippets.
 - Source-free human content remains searchable and may be public, but is represented as human opinion with empty citations, never as fact.
-- AI content is excluded from trusted/default surfaces unless its promotion and caller scope permit it.
+- Default local search includes active Source, human, fact, and Snippet content, including private
+  content, and excludes archived, superseded, and AI results. Explicit AI search is trusted-local
+  only and cannot bypass promotion rules.
+- Missing, stale, incompatible, or corrupt indexes cannot serve FTS or context and are never rebuilt
+  implicitly by a read command.
 
-Chinese and English normalization/tokenization is deterministic and versioned in index metadata. Semantic or hybrid search is deferred and must preserve the same visibility, provenance, AI-review, and supersession filters.
+Tokenizer v1 uses standard-library Unicode NFKC and case folding, letter/number runs, and versioned
+Han single-character plus adjacent-bigram tokens. Documents and literal queries use the same
+pipeline. Semantic or hybrid search is deferred and must preserve the same visibility, provenance,
+AI-review, and supersession filters.
 
 ## Context assembly
 
 Context assembly returns traceable sections and citations under an explicit trusted-local or public-safe scope. It does not infer scope from a caller name or output destination and cannot bypass [publishing policy](security-publishing.md).
+
+Phase 3 context groups Sources, Facts, Human Notes, and Snippets under a bounded character budget and
+does not emit AI content. Public-safe scope audits each returned item's serialized dependency closure,
+excludes unsafe candidates with typed reasons, and retains safe candidates. This result is not a
+Phase 6B publish audit or staging manifest.
