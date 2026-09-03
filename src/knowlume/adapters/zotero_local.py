@@ -12,7 +12,8 @@ from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol, cast
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode, urlparse, urlsplit
+from urllib.request import url2pathname
 
 from platformdirs import user_cache_dir
 
@@ -37,6 +38,7 @@ _KEY_RE = re.compile(r"^[A-Z0-9]{8}$")
 class _HttpResponse(Protocol):
     status_code: int
     content: bytes
+    headers: Mapping[str, str]
 
 
 class _HttpxModule(Protocol):
@@ -135,6 +137,33 @@ def _isbn_values(value: str) -> tuple[str, ...]:
     return tuple(normalized)
 
 
+def _local_file_redirect(response: _HttpResponse) -> bytes:
+    location = response.headers.get("location")
+    if not isinstance(location, str):
+        raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero file redirect is invalid")
+    parsed = urlsplit(location)
+    if (
+        parsed.scheme.lower() != "file"
+        or parsed.netloc.lower() not in {"", "localhost"}
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero file redirect is unsafe")
+    try:
+        path = Path(url2pathname(parsed.path))
+    except (OSError, ValueError) as error:
+        raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero file redirect is invalid") from error
+    path_text = str(path)
+    if not path.is_absolute() or path_text.startswith(("\\\\", "//")):
+        raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero file redirect is unsafe")
+    try:
+        return path.read_bytes()
+    except (OSError, ValueError) as error:
+        raise DomainError(
+            "ZOTERO_ITEM_UNAVAILABLE", "Zotero attachment file is unavailable"
+        ) from error
+
+
 class ZoteroLocalApi:
     def __init__(
         self,
@@ -160,6 +189,8 @@ class ZoteroLocalApi:
             raise DomainError(
                 "ZOTERO_API_UNAVAILABLE", "Zotero Local API is unavailable"
             ) from error
+        if binary and response.status_code == 302:
+            return _local_file_redirect(response)
         if response.status_code in {401, 403}:
             raise DomainError("ZOTERO_PERMISSION_DENIED", "Zotero Local API refused read access")
         if response.status_code == 404:

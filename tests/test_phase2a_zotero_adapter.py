@@ -4,6 +4,7 @@ import json
 import threading
 import time
 from collections.abc import Iterator
+from hashlib import sha256
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -182,3 +183,76 @@ def test_one_pdf_is_cached_and_hashed(
     assert first.sha256 == "sha256:6b081077b62ba46e09c937ea190244f530db1e421f63cabe1508f8af6f183b31"
     assert first.cache_path.is_file()
     assert requests.count("/api/users/0/items/EFGH5678/file") == 1
+
+
+def test_zotero10_local_file_redirect_is_cached_and_hashed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "论文 2608.pdf"
+    body = b"%PDF-zotero-10-local-redirect"
+    source.write_bytes(body)
+    endpoint = "http://127.0.0.1:23119/api"
+    responses = {
+        f"{endpoint}/users/0/items/ABCD1234/children": httpx.Response(
+            200, json=[_child(filename=source.name)]
+        ),
+        f"{endpoint}/users/0/items/EFGH5678/file": httpx.Response(
+            302, headers={"location": source.as_uri()}
+        ),
+    }
+
+    def redirected_get(url: str, *args: object, **kwargs: object) -> httpx.Response:
+        return responses[url]
+
+    monkeypatch.setattr(httpx, "get", redirected_get)
+    attachment = ZoteroLocalApi(
+        endpoint=endpoint, cache_root=tmp_path / "cache"
+    ).primary_attachment(_reference()).attachment
+    assert attachment is not None
+    assert attachment.cache_path != source
+    assert attachment.cache_path.read_bytes() == body
+    assert attachment.sha256 == f"sha256:{sha256(body).hexdigest()}"
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        "https://example.test/paper.pdf",
+        "file://server/share/paper.pdf",
+        "file://user:secret@localhost/C:/paper.pdf",
+        "file:relative.pdf",
+        "file:///C:/paper.pdf?download=1",
+        "file:///C:/paper.pdf#fragment",
+        "file:////server/share/paper.pdf",
+    ],
+)
+def test_zotero10_unsafe_file_redirects_fail_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    location: str,
+) -> None:
+    def redirected_get(url: str, *args: object, **kwargs: object) -> httpx.Response:
+        return httpx.Response(302, headers={"location": location})
+
+    monkeypatch.setattr(httpx, "get", redirected_get)
+    with pytest.raises(DomainError) as caught:
+        ZoteroLocalApi(cache_root=tmp_path)._request(
+            "users/0/items/EFGH5678/file", binary=True
+        )
+    assert caught.value.code == "ZOTERO_RESPONSE_INVALID"
+
+
+def test_zotero10_missing_redirect_target_is_unavailable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    missing = (tmp_path / "missing.pdf").as_uri()
+
+    def redirected_get(url: str, *args: object, **kwargs: object) -> httpx.Response:
+        return httpx.Response(302, headers={"location": missing})
+
+    monkeypatch.setattr(httpx, "get", redirected_get)
+    with pytest.raises(DomainError) as caught:
+        ZoteroLocalApi(cache_root=tmp_path)._request(
+            "users/0/items/EFGH5678/file", binary=True
+        )
+    assert caught.value.code == "ZOTERO_ITEM_UNAVAILABLE"
