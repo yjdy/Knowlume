@@ -9,8 +9,9 @@ isolated-install, and Windows/macOS/Linux Python 3.13–3.14
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661) and
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33252123610) gates. Earlier Phase 2A and
 Phase 1 evidence remains linked from the [roadmap](roadmap.md). Phase 3 projection, bilingual search,
-and scoped context behavior is implemented under ADR-0016 and has passed local, distribution, and
-isolated-wheel gates; required cross-platform remote gates remain pending.
+and scoped context behavior is complete under ADR-0016 after local, distribution, isolated-wheel,
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834), and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) gates passed.
 
 The cross-platform Python package and release-engineering foundation is implemented independently
 of the feature phases. Public command status and verification evidence are tracked in

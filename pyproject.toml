@@ -95,8 +95,8 @@ include = [
 ]
 
 [tool.knowlume.release]
-testpypi-enabled = false
-pypi-prerelease-enabled = false
+testpypi-enabled = true
+pypi-prerelease-enabled = true
 pypi-stable-enabled = false
 
 [tool.pytest.ini_options]

@@ -17,9 +17,11 @@ isolated-install, and Windows/macOS/Linux Python 3.13–3.14
 local, distribution, isolated-install, and
 Windows/macOS/Linux Python 3.13–3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913)
 and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates. Phase 3
-projection/search behavior is implemented under ADR-0016 and has passed local and isolated-package
-gates; its required cross-platform remote gates remain pending. Read-only Web remains in its later
-phase, and publication gates remain closed.
+projection/search behavior is complete under ADR-0016 after local, isolated-package,
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834), and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) gates passed. Read-only Web
+remains in its later phase. TestPyPI and PyPI prerelease eligibility are open; stable publication
+remains closed and every publication action remains separately authorized.
 
 ## Release track
 
@@ -32,7 +34,9 @@ Release engineering runs across the feature phases without advancing their gates
 | Phase 3 complete | first public PyPI prerelease and matching GitHub Release |
 | Phase 6B complete | stable `1.0.0` or later |
 
-Publishing remains blocked until the release owner controls the normalized PyPI project name. Package installation, upgrade, downgrade, and removal never migrate or delete a vault.
+The release owner confirmed control of the normalized PyPI project name on 2026-09-03. Publication
+still requires separate explicit authorization. Package installation, upgrade, downgrade, and
+removal never migrate or delete a vault.
 
 ## Phases and gates
 
@@ -161,6 +165,13 @@ when all of the following are directly proven:
   Windows/macOS/Linux Python 3.13-3.14 CI pass before status changes;
 - release gates remain closed until feature CI is green and normalized PyPI project-name control is
   proven; opening them does not authorize a tag or publication.
+
+This gate is Complete. Feature commit `09c4a634a9fdf196dee0e7efe066ce3ab7eafd01` passed the required
+Windows/macOS/Linux × Python 3.13/3.14
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) workflows. The release
+owner confirmed the `knowlume` PyPI Trusted Publisher configuration on 2026-09-03; this opens
+prerelease eligibility without authorizing a tag, upload, or GitHub Release.
 
 Phase 3 does not implement semantic/vector search, Web UI, AI review, Snippet creation, Git history,
 or Phase 6B publishing. Its detailed milestone and Git rollback boundaries are owned only by the

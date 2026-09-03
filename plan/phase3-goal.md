@@ -1,9 +1,10 @@
 # Phase 3 execution goal: Deterministic projection, search, and context
 
-> **Status:** Implemented locally — M0–M8 evidence is green; M9 remote gates remain pending
+> **Status:** Complete — M0–M9 gates passed
 > **Target branch:** `Phase3`
 > **Implementation baseline commit:** `758554bcae2d73fc2399219dd6f7436a6e3dbe74`
 > **Baseline state:** Phase 2B PR #2 is merged into `main`; the target branch starts from that merge
+> **Feature evidence:** [CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834) and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) passed for `09c4a634a9fdf196dee0e7efe066ce3ab7eafd01`; PyPI Trusted Publisher control was confirmed by the release owner on 2026-09-03
 
 ## 1. Current foundation and authority
 
@@ -16,7 +17,8 @@ Phase 0R, Phase 1, Phase 2A, and Phase 2B are complete. Phase 3 reuses:
 - Phase 2A and 2B Source provenance, canonical identities, workflow commands, and unified capture;
 - CLI envelope v1, packaged resources through `importlib.resources`, distribution audit, isolated
   installation, and supported-platform CI;
-- the release pipeline's closed TestPyPI, PyPI prerelease, and stable gates.
+- the release pipeline's fail-closed TestPyPI, PyPI prerelease, and stable gates, with the first two
+  opened only at M9 after feature CI and project-name control were proven.
 
 This goal is subordinate to machine schemas and follows:
 
