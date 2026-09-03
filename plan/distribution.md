@@ -11,7 +11,10 @@
 - Repository and release source: `https://github.com/yjdy/Knowlume`.
 - Version source: the static PEP 440 version in `pyproject.toml`; release tag `vX.Y.Z` must match it exactly.
 
-Package version and durable contract versions are independent. Runtime version output reports the package, object contract, locator, relation, CLI interface, projection, and parser versions together.
+Package version and durable contract versions are independent. Runtime version output reports the
+package, object contract, locator, relation, CLI interface, projection, and parser versions together;
+Phase 3 adds the independent tokenizer version without changing the package or durable contract
+versions.
 
 ## Installation profiles
 
@@ -54,6 +57,14 @@ Protected `vX.Y.Z` tags enter a manually approved release environment. The pipel
 - Phase 3 gate: public PyPI prerelease.
 - Phase 6B gate: stable `1.0.0` or later.
 
-Publishing remains blocked until the configured PyPI project name is controlled by the release owner.
+The release owner confirmed control of the configured `knowlume` PyPI project through Trusted
+Publishing on 2026-09-03. This satisfies the project-name prerequisite without authorizing a tag,
+upload, GitHub Release, or stable publication.
 
 The `[tool.knowlume.release]` gates in `pyproject.toml` also fail closed. `testpypi-enabled` is opened only with the Phase 1 gate, `pypi-prerelease-enabled` only with Phase 3, and `pypi-stable-enabled` only with Phase 6B. GitHub environment approval is required in addition to, not instead of, these repository gates.
+
+Because the release planner forbids PyPI before TestPyPI, Phase 3 release readiness opened
+`testpypi-enabled` and `pypi-prerelease-enabled` together after the complete feature gate and
+normalized project-name control were proven. `pypi-stable-enabled` remains closed. Opening these
+repository gates does not authorize a package version change, tag, registry upload, or GitHub
+Release; each remains a separate explicit release action.

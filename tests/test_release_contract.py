@@ -33,8 +33,8 @@ def test_python_distribution_metadata_is_frozen() -> None:
         "templates/v2": "knowlume/_assets/templates/v2",
     }
     assert config["tool"]["knowlume"]["release"] == {
-        "testpypi-enabled": False,
-        "pypi-prerelease-enabled": False,
+        "testpypi-enabled": True,
+        "pypi-prerelease-enabled": True,
         "pypi-stable-enabled": False,
     }
     assert config["tool"]["uv"]["index"] == [{"url": "https://pypi.org/simple", "default": True}]
@@ -74,6 +74,7 @@ def test_release_workflows_cover_required_trust_and_platform_gates() -> None:
     assert "actions/setup-python@v6" in smoke
     assert "python-version: ${{ matrix.python }}" in smoke
     assert "scripts/verify_installed_phase1.py" in smoke
+    assert "scripts/verify_installed_phase3.py" in smoke
     assert "scripts/verify_install_lifecycle.py" in smoke
     assert "scripts/release_plan.py" in release
     assert "if: needs.release-plan.outputs.testpypi == 'true'" in release
@@ -84,7 +85,9 @@ def test_release_workflows_cover_required_trust_and_platform_gates() -> None:
 def test_release_plan_skips_formal_publication_for_testpypi_only(tmp_path: Path) -> None:
     source = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     config = tmp_path / "phase1.toml"
-    config.write_text(source.replace("testpypi-enabled = false", "testpypi-enabled = true"))
+    config.write_text(
+        source.replace("pypi-prerelease-enabled = true", "pypi-prerelease-enabled = false")
+    )
     result = subprocess.run(
         [
             sys.executable,
@@ -104,6 +107,29 @@ def test_release_plan_skips_formal_publication_for_testpypi_only(tmp_path: Path)
     ]
 
 
+def test_phase3_prerelease_plan_opens_testpypi_and_pypi(tmp_path: Path) -> None:
+    source = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    config = tmp_path / "phase3.toml"
+    config.write_text(source.replace('version = "0.1.0"', 'version = "0.1.0rc1"'))
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/release_plan.py"),
+            "--config",
+            str(config),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert result.stdout.splitlines() == [
+        "testpypi=true",
+        "pypi=true",
+        "github_release=true",
+    ]
+
+
 def test_release_tag_and_phase_gates_fail_closed() -> None:
     script = ROOT / "scripts" / "check_release_tag.py"
     valid_tag = subprocess.run(
@@ -114,14 +140,13 @@ def test_release_tag_and_phase_gates_fail_closed() -> None:
     )
     assert valid_tag.returncode == 0
 
-    closed_gate = subprocess.run(
+    open_testpypi_gate = subprocess.run(
         [sys.executable, str(script), "v0.1.0", "--target", "testpypi"],
         check=False,
         capture_output=True,
         text=True,
     )
-    assert closed_gate.returncode == 1
-    assert "release gate 'testpypi-enabled' is closed" in closed_gate.stderr
+    assert open_testpypi_gate.returncode == 0
 
     closed_stable_gate = subprocess.run(
         [sys.executable, str(script), "v0.1.0", "--target", "pypi"],

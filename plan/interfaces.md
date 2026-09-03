@@ -3,8 +3,9 @@
 > Status: Active — Contract v2
 > Authoritative for: user-facing commands, machine output, vault discovery, and management surfaces
 
-All interfaces call shared application services. Phase 1 Vault, scanner, Note, relation, and explicit
-v1-to-v2 migration commands are implemented; the Web service remains unimplemented.
+All interfaces call shared application services. Phase 1 Vault/core, Phase 2 Source/capture, and
+Phase 3 query/index commands are implemented; the Phase 3 remote completion gates and Web service
+remain outstanding.
 
 ## Command surface and ownership
 
@@ -173,6 +174,49 @@ section-targeted relation.
 `note new --type literature` requires `--source SOURCE_ID` and atomically creates the required
 `summarizes` relation. `--source` is rejected for the other Note types; no Source is guessed.
 
+## Phase 3 query and index interface
+
+Phase 3 follows [`phase3-goal.md`](phase3-goal.md) and
+[`ADR-0016`](decisions/0016-phase3-deterministic-projection-search-context.md). Its planned public
+syntax is:
+
+```text
+kb grep QUERY [--limit N] [--json]
+kb get ID [--json]
+kb index build [--json]
+kb index rebuild [--json]
+kb index status [--json]
+kb search QUERY
+  [--kind KIND] [--subtype SUBTYPE]
+  [--visibility VISIBILITY] [--record-status STATUS]
+  [--workflow-stage STAGE] [--maturity MATURITY]
+  [--review-status STATUS] [--tag TAG]... [--role ROLE]
+  [--scope trusted-local|public-safe] [--limit N] [--json]
+kb context QUERY --scope trusted-local|public-safe
+  [--limit N] [--max-chars N] [--json]
+```
+
+`grep` and `get` never require or create SQLite. Grep is a trusted-local diagnostic over configured
+durable object and relation roots; its relative path, line, and column identify a current navigation
+location, not durable identity. Get resolves a permanent object ID through the scanner and returns
+the normalized object and its traceable content without probing an external adapter.
+
+`index build` creates a missing database and otherwise performs an incremental update. Incompatible
+or corrupt state requires explicit `index rebuild`. Status is read-only. Search and context require a
+fresh compatible index and never rebuild implicitly. The database is always the configured state
+directory's `kb.sqlite` and remains disposable.
+
+Search defaults to `trusted-local`, limit 20, and active Source, human, fact, and Snippet content.
+It excludes archived, superseded, and AI results unless a valid trusted-local AI filter is explicit.
+The maximum limit is 200; repeated tags use AND semantics. Query text is literal and cannot inject
+FTS5 syntax. Results use BM25 followed by object, section, and ordinal tie-breaks and always return to
+a relative file path and durable object/section identity when applicable.
+
+Context requires an explicit scope, defaults to 20 results and 12,000 characters, and accepts at
+most 200 results and 100,000 characters. It groups Sources, Facts, Human Notes, and Snippets and does
+not return AI content in Phase 3. Public-safe scope audits every serialized result dependency,
+excludes unsafe candidates with typed reasons, and is not a Phase 6B publish certification.
+
 ## Machine interface v1
 
 CLI stdout and stderr use UTF-8 on every supported platform. Commands that support JSON emit exactly one document matching the [CLI envelope v1 schema](../schemas/interfaces/cli-envelope-v1.schema.json) to stdout; diagnostics go to stderr. `interface_version` is independent from object, locator, relation, projection, and parser/tokenizer versions.
@@ -249,7 +293,28 @@ diagnostics remain applicable by reference and are not duplicated here. `ZOTERO_
 and `PAPER_CAPTURE_INVALID` are internal construction/invariant diagnostics; a future public
 `kb add` path must translate them into the stable `ADD_*` vocabulary.
 
-`kb --version` reports package and independent contract/projection/parser versions without resolving a vault. `kb doctor` currently validates the Python runtime and bundled release assets; later phases extend it with vault and adapter capability probes without changing its command identity.
+Phase 3 reserves these typed diagnostics:
+
+| Code | Exit/severity | Meaning |
+|---|---:|---|
+| `INDEX_NOT_FOUND` | 5 | a query requires an index and none exists |
+| `INDEX_INCOMPATIBLE` | 3 | interpretation versions do not match runtime versions |
+| `INDEX_CORRUPT` | 3 | SQLite cannot be opened or validated |
+| `INDEX_SOURCE_INVALID` | 3 | durable input does not produce a healthy scanner snapshot |
+| `INDEX_SOURCE_CHANGED` | 4 | durable files changed before projection commit |
+| `INDEX_BUSY` | 4 | another projection writer owns the index lock |
+| `SEARCH_QUERY_INVALID` | 2 | query, filters, or bounds are invalid |
+| `OBJECT_NOT_FOUND` | 3 | generic permanent-ID lookup failed |
+| `INDEX_REFRESH_FAILED` | warning | durable mutation succeeded but best-effort refresh failed |
+
+Phase 3 JSON data uses `grep-result-v1`, `get-result-v1`, `search-result-v1`,
+`context-result-v1`, and `index-result-v1`. These schemas must exist with positive and negative
+fixtures before any command is registered or marked implemented.
+
+`kb --version` reports package and independent contract/projection/parser versions without resolving
+a vault. Phase 3 adds the independent tokenizer version before registering its first query/index
+command. `kb doctor` currently validates the Python runtime and bundled release assets; later phases
+extend it with vault and adapter capability probes without changing its command identity.
 
 `kb update-check` is the only package-update network operation. It runs only when invoked, never installs an update, defaults to stable versions, and uses `--pre` to consider prereleases. JSON success data follows [update-check result v1](../schemas/interfaces/update-check-result-v1.schema.json). Unavailable or malformed package metadata emits `UPDATE_CHECK_UNAVAILABLE` with exit code 5. No vault path, object identity, content, or usage data is sent.
 

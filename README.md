@@ -17,8 +17,13 @@ Windows/macOS/Linux × Python 3.13/3.14 的
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) 门禁。Phase 1 的 Vault、
 parser/scanner、safe writes、Note、relation 和显式迁移也已通过
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) 与
-[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 门禁。SQLite search 和
-只读 Web 功能仍按路线图逐阶段实现，所有发布开关保持关闭。
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) 门禁。Phase 3 的
+deterministic SQLite projection、双语 literal FTS、index-independent grep/get 和 scoped context
+已通过本地完整测试、分发审计、Python 3.13/3.14 隔离 wheel 验证，以及
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834) 和
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) 的跨平台远程门禁。
+PyPI Trusted Publisher 控制权已确认；TestPyPI 与 PyPI prerelease 门禁已开放，stable 门禁保持关闭，
+且未创建 tag、上传包或创建 GitHub Release。只读 Web 功能继续按路线图实现。
 
 ```text
 Phase 0R  Contract v2                         Complete
@@ -26,7 +31,7 @@ Release   Python package foundation           Implemented
 Phase 1   Vault, domain, parser, safe writes  Complete
 Phase 2A  Paper + Zotero                      Complete
 Phase 2B  Unified capture: Web, Book, OSS     Complete
-Phase 3   SQLite projection and search        Planned
+Phase 3   SQLite projection/search/context    Complete
 Phase 4   Read-only Web                       Planned
 Phase 5   Automation and AI promotion         Planned
 Phase 6A  Evolution and history               Planned
@@ -74,19 +79,20 @@ uv venv --python 3.14 .venv
 uv sync --all-extras
 ```
 
-当前可执行的 Phase 1–2A 命令可从完整账本查看；以下命令可快速检查安装、初始化 vault
-和浏览 Source：
+当前可执行的 Phase 1–2B 命令可从完整账本查看；以下命令可快速检查安装、初始化 vault、
+捕获和浏览 Source：
 
 ```powershell
 uv run --no-sync kb --version
 uv run --no-sync kb init PATH
 uv run --no-sync kb --vault PATH scan
+uv run --no-sync kb --vault PATH add INPUT --json
 uv run --no-sync kb --vault PATH source list
 uv run --no-sync kb --vault PATH inbox
 uv run --no-sync kb update-check
 ```
 
-`doctor` 检查的是安装产物中的资源完整性，应在构建并隔离安装 wheel 后运行；editable 源码环境不会回退读取仓库资源。`update-check` 只有在显式调用时联网，并且不会安装更新。正式 PyPI 发布要等 Phase 3 gate；当前不要把本地构建误认为公开版本。
+`doctor` 检查的是安装产物中的资源完整性，应在构建并隔离安装 wheel 后运行；editable 源码环境不会回退读取仓库资源。`update-check` 只有在显式调用时联网，并且不会安装更新。Phase 3 完成仅开放 prerelease 资格；tag、注册表上传和 GitHub Release 仍需分别明确授权。
 
 运行完整契约与文档链接检查：
 
@@ -106,6 +112,7 @@ uv run --no-sync pytest -p no:cacheprovider
 - [Security and publishing](plan/security-publishing.md)
 - [Distribution and releases](plan/distribution.md)
 - [Roadmap](plan/roadmap.md)
+- [Phase 3 execution goal](plan/phase3-goal.md)
 - [Accepted decisions](plan/decisions/)
 - [v1→v2 migration](plan/migrations/v1-to-v2.md)
 

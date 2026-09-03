@@ -2,9 +2,9 @@
 
 本文档记录所有已规划 `kb` 命令的用途、交付阶段、实现方案、当前状态和验证证据，用于每次 CLI 变更后的对比与验收。
 
-> Last synchronized: 2026-08-29
+> Last synchronized: 2026-09-03
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Phase 2A and Phase 2B Complete; commands Verified
+> Current delivery state: Phase 3 Complete and remotely verified
 
 ## Authority and update rules
 
@@ -88,13 +88,24 @@
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `grep` | `kb grep QUERY` | 不依赖索引搜索 durable files | FileSearchBackend、稳定结果定位 | `Planned` | — |
-| `search` | `kb search QUERY` | 使用 SQLite FTS 和受控过滤搜索 | Projection reader、FTS ranking、provenance/visibility filters | `Planned` | — |
-| `get` | `kb get ID` | 按稳定 ID 返回对象和可追溯内容 | Object lookup、normalized machine/human output | `Planned` | — |
-| `context` | `kb context QUERY` | 按显式 trusted-local/public-safe scope 组装上下文 | SearchBackend、dependency/provenance filters、citations | `Planned` | — |
-| `index.build` | `kb index build` | 增量更新 SQLite projection | checksums、change set、transactional projection commit | `Planned` | — |
-| `index.rebuild` | `kb index rebuild` | 从 durable files 确定性重建索引 | v2 DDL、deterministic scan、atomic database replacement | `Planned` | — |
-| `index.status` | `kb index status` | 报告 projection 版本、新鲜度和错误 | index metadata、scan state、parse errors | `Planned` | — |
+| `grep` | `kb grep QUERY [--limit N] [--json]` | 不依赖索引搜索 durable files | trusted-local scanner/file search、relative path/ephemeral line、grep-result v1 | `Verified` | `tests/test_phase3_cli.py`; `tests/test_phase3_search.py`; local complete suite |
+| `search` | `kb search QUERY [filters] [--scope trusted-local\|public-safe] [--limit N] [--json]` | 使用 SQLite FTS 和受控过滤搜索 | literal bilingual tokenizer、BM25、stable tie-break、search-result v1 | `Verified` | `tests/test_phase3_cli.py`; `tests/test_phase3_search.py`; isolated wheel smoke |
+| `get` | `kb get ID [--json]` | 按稳定 ID 返回对象和可追溯内容 | scanner lookup、normalized body/citations/relations、get-result v1 | `Verified` | `tests/test_phase3_cli.py`; `tests/test_phase3_contracts.py`; local complete suite |
+| `context` | `kb context QUERY --scope trusted-local\|public-safe [--limit N] [--max-chars N] [--json]` | 按显式 scope 组装可追溯上下文 | per-result dependency audit、grouping/budget、context-result v1 | `Verified` | `tests/test_phase3_cli.py`; `tests/test_phase3_search.py`; isolated wheel smoke |
+| `index.build` | `kb index build [--json]` | 创建或增量更新 SQLite projection | checksums、change set、single transaction、index-result v1 | `Verified` | `tests/test_phase3_search.py`; `tests/test_phase3_cli.py`; local complete suite |
+| `index.rebuild` | `kb index rebuild [--json]` | 从 durable files 确定性重建索引 | packaged v2 DDL、healthy snapshot、atomic database replacement | `Verified` | `tests/test_phase3_search.py`; distribution audit; Python 3.13/3.14 isolated wheel smoke |
+| `index.status` | `kb index status [--json]` | 报告 projection 版本、新鲜度和错误 | missing/fresh/stale/incompatible/corrupt、index-result v1 | `Verified` | `tests/test_phase3_cli.py`; `tests/test_phase3_search.py`; local complete suite |
+
+`search` filters are `--kind`, `--subtype`, `--visibility`, `--record-status`,
+`--workflow-stage`, `--maturity`, `--review-status`, repeatable `--tag`, and `--role`. Default search
+is trusted-local active Source/human/fact/snippet content with AI, archived, and superseded results
+excluded. Default limit is 20 and maximum is 200. `context` requires scope, defaults to 12,000
+characters, and excludes AI throughout Phase 3. Exact behavior and diagnostics are frozen by
+[`ADR-0016`](plan/decisions/0016-phase3-deterministic-projection-search-context.md); every command
+is registered and `Verified`. The complete Phase 3 inventory passed
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) on Windows, macOS, and
+Linux with Python 3.13 and 3.14.
 
 ## Phase 4 — Read-only Web
 
@@ -147,6 +158,9 @@
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-09-03 | 完成 Phase 3 projection/search/context | Feature commit `09c4a634a9fdf196dee0e7efe066ce3ab7eafd01` 通过跨平台 [CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847)；release owner 已确认 PyPI Trusted Publisher 控制权，TestPyPI/PyPI prerelease gate 开放而 stable gate 保持关闭；未创建 tag、上传包或创建 GitHub Release |
+| 2026-08-30 | 实现 Phase 3 projection/search/context | 七个命令、五个 result schemas、tokenizer v1、deterministic rebuild/incremental refresh、public-safe context、本地完整套件、分发审计和 Python 3.13/3.14 隔离 wheel smoke 已通过；远程完成门禁仍待执行，发布开关保持关闭 |
+| 2026-08-29 | 冻结 Phase 3 projection/search/context 设计 | ADR-0016 与 `phase3-goal.md` 固定 state-directory SQLite、deterministic segments、standard-library bilingual n-gram、全部命令 JSON、trusted-local 默认和逐结果 public-safe 审计；命令仍为 `Planned` |
 | 2026-08-29 | 完成 Phase 2B 统一 Source capture | `kb add` 四条 backend、Book edition/config 契约、Zotero 精确分类与 Web snapshot、匿名 Git HEAD、幂等/冲突写入和 OSS→Literature Note 已通过本地、分发、隔离安装及[跨平台 CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661)；状态更新为 `Verified` |
 | 2026-08-29 | 勘误 Phase 2A capture 边界并回补 CLI 验收 | Phase 2A 保持 Complete/Verified：内部 Paper capture 依赖可注入 metadata resolver，生产 DOI/arXiv Zotero 搜索归 Phase 2B；`tests/test_phase2a_cli.py` 直接覆盖 Source filters、open 成功、sync 审批参数、warnings 和主要 human/JSON 输出；ADR-0014 冻结完整公开诊断 |
 | 2026-08-29 | 收紧 Phase 2B OSS 范围并无期限延期 Snippet 创建 | `add.repo` 仅捕获仓库根和远端 HEAD 的项目级 OSS Source；整体项目笔记复用已验证的 Literature Note；`snippet.add` 改为未分配阶段的 `Deferred`，现有 Contract v2 Snippet 仍可读 |

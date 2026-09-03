@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://knowlume.dev/schemas/interfaces/index-result-v1.schema.json",
+  "title": "Knowlume index result v1", "type": "object", "additionalProperties": false,
+  "required": ["operation", "state", "versions", "snapshot", "counts", "changed_paths", "findings"],
+  "properties": {
+    "operation": {"enum": ["build", "rebuild", "status"]}, "state": {"enum": ["missing", "fresh", "stale", "incompatible", "corrupt"]},
+    "versions": {"type": "object", "additionalProperties": false, "required": ["runtime", "index"], "properties": {"runtime": {"$ref": "#/$defs/versions"}, "index": {"oneOf": [{"$ref": "#/$defs/versions"}, {"type": "null"}]}}},
+    "snapshot": {"type": "object", "additionalProperties": false, "required": ["current", "indexed"], "properties": {"current": {"$ref": "#/$defs/checksum"}, "indexed": {"oneOf": [{"$ref": "#/$defs/checksum"}, {"type": "null"}]}}},
+    "counts": {"type": "object", "additionalProperties": false, "required": ["objects", "relations", "sections", "segments", "citations"], "properties": {"objects": {"$ref": "#/$defs/count"}, "relations": {"$ref": "#/$defs/count"}, "sections": {"$ref": "#/$defs/count"}, "segments": {"$ref": "#/$defs/count"}, "citations": {"$ref": "#/$defs/count"}}},
+    "changed_paths": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}}, "findings": {"type": "array", "items": {"type": "object"}}
+  },
+  "allOf": [{"if": {"properties": {"state": {"const": "missing"}}}, "then": {"properties": {"snapshot": {"properties": {"indexed": {"type": "null"}}}}}}, {"if": {"properties": {"operation": {"enum": ["build", "rebuild"]}}}, "then": {"properties": {"state": {"const": "fresh"}}}}],
+  "$defs": {
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).+"}, "checksum": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "count": {"type": "integer", "minimum": 0},
+    "versions": {"type": "object", "additionalProperties": false, "required": ["projection", "object_contract", "locator", "relation_schema", "parser", "tokenizer", "segment_algorithm"], "properties": {"projection": {"type": "integer", "minimum": 1}, "object_contract": {"type": "integer", "minimum": 1}, "locator": {"type": "integer", "minimum": 1}, "relation_schema": {"type": "integer", "minimum": 1}, "parser": {"type": "integer", "minimum": 1}, "tokenizer": {"type": "integer", "minimum": 1}, "segment_algorithm": {"type": "integer", "minimum": 1}}}
+  }
+}

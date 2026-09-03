@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://knowlume.dev/schemas/interfaces/get-result-v1.schema.json",
+  "title": "Knowlume get result v1", "type": "object", "additionalProperties": false,
+  "required": ["object_id", "path", "checksum", "object", "body", "citations", "relations"],
+  "properties": {
+    "object_id": {"$ref": "#/$defs/objectId"}, "path": {"$ref": "#/$defs/path"}, "checksum": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "object": {"$ref": "https://knowlume.dev/schemas/v2/objects.schema.json"}, "body": {"oneOf": [{"type": "string"}, {"$ref": "https://knowlume.dev/schemas/v2/note-body.schema.json"}]}, "citations": {"type": "array", "items": {"type": "object"}},
+    "relations": {"type": "object", "additionalProperties": false, "required": ["outgoing", "incoming"], "properties": {
+      "outgoing": {"type": "array", "items": {"$ref": "#/$defs/relation"}}, "incoming": {"type": "array", "items": {"$ref": "#/$defs/relation"}}
+    }}
+  },
+  "$defs": {
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).+"},
+    "objectId": {"type": "string", "pattern": "^(src|note|snip|ai)_[0-9A-HJKMNP-TV-Z]{26}$"},
+    "relation": {"type": "object", "additionalProperties": false, "required": ["from_id", "to_id", "relation_type", "created_at", "actor"], "properties": {
+      "from_id": {"$ref": "#/$defs/objectId"}, "to_id": {"$ref": "#/$defs/objectId"}, "to_section_id": {"type": "string", "pattern": "^sec_[a-z0-9][a-z0-9_-]{2,63}$"},
+      "relation_type": {"enum": ["cites", "derived_from", "summarizes", "synthesizes", "supports", "contradicts", "related_to", "snippet_from", "promoted_from", "supersedes"]},
+      "locator": {"type": "object"}, "reason": {"type": "string", "minLength": 1}, "created_at": {"type": "string", "format": "date-time"},
+      "actor": {"type": "object", "additionalProperties": false, "required": ["type", "id"], "properties": {"type": {"enum": ["human", "system"]}, "id": {"type": "string", "minLength": 1}}}
+    }}
+  }
+}

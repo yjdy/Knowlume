@@ -28,6 +28,7 @@ from phase0_support import (
     semantic_v2_relation_errors,
     validation_errors,
 )
+from referencing import Resource
 
 ContractBundle = tuple[dict[str, dict[str, Any]], Any]
 ObjectMap = dict[str, dict[str, Any]]
@@ -45,7 +46,11 @@ def v2_contracts() -> ContractBundle:
 
 @pytest.fixture(scope="module")
 def interface_contracts() -> ContractBundle:
-    return load_schemas(INTERFACE_SCHEMA_DIR)
+    schemas, registry = load_schemas(INTERFACE_SCHEMA_DIR)
+    v2_schemas, _v2_registry = load_schemas(V2_SCHEMA_DIR)
+    for schema in v2_schemas.values():
+        registry = registry.with_resource(schema["$id"], Resource.from_contents(schema))
+    return schemas, registry
 
 
 @pytest.fixture(scope="module")
@@ -446,9 +451,14 @@ def test_interface_and_migration_report_contracts(
     schemas, registry = interface_contracts
     assert set(schemas) == {
         "add-result-v1",
-        "cli-envelope-v1",
-        "finding-v1",
-        "migration-report-v1",
+            "cli-envelope-v1",
+            "context-result-v1",
+            "finding-v1",
+            "get-result-v1",
+            "grep-result-v1",
+            "index-result-v1",
+            "migration-report-v1",
+            "search-result-v1",
         "source-list-result-v1",
         "source-show-result-v1",
         "source-sync-result-v1",

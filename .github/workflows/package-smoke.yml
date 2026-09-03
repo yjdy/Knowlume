@@ -3,7 +3,7 @@ name: Package smoke
 on:
   workflow_dispatch:
   push:
-    branches: [Phase2B]
+    branches: [Phase3]
   pull_request:
     paths:
       - "pyproject.toml"
@@ -13,6 +13,7 @@ on:
       - "templates/**"
       - "scripts/verify_distribution.py"
       - "scripts/verify_installed_phase1.py"
+      - "scripts/verify_installed_phase3.py"
       - "scripts/verify_install_lifecycle.py"
       - ".github/workflows/package-smoke.yml"
 
@@ -75,6 +76,11 @@ jobs:
         run: |
           WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )
           python scripts/verify_installed_phase1.py "$WHEEL"
+      - name: Smoke test Phase 3 installed projection and search
+        shell: bash
+        run: |
+          WHEEL=$(python -c "from pathlib import Path; print(next(Path('dist').glob('*.whl')))" )
+          python scripts/verify_installed_phase3.py "$WHEEL"
       - name: Verify package lifecycle preserves Vaults
         shell: bash
         run: |

@@ -4,14 +4,18 @@
 
 ## Current baseline
 
-Phase 0R, Phase 1, and Phase 2A are complete. Phase 2A passed local, distribution,
+Phase 0R, Phase 1, Phase 2A, and Phase 2B are complete. Phase 2B passed local, distribution,
 isolated-install, and Windows/macOS/Linux Python 3.13–3.14
-[CI](https://github.com/yjdy/Knowlume/actions/runs/33179444723) and
-[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33179444644) gates. Phase 1 evidence
-remains at [CI](https://github.com/yjdy/Knowlume/actions/runs/33120979913) and
-[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856).
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33252123661) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33252123610) gates. Earlier Phase 2A and
+Phase 1 evidence remains linked from the [roadmap](roadmap.md). Phase 3 projection, bilingual search,
+and scoped context behavior is complete under ADR-0016 after local, distribution, isolated-wheel,
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834), and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) gates passed.
 
-The cross-platform Python package and release-engineering foundation is implemented independently of the feature phases. It exposes only verified release diagnostics until Phase 1 commands satisfy their gates.
+The cross-platform Python package and release-engineering foundation is implemented independently
+of the feature phases. Public command status and verification evidence are tracked in
+[`CLI.md`](../CLI.md).
 
 ## Active documents
 
@@ -28,6 +32,7 @@ The cross-platform Python package and release-engineering foundation is implemen
 | [`phase1-goal.md`](phase1-goal.md) | Phase 1 execution goal, milestones, acceptance checks, and Git rollback boundaries |
 | [`phase2a-goal.md`](phase2a-goal.md) | Phase 2A Paper/Zotero execution goal, milestones, acceptance checks, and Git rollback boundaries |
 | [`phase2b-goal.md`](phase2b-goal.md) | Phase 2B unified Source capture goal, project-level OSS boundary, milestones, and acceptance checks |
+| [`phase3-goal.md`](phase3-goal.md) | Phase 3 projection, bilingual search, scoped context, milestones, and release-readiness gates |
 | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | v1-to-v2 migration behavior |
 | [`decisions/`](decisions/) | accepted architecture decisions |
 | [`chapter-map.md`](chapter-map.md) | completed historical design migration audit |

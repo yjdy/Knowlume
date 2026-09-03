@@ -51,6 +51,13 @@ without snapshot evidence remain readable but are not public citation dependenci
 
 Callers choose an explicit trusted-local or public-safe scope. Search results and adapters cannot widen it. Private objects or attachments may leave the machine only when an explicit release policy authorizes every selected item and transitive content dependency.
 
+Phase 3 context applies this choice to each item it actually returns. `trusted-local` may include
+private local content; `public-safe` excludes unsafe candidates with typed reasons while retaining
+eligible results. Phase 3 context emits no AI content. Its per-result check is not a public allowlist,
+publish manifest, or staging audit and cannot certify an object or Vault for publication. The frozen
+query boundary is recorded in
+[`ADR-0016`](decisions/0016-phase3-deterministic-projection-search-context.md).
+
 ## Local Web security
 
 The service binds to loopback by default. Host and Origin use allowlists; permissive CORS is forbidden. Markdown is sanitized, security response headers are enabled, mutations require CSRF protection and conflict-safe writes, and path operations reject traversal and symlink/junction escape.

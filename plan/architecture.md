@@ -44,10 +44,17 @@ vault/
 ├── snippets/
 ├── ai/artifacts/
 ├── relations/
-└── .knowlume/{locks,transactions}/   # ignored, disposable
+└── .knowlume/
+    ├── kb.sqlite                     # ignored, disposable Phase 3 projection
+    ├── locks/                        # ignored, disposable
+    └── transactions/                 # ignored, disposable
 ```
 
-`knowlume.toml` contains portable relative configuration. Absolute vault paths, credentials, adapter endpoints, locks, and transaction state are machine-local. Vault resolution is `--vault`, `KNOWLUME_VAULT`, nearest ancestor marker, then user default; ambiguity fails.
+`knowlume.toml` contains portable relative configuration. Absolute vault paths, credentials, adapter
+endpoints, locks, transaction state, and the Phase 3 SQLite projection are machine-local. Vault
+resolution is `--vault`, `KNOWLUME_VAULT`, nearest ancestor marker, then user default; ambiguity
+fails. Projection lifecycle is frozen by
+[`ADR-0016`](decisions/0016-phase3-deterministic-projection-search-context.md).
 
 Application `private` visibility is not encryption and does not prevent Git pushes. Knowlume never performs Git commit, push, pull, or history rewriting implicitly.
 

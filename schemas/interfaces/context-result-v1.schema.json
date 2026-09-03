@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://knowlume.dev/schemas/interfaces/context-result-v1.schema.json",
+  "title": "Knowlume context result v1", "type": "object", "additionalProperties": false,
+  "required": ["query", "scope", "limit", "max_chars", "groups", "exclusions", "character_count", "truncated", "excluded_count", "notice"],
+  "properties": {
+    "query": {"type": "string", "minLength": 1}, "scope": {"enum": ["trusted-local", "public-safe"]},
+    "limit": {"type": "integer", "minimum": 1, "maximum": 200}, "max_chars": {"type": "integer", "minimum": 1, "maximum": 100000},
+    "groups": {"type": "object", "additionalProperties": false, "required": ["sources", "facts", "human_notes", "snippets"], "properties": {"sources": {"$ref": "#/$defs/items"}, "facts": {"$ref": "#/$defs/items"}, "human_notes": {"$ref": "#/$defs/items"}, "snippets": {"$ref": "#/$defs/items"}}},
+    "exclusions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["code", "object_id", "segment_id"], "properties": {"code": {"type": "string", "minLength": 1}, "object_id": {"type": "string", "pattern": "^(src|note|snip|ai)_[0-9A-HJKMNP-TV-Z]{26}$"}, "segment_id": {"type": "string", "pattern": "^seg_[0-9a-f]{64}$"}}}},
+    "character_count": {"type": "integer", "minimum": 0, "maximum": 100000}, "truncated": {"type": "boolean"}, "excluded_count": {"type": "integer", "minimum": 0}, "notice": {"type": "string", "minLength": 1}
+  },
+  "allOf": [{"if": {"properties": {"scope": {"const": "public-safe"}}}, "then": {"properties": {"groups": {"properties": {"sources": {"items": {"$ref": "search-result-v1.schema.json#/$defs/publicHit"}}, "facts": {"items": {"$ref": "search-result-v1.schema.json#/$defs/publicHit"}}, "human_notes": {"items": {"$ref": "search-result-v1.schema.json#/$defs/publicHit"}}, "snippets": {"items": {"$ref": "search-result-v1.schema.json#/$defs/publicHit"}}}}}}}],
+  "$defs": {"items": {"type": "array", "maxItems": 200, "items": {"$ref": "search-result-v1.schema.json#/$defs/hit"}}}
+}

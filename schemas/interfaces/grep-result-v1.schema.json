@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://knowlume.dev/schemas/interfaces/grep-result-v1.schema.json",
+  "title": "Knowlume grep result v1", "type": "object", "additionalProperties": false,
+  "required": ["query", "limit", "hits", "count"],
+  "properties": {
+    "query": {"type": "string", "minLength": 1}, "limit": {"type": "integer", "minimum": 1, "maximum": 200},
+    "count": {"type": "integer", "minimum": 0, "maximum": 200},
+    "hits": {"type": "array", "maxItems": 200, "items": {"$ref": "#/$defs/hit"}}
+  },
+  "$defs": {
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).+"},
+    "objectId": {"type": "string", "pattern": "^(src|note|snip|ai)_[0-9A-HJKMNP-TV-Z]{26}$"},
+    "hit": {"type": "object", "additionalProperties": false, "required": ["path", "line", "column", "excerpt"], "properties": {
+      "path": {"$ref": "#/$defs/path"}, "line": {"type": "integer", "minimum": 1}, "column": {"type": "integer", "minimum": 1},
+      "excerpt": {"type": "string"}, "object_id": {"$ref": "#/$defs/objectId"},
+      "section_id": {"type": "string", "pattern": "^sec_[a-z0-9][a-z0-9_-]{2,63}$"}
+    }}
+  }
+}
