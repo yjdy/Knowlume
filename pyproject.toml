@@ -78,6 +78,7 @@ packages = ["src/knowlume"]
 "templates/v1" = "knowlume/_assets/templates/v1"
 "templates/v2" = "knowlume/_assets/templates/v2"
 "templates/config" = "knowlume/_assets/templates/config"
+"templates/web" = "knowlume/_assets/templates/web"
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -86,6 +87,7 @@ include = [
     "/templates/v1",
     "/templates/v2",
     "/templates/config",
+    "/templates/web",
     "/tests",
     "/plan",
     "/README.md",

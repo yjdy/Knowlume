@@ -23,6 +23,7 @@ AUTHORITATIVE_ASSETS = [
     *sorted((ROOT / "templates" / "v1").rglob("*")),
     *sorted((ROOT / "templates" / "v2").rglob("*")),
     *sorted((ROOT / "templates" / "config").rglob("*")),
+    *sorted((ROOT / "templates" / "web").rglob("*")),
 ]
 AUTHORITATIVE_ASSETS = [path for path in AUTHORITATIVE_ASSETS if path.is_file()]
 

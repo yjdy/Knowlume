@@ -14,6 +14,7 @@ import pytest
 from fastapi.testclient import TestClient
 from phase4_support import (
     ROOT,
+    WEB_ROOT,
     asset_reader,
     copy_fixture,
     empty_vault,
@@ -31,6 +32,7 @@ from knowlume.application.scanning import Finding, ScanResult, scan_vault
 from knowlume.domain.search import ContextScope, SearchFilters
 from knowlume.domain.values import DomainError
 from knowlume.ids import new_ulid
+from knowlume.resources import REQUIRED_ASSETS
 from knowlume.web.app import SECURITY_HEADERS, create_app
 from knowlume.web.server import run_server
 
@@ -58,6 +60,25 @@ def _assert_security_headers(response: Any) -> None:
         assert response.headers[name] == value
     assert "access-control-allow-origin" not in response.headers
     assert "set-cookie" not in response.headers
+
+
+def test_every_web_resource_is_required_and_htmx_integrity_is_fixed() -> None:
+    authoritative = {
+        f"templates/web/{path.relative_to(WEB_ROOT).as_posix()}"
+        for path in WEB_ROOT.rglob("*")
+        if path.is_file()
+    }
+    assert {name for name in REQUIRED_ASSETS if name.startswith("templates/web/")} == authoritative
+    integrity = dict(
+        line.split(": ", 1)
+        for line in template_reader("templates/web/vendor/htmx-2.0.10.integrity.txt").splitlines()
+    )
+    assert integrity["version"] == "2.0.10"
+    asset_digest = hashlib.sha256(asset_reader("templates/web/assets/htmx.min.js")).hexdigest()
+    assert asset_digest == integrity["asset_sha256"]
+    assert hashlib.sha256(asset_reader("templates/web/vendor/HTMX-LICENSE.txt")).hexdigest() == (
+        integrity["license_sha256"]
+    )
 
 
 def test_route_surface_is_exactly_the_frozen_read_only_html_interface(tmp_path: Path) -> None:

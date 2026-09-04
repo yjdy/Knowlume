@@ -27,7 +27,7 @@ def _surface(typer: Typer) -> tuple[set[str], set[str]]:
     return _command_names(typer.registered_commands), _group_names(typer.registered_groups)
 
 
-def test_registered_cli_inventory_through_phase3_is_exact() -> None:
+def test_registered_cli_inventory_through_phase4_is_exact() -> None:
     commands, groups = _surface(app)
     assert commands == {
         "add",
@@ -42,6 +42,7 @@ def test_registered_cli_inventory_through_phase3_is_exact() -> None:
         "process",
         "scan",
         "search",
+        "serve",
         "status",
         "update-check",
     }

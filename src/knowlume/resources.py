@@ -29,6 +29,10 @@ def read_asset_text(relative_name: str) -> str:
     return asset(relative_name).read_text(encoding="utf-8")
 
 
+def read_asset_bytes(relative_name: str) -> bytes:
+    return asset(relative_name).read_bytes()
+
+
 REQUIRED_ASSETS = (
     "schemas/v1/objects.schema.json",
     "schemas/v2/objects.schema.json",
@@ -48,6 +52,25 @@ REQUIRED_ASSETS = (
     "templates/v1/notes/literature.md",
     "templates/v2/notes/idea.md",
     "templates/config/v1/knowlume.toml",
+    "templates/web/base.html",
+    "templates/web/dashboard.html",
+    "templates/web/error.html",
+    "templates/web/health.html",
+    "templates/web/note-detail.html",
+    "templates/web/notes.html",
+    "templates/web/README.md",
+    "templates/web/search.html",
+    "templates/web/source-detail.html",
+    "templates/web/sources.html",
+    "templates/web/assets/app.css",
+    "templates/web/assets/htmx.min.js",
+    "templates/web/fragments/catalog-list.html",
+    "templates/web/fragments/search-results.html",
+    "templates/web/partials/metadata.html",
+    "templates/web/partials/recent-list.html",
+    "templates/web/partials/relations.html",
+    "templates/web/vendor/HTMX-LICENSE.txt",
+    "templates/web/vendor/htmx-2.0.10.integrity.txt",
 )
 
 

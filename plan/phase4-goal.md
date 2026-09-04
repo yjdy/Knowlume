@@ -1,9 +1,9 @@
 # Phase 4 execution goal: Local read-only Web management
 
-> **Status:** Design frozen — implementation pending
+> **Status:** Implemented locally — M0–M7 complete; M8 remote gate pending
 > **Target branch:** `Phase4`
 > **Implementation baseline commit:** `ab22542316788fc0924a672d4c70dd923b878394`
-> **Baseline state:** Phase 3 已合并到 `main`；Phase 4 尚未开始
+> **Baseline state:** Phase 3 已合并到 `main`；本地实现从该提交开始；P4-C1～P4-C8 位于 `Phase4`
 
 ## 1. 当前基础与权威来源
 

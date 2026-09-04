@@ -14,7 +14,9 @@ and scoped context behavior is complete under ADR-0016 after local, distribution
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) gates passed.
 Phase 4 local read-only Web behavior is frozen by
 [`ADR-0017`](decisions/0017-phase4-local-read-only-application-backed-web.md) and
-[`phase4-goal.md`](phase4-goal.md). Implementation and all executable gates remain pending.
+[`phase4-goal.md`](phase4-goal.md). M1–M7 implementation, local tests, distribution audit,
+isolated-wheel checks, lifecycle checks, and browser acceptance are green; M8 cross-platform CI and
+package smoke remain required before Phase 4 is Complete.
 
 The cross-platform Python package and release-engineering foundation is implemented independently
 of the feature phases. Public command status and verification evidence are tracked in
