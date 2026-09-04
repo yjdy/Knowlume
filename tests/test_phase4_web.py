@@ -4,6 +4,7 @@ import asyncio
 import builtins
 import hashlib
 import sqlite3
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 from html import unescape
@@ -11,6 +12,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from click import unstyle
 from fastapi.testclient import TestClient
 from phase4_support import (
     ROOT,
@@ -79,6 +81,23 @@ def test_every_web_resource_is_required_and_htmx_integrity_is_fixed() -> None:
     assert hashlib.sha256(asset_reader("templates/web/vendor/HTMX-LICENSE.txt")).hexdigest() == (
         integrity["license_sha256"]
     )
+    attributes = subprocess.run(
+        [
+            "git",
+            "check-attr",
+            "eol",
+            "--",
+            "templates/web/vendor/HTMX-LICENSE.txt",
+            "templates/web/vendor/htmx-2.0.10.integrity.txt",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert set(attributes.stdout.splitlines()) == {
+        "templates/web/vendor/HTMX-LICENSE.txt: eol: lf",
+        "templates/web/vendor/htmx-2.0.10.integrity.txt: eol: lf",
+    }
 
 
 def test_route_surface_is_exactly_the_frozen_read_only_html_interface(tmp_path: Path) -> None:
@@ -664,7 +683,7 @@ def test_cli_help_arguments_capability_server_and_browser_warning(
     vault = empty_vault(tmp_path)
     help_result = RUNNER.invoke(cli.app, ["serve", "--help"])
     assert help_result.exit_code == 0
-    assert "--open-browser" in help_result.stdout
+    assert "--open-browser" in unstyle(help_result.stdout)
     for args in (
         ("--host", "0.0.0.0"),
         ("--port", "0"),
