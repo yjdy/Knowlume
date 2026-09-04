@@ -3,11 +3,17 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
+from fastapi import FastAPI
+
 from knowlume.adapters.filesystem import FilesystemVault
 from knowlume.adapters.sqlite_projection import SQLiteProjection
+from knowlume.application.catalog import CatalogQueryService
+from knowlume.application.query import QueryService
 from knowlume.ports.vault import Vault
+from knowlume.web.app import create_app
 
 ROOT = Path(__file__).resolve().parents[1]
+WEB_ROOT = ROOT / "templates" / "web"
 
 
 def empty_vault(tmp_path: Path, name: str = "vault") -> Vault:
@@ -75,4 +81,33 @@ def projection() -> SQLiteProjection:
         ddl_reader=lambda _name: (ROOT / "schemas/v2/sqlite-projection-v2.sql").read_text(
             encoding="utf-8"
         )
+    )
+
+
+def template_reader(name: str) -> str:
+    prefix = "templates/web/"
+    if not name.startswith(prefix):
+        raise AssertionError(name)
+    return (WEB_ROOT / name.removeprefix(prefix)).read_text(encoding="utf-8")
+
+
+def asset_reader(name: str) -> bytes:
+    prefix = "templates/web/"
+    if not name.startswith(prefix):
+        raise AssertionError(name)
+    return (WEB_ROOT / name.removeprefix(prefix)).read_bytes()
+
+
+def web_app(vault: Vault, selected_projection: SQLiteProjection | None = None) -> FastAPI:
+    store = selected_projection or projection()
+    catalog = CatalogQueryService(
+        index_status=lambda selected_vault, scan: store.status(selected_vault, scan=scan)
+    )
+    return create_app(
+        vault=vault,
+        catalog=catalog,
+        query=QueryService(store),
+        projection=store,
+        template_reader=template_reader,
+        asset_reader=asset_reader,
     )
