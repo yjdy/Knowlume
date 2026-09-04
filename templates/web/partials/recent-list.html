@@ -1,0 +1,12 @@
+{% if items %}
+<ol class="card-list">
+  {% for item in items %}
+  <li>
+    <a href="/{{ 'sources' if kind == 'source' else 'notes' }}/{{ item.object_id }}">
+      <span class="card-title">{{ item.title }}</span>
+      <span class="meta">{{ item.subtype }} · {{ item.updated }}</span>
+    </a>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}<p class="empty">暂无对象。</p>{% endif %}
