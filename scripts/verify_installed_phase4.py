@@ -99,7 +99,9 @@ def _start_server(
         stderr=subprocess.PIPE,
         encoding="utf-8",
         env={**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"},
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
+        creationflags=(
+            int(getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)) if os.name == "nt" else 0
+        ),
     )
     try:
         for _ in range(100):
@@ -127,7 +129,7 @@ def _start_server(
 
 def _stop_server(process: subprocess.Popen[str]) -> None:
     if os.name == "nt":
-        process.send_signal(signal.CTRL_BREAK_EVENT)
+        process.send_signal(vars(signal)["CTRL_BREAK_EVENT"])
     else:
         process.send_signal(signal.SIGINT)
     try:
