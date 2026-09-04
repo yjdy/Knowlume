@@ -19,8 +19,11 @@ Windows/macOS/Linux Python 3.13–3.14 [CI](https://github.com/yjdy/Knowlume/act
 and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33120979856) gates. Phase 3
 projection/search behavior is complete under ADR-0016 after local, isolated-package,
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834), and
-[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) gates passed. Read-only Web
-remains in its later phase. TestPyPI and PyPI prerelease eligibility are open; stable publication
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) gates passed. Phase 4
+read-only Web design is frozen by
+[`ADR-0017`](decisions/0017-phase4-local-read-only-application-backed-web.md) and its
+[`execution goal`](phase4-goal.md). Implementation and all Phase 4 executable gates remain pending.
+TestPyPI and PyPI prerelease eligibility are open; stable publication
 remains closed and every publication action remains separately authorized.
 
 ## Release track
@@ -176,6 +179,35 @@ prerelease eligibility without authorizing a tag, upload, or GitHub Release.
 Phase 3 does not implement semantic/vector search, Web UI, AI review, Snippet creation, Git history,
 or Phase 6B publishing. Its detailed milestone and Git rollback boundaries are owned only by the
 execution goal.
+
+## Phase 4 executable gate
+
+Phase 4 follows [`phase4-goal.md`](phase4-goal.md) and
+[`ADR-0017`](decisions/0017-phase4-local-read-only-application-backed-web.md). It is complete only
+when all of the following are directly proven:
+
+- `kb serve` validates loopback host and port before lazily importing the optional Web runtime, and
+  core-only help/import/version/doctor behavior remains intact;
+- Dashboard, Source/Note catalogs and details, Knowledge Health, and FTS Search reuse shared
+  scanner, object, relation, projection-status, and Phase 3 query services without a second parser,
+  search implementation, or durable body cache;
+- all non-search views work with missing or unhealthy SQLite, while Search rejects every non-fresh
+  state with the correct 503 diagnostic and never builds, rebuilds, or repairs the index;
+- normalized fields, stable object/section identity, provenance roles, citations, locators, and
+  relations remain traceable without exposing absolute paths or attachment/snapshot bodies;
+- Host, Origin, proxy, method, path, Markdown, template, URL-scheme, log, and response-header
+  adversarial tests fail closed, and full page traversal has executable zero-write evidence;
+- ordinary GET forms remain complete without JavaScript, HTMX fragments preserve identical
+  semantics, and keyboard, focus, narrow-screen, light/dark, and reduced-motion behavior pass
+  browser acceptance;
+- bundled Web resources are byte-identical in the wheel, core-only and Web installed-wheel smoke
+  tests pass, lifecycle checks leave Vault state unchanged, and the complete supported-platform
+  gate is green before completion status changes.
+
+Phase 4 adds no mutation, HTTP JSON API, OpenAPI, LAN binding, authentication, attachment/snapshot
+delivery, AI review, index maintenance, package version, release action, or durable contract change.
+The local and remote gates remain pending. Completion status remains withheld until the M8 feature
+and package-smoke workflows pass on the supported platform matrix.
 
 ## Deferred scope
 

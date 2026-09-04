@@ -60,7 +60,36 @@ query boundary is recorded in
 
 ## Local Web security
 
-The service binds to loopback by default. Host and Origin use allowlists; permissive CORS is forbidden. Markdown is sanitized, security response headers are enabled, mutations require CSRF protection and conflict-safe writes, and path operations reject traversal and symlink/junction escape.
+Phase 4 is strictly read-only and application-backed as frozen by
+[`ADR-0017`](decisions/0017-phase4-local-read-only-application-backed-web.md). The service accepts
+only `127.0.0.1`, `localhost`, or `::1`, validates `Host`, and permits a present `Origin` only when it
+exactly matches the current loopback origin. Proxy forwarding headers are not trusted, permissive
+CORS is forbidden, and no cookie, session, authentication token, or local secret is introduced.
+Only GET/HEAD routes exist; there are no mutation, attachment, snapshot, arbitrary-file, JSON API,
+OpenAPI, or external-resource routes.
+
+Jinja2 autoescape is global. Markdown disables raw HTML, external images, and `file:`, `data:`,
+`javascript:`, or unknown schemes; only renderer-produced safe HTML may bypass template escaping.
+Pages expose only Vault-relative paths and permitted normalized metadata. Unexpected errors and
+logs omit query text, object bodies, attachment details, adapter stderr, traceback, and absolute
+paths.
+
+Every HTML, error, fragment, and static response sets:
+
+```text
+Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+X-Frame-Options: DENY
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Cache-Control: no-store
+```
+
+Serving and traversing the interface must leave Vault, relation, configuration, index, state, and
+cache bytes unchanged. Writable Web behavior remains a future decision requiring explicit CSRF,
+authentication, conflict, audit, and transport design.
 
 ## Logging, Git, and deletion
 

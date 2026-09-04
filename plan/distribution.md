@@ -22,7 +22,7 @@ The default distribution contains the CLI and core local functionality. Optional
 
 | Extra | Capability |
 |---|---|
-| `web` | FastAPI/Jinja2/Uvicorn local Web interface |
+| `web` | FastAPI/Jinja2/Uvicorn/MarkdownIt local read-only Web interface |
 | `zotero` | HTTPX transport for the loopback-only Zotero Local API adapter |
 | `all` | every supported optional capability |
 
@@ -34,6 +34,13 @@ machines and CI. Machine-specific mirror URLs must not be committed to the lockf
 ## Runtime assets
 
 Top-level `schemas/` and versioned templates remain authoritative source files. Hatch copies them into `knowlume/_assets/` in the wheel. Installed code resolves assets through `importlib.resources`, validates relative asset names, and never searches a source checkout or current working directory.
+
+Phase 4 adds `templates/web/` as the authoritative HTML, CSS, HTMX 2.0.10, vendor-license, and
+integrity-record tree. Hatch copies it byte-for-byte to `knowlume/_assets/templates/web/`, and the
+distribution audit compares every source and wheel resource. The Web runtime obtains templates and
+static assets only through `importlib.resources`; it has no frontend build or runtime network step.
+`markdown-it-py>=4.2,<5` belongs only to `web` and `all`, alongside FastAPI, Jinja2, and Uvicorn.
+Core and `zotero` imports and installations do not gain Web dependencies.
 
 The wheel allowlist is the `knowlume` Python package, bundled schemas/templates, distribution metadata, and license metadata. It excludes plans, tests, fixtures, vault files, databases, caches, logs, credentials, and machine-specific paths.
 
