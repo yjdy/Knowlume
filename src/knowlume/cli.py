@@ -240,6 +240,12 @@ def _query_service() -> QueryService:
     return QueryService(_projection())
 
 
+def _exit_web_error(error: DomainError) -> NoReturn:
+    exit_code = 2 if error.code == "WEB_ARGUMENT_INVALID" else 5
+    typer.echo(f"{error.code}: {error}", err=True)
+    raise typer.Exit(exit_code)
+
+
 def _refresh_warning(vault: Vault, *, changed: bool = True) -> tuple[str, ...]:
     if not changed or not isinstance(vault, Vault):
         return ()
@@ -877,6 +883,61 @@ def context_command(
         for item in result["groups"][key]:  # type: ignore[index]
             typer.echo(f"- {item['object_id']}: {item['snippet']}")
     typer.echo(f"{result['character_count']} characters; {result['excluded_count']} excluded.")
+
+
+@app.command("serve")
+def serve_command(
+    ctx: typer.Context,
+    host: Annotated[
+        str,
+        typer.Option("--host", help="Loopback host: 127.0.0.1, localhost, or ::1."),
+    ] = "127.0.0.1",
+    port: Annotated[
+        str,
+        typer.Option("--port", help="Loopback TCP port from 1 through 65535."),
+    ] = "8765",
+    open_browser: Annotated[
+        bool,
+        typer.Option("--open-browser", help="Open the local page once after startup."),
+    ] = False,
+) -> None:
+    """Serve the strictly read-only local Web interface."""
+
+    if host not in {"127.0.0.1", "localhost", "::1"}:
+        _exit_web_error(
+            DomainError("WEB_ARGUMENT_INVALID", "host must be an allowed loopback address")
+        )
+    try:
+        selected_port = int(port)
+    except ValueError:
+        _exit_web_error(DomainError("WEB_ARGUMENT_INVALID", "port must be an integer"))
+    if str(selected_port) != port or not 1 <= selected_port <= 65535:
+        _exit_web_error(
+            DomainError("WEB_ARGUMENT_INVALID", "port must be between 1 and 65535")
+        )
+    vault = _resolved_vault(ctx)
+    try:
+        from knowlume.web.server import run_server
+    except ModuleNotFoundError:
+        _exit_web_error(
+            DomainError(
+                "WEB_CAPABILITY_UNAVAILABLE",
+                "install knowlume[web] to use the local Web interface",
+            )
+        )
+    try:
+        run_server(
+            vault,
+            host=host,
+            port=selected_port,
+            open_browser=open_browser,
+        )
+    except KeyboardInterrupt:
+        return
+    except DomainError as error:
+        if error.code != "WEB_SERVER_UNAVAILABLE":
+            raise
+        _exit_web_error(error)
 
 
 @app.command("migrate")
