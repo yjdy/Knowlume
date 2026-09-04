@@ -1,0 +1,21 @@
+{% for direction in ['outgoing', 'incoming'] %}
+<section aria-labelledby="relations-{{ direction }}">
+  <h2 id="relations-{{ direction }}">{{ '正向关系（Outgoing relations）' if direction == 'outgoing' else '反向关系（Incoming relations）' }}</h2>
+  {% set relations = detail.relations[direction] %}
+  {% if relations %}
+  <ul class="relation-list">
+    {% for relation in relations %}
+    <li>
+      <span class="status">{{ relation.relation_type }}</span>
+      {% set related_id = relation.to_id if direction == 'outgoing' else relation.from_id %}
+      {% set href = object_href(related_id) %}
+      {% if href %}<a href="{{ href }}"><code>{{ related_id }}</code></a>{% else %}<code>{{ related_id }}</code>{% endif %}
+      {% if relation.get('to_section_id') %}<code>#{{ relation.to_section_id }}</code>{% endif %}
+      {% if relation.get('locator') %}<span class="meta">{{ relation.locator|display }}</span>{% endif %}
+      {% if relation.get('reason') %}<span>{{ relation.reason }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="empty">无。</p>{% endif %}
+</section>
+{% endfor %}

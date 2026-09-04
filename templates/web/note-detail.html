@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ detail.object.title }} · Note · Knowlume{% endblock %}
+{% block content %}
+<article>
+  <header class="detail-heading"><p class="eyebrow">NOTE · {{ detail.object.note_type }}</p><h1>{{ detail.object.title }}</h1><p><code>{{ detail.object_id }}</code></p></header>
+  <section class="panel" aria-labelledby="traceability"><h2 id="traceability">可追溯信息</h2><dl class="metadata"><div><dt>path</dt><dd><code>{{ detail.path }}</code></dd></div><div><dt>checksum</dt><dd><code>{{ detail.checksum }}</code></dd></div></dl></section>
+  <section aria-labelledby="note-fields"><h2 id="note-fields">规范化字段</h2>{% with metadata=detail.object, excluded=[] %}{% include "partials/metadata.html" %}{% endwith %}</section>
+  <section aria-labelledby="note-sections">
+    <h2 id="note-sections">稳定 Sections</h2>
+    {% for section in detail.body.sections %}
+    <article class="note-section role-{{ section.role }}" id="{{ section.section_id }}">
+      <header><span class="status">role={{ section.role }}</span><code>{{ section.section_id }}</code><h3>{{ section.heading }}</h3></header>
+      {% for block in section.blocks %}
+      <div class="prose block block-{{ block.kind }}">{{ block.text|markdown }}</div>
+      {% if block.kind == 'fact' %}
+      <ol class="citations" aria-label="Fact citations">
+        {% for citation in block.citations %}<li><a href="/sources/{{ citation.source_id }}"><code>{{ citation.source_id }}</code></a><span>{{ citation.locator|display }}</span></li>{% endfor %}
+      </ol>
+      {% elif block.kind == 'ai' %}<p class="meta">promoted artifact: <code>{{ block.artifact_id }}</code></p>{% endif %}
+      {% endfor %}
+    </article>
+    {% endfor %}
+  </section>
+  {% include "partials/relations.html" %}
+</article>
+{% endblock %}

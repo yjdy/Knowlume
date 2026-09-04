@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Sources · Knowlume{% endblock %}
+{% block content %}
+<section class="page-heading"><p class="eyebrow">CATALOG</p><h1>来源（Sources）</h1><p>按稳定 ID 浏览来源记录。</p></section>
+<form class="filters" action="/sources" method="get" hx-get="/sources" hx-target="#catalog-results" hx-swap="outerHTML" hx-push-url="true">
+  <label>类型<select name="source_type"><option value="">全部</option>{% for value in ['paper','web','book','oss'] %}<option value="{{ value }}"{% if catalog_page.filters.source_type == value %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>工作流<select name="workflow_stage"><option value="">全部</option>{% for value in ['inbox','reading','processed','integrated'] %}<option value="{{ value }}"{% if catalog_page.filters.workflow_stage == value %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>状态<select name="record_status"><option value="">全部</option>{% for value in ['active','archived','superseded'] %}<option value="{{ value }}"{% if catalog_page.filters.record_status == value %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>可见性<select name="visibility"><option value="">全部</option>{% for value in ['private','public'] %}<option value="{{ value }}"{% if catalog_page.filters.visibility == value %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>标签 1（AND）<input name="tag" value="{{ catalog_page.filters.tags[0] if catalog_page.filters.tags else '' }}"></label>
+  <label>标签 2（AND）<input name="tag" value="{{ catalog_page.filters.tags[1] if catalog_page.filters.tags|length > 1 else '' }}"></label>
+  <button type="submit">筛选</button>
+</form>
+{% include "fragments/catalog-list.html" %}
+{% endblock %}

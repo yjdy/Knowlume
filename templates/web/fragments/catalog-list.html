@@ -1,0 +1,20 @@
+<section id="catalog-results" aria-live="polite" aria-label="Catalog 结果">
+  <div class="result-summary"><strong>{{ catalog_page.total }}</strong> 项 · 第 {{ catalog_page.page }} / {{ catalog_page.page_count }} 页</div>
+  {% if catalog_page.items %}
+  <ol class="card-list catalog-list" start="{{ (catalog_page.page - 1) * catalog_page.page_size + 1 }}">
+    {% for item in catalog_page.items %}
+    <li>
+      <a href="/{{ 'sources' if catalog_kind == 'source' else 'notes' }}/{{ item.object_id }}">
+        <span class="card-title">{{ item.title }}</span>
+        <span class="meta">{{ item.subtype }} · {{ item.visibility }} · {{ item.record_status }} · {{ item.updated }}</span>
+        <code>{{ item.object_id }}</code>
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}<p class="empty">没有符合条件的对象。</p>{% endif %}
+  <nav class="pagination" aria-label="分页">
+    {% if catalog_page.has_previous %}<a href="{{ page_url(request, catalog_page.page - 1) }}">上一页</a>{% endif %}
+    {% if catalog_page.has_next %}<a href="{{ page_url(request, catalog_page.page + 1) }}">下一页</a>{% endif %}
+  </nav>
+</section>
