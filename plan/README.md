@@ -12,6 +12,12 @@ Phase 1 evidence remains linked from the [roadmap](roadmap.md). Phase 3 projecti
 and scoped context behavior is complete under ADR-0016 after local, distribution, isolated-wheel,
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834), and
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) gates passed.
+Phase 4 local read-only Web behavior is frozen by
+[`ADR-0017`](decisions/0017-phase4-local-read-only-application-backed-web.md) and
+[`phase4-goal.md`](phase4-goal.md). Implementation, local tests, distribution audit, isolated-wheel
+checks, lifecycle checks, browser acceptance, and the Windows/macOS/Linux × Python 3.13/3.14
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33882303896) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33882303627) gates passed.
 
 The cross-platform Python package and release-engineering foundation is implemented independently
 of the feature phases. Public command status and verification evidence are tracked in
@@ -33,6 +39,7 @@ of the feature phases. Public command status and verification evidence are track
 | [`phase2a-goal.md`](phase2a-goal.md) | Phase 2A Paper/Zotero execution goal, milestones, acceptance checks, and Git rollback boundaries |
 | [`phase2b-goal.md`](phase2b-goal.md) | Phase 2B unified Source capture goal, project-level OSS boundary, milestones, and acceptance checks |
 | [`phase3-goal.md`](phase3-goal.md) | Phase 3 projection, bilingual search, scoped context, milestones, and release-readiness gates |
+| [`phase4-goal.md`](phase4-goal.md) | Phase 4 local read-only Web, security, packaging, browser acceptance, and rollback gates |
 | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | v1-to-v2 migration behavior |
 | [`decisions/`](decisions/) | accepted architecture decisions |
 | [`chapter-map.md`](chapter-map.md) | completed historical design migration audit |

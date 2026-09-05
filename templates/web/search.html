@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}搜索 · Knowlume{% endblock %}
+{% block content %}
+<section class="page-heading"><p class="eyebrow">PHASE 3 FTS</p><h1>搜索</h1><p>直接复用确定性双语 FTS 与既有 scope 规则。</p></section>
+<form class="filters search-filters" action="/search" method="get" hx-get="/search" hx-target="#search-results" hx-swap="outerHTML" hx-push-url="true">
+  <label class="wide">查询<input type="search" name="q" value="{{ query_text }}" autocomplete="off"></label>
+  <label>范围（Scope）<select name="scope">{% for value in ['trusted-local','public-safe'] %}<option value="{{ value }}"{% if search_values.get('scope', ['trusted-local'])[0] == value %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>对象种类（Kind）<select name="kind"><option value="">全部</option>{% for value in ['source','note','snippet','ai_artifact'] %}<option value="{{ value }}"{% if search_values.get('kind', [''])[0] == value %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>子类型（Subtype）<input name="subtype" value="{{ search_values.get('subtype', [''])[0] }}"></label>
+  <label>可见性（Visibility）<input name="visibility" value="{{ search_values.get('visibility', [''])[0] }}"></label>
+  <label>记录状态（Record status）<input name="record_status" value="{{ search_values.get('record_status', [''])[0] }}"></label>
+  <label>工作流（Workflow stage）<input name="workflow_stage" value="{{ search_values.get('workflow_stage', [''])[0] }}"></label>
+  <label>成熟度（Maturity）<input name="maturity" value="{{ search_values.get('maturity', [''])[0] }}"></label>
+  <label>审核状态（Review status）<input name="review_status" value="{{ search_values.get('review_status', [''])[0] }}"></label>
+  <label>内容角色（Role）<input name="role" value="{{ search_values.get('role', [''])[0] }}"></label>
+  <label>标签 1（AND）<input name="tag" value="{{ search_values.get('tag', [''])[0] }}"></label>
+  <label>标签 2（AND）<input name="tag" value="{{ search_values.get('tag', ['', ''])[1] if search_values.get('tag', [])|length > 1 else '' }}"></label>
+  <label>结果上限（Limit）<input name="limit" inputmode="numeric" value="{{ search_values.get('limit', ['20'])[0] }}"></label>
+  <button type="submit">搜索</button>
+</form>
+{% include "fragments/search-results.html" %}
+{% endblock %}

@@ -23,7 +23,11 @@ deterministic SQLite projection、双语 literal FTS、index-independent grep/ge
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834) 和
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) 的跨平台远程门禁。
 PyPI Trusted Publisher 控制权已确认；TestPyPI 与 PyPI prerelease 门禁已开放，stable 门禁保持关闭，
-且未创建 tag、上传包或创建 GitHub Release。只读 Web 功能继续按路线图实现。
+且未创建 tag、上传包或创建 GitHub Release。Phase 4 只读 Web 的共享 catalog、安全 Markdown、
+loopback 服务、Dashboard/Health、Source/Note 浏览、FTS/HTMX 搜索、本地与隔离 wheel 验收，
+以及 Windows/macOS/Linux × Python 3.13/3.14 的
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33882303896) 与
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33882303627) 门禁均已通过。
 
 ```text
 Phase 0R  Contract v2                         Complete
@@ -32,7 +36,7 @@ Phase 1   Vault, domain, parser, safe writes  Complete
 Phase 2A  Paper + Zotero                      Complete
 Phase 2B  Unified capture: Web, Book, OSS     Complete
 Phase 3   SQLite projection/search/context    Complete
-Phase 4   Read-only Web                       Planned
+Phase 4   Read-only Web                       Complete
 Phase 5   Automation and AI promotion         Planned
 Phase 6A  Evolution and history               Planned
 Phase 6B  Secure publishing                   Planned

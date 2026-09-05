@@ -141,9 +141,9 @@ class SQLiteProjection:
             for name in ("objects", "relations", "sections", "segments", "citations")
         }
 
-    def status(self, vault: Vault) -> dict[str, object]:
+    def status(self, vault: Vault, *, scan: ScanResult | None = None) -> dict[str, object]:
         database = self.database_path(vault)
-        scan = scan_vault(vault)
+        scan = scan or scan_vault(vault)
         current_snapshot = snapshot_hash(scan)
         base: dict[str, object] = {
             "operation": "status",

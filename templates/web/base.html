@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false,"allowScriptTags":false}'>
+  <title>{% block title %}Knowlume{% endblock %}</title>
+  <link rel="stylesheet" href="/assets/app.css">
+  <script src="/assets/htmx.min.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <header class="site-header">
+    <div class="shell header-row">
+      <a class="brand" href="/" aria-label="Knowlume 首页">Knowlume <span>知识微光</span></a>
+      <nav aria-label="主要导航">
+        <a href="/"{% if current_path == '/' %} aria-current="page"{% endif %}>概览</a>
+        <a href="/sources"{% if current_path.startswith('/sources') %} aria-current="page"{% endif %}>来源</a>
+        <a href="/notes"{% if current_path.startswith('/notes') %} aria-current="page"{% endif %}>笔记</a>
+        <a href="/search"{% if current_path == '/search' %} aria-current="page"{% endif %}>搜索</a>
+        <a href="/health"{% if current_path == '/health' %} aria-current="page"{% endif %}>健康</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main" class="shell" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="shell site-footer">本地只读界面 · durable files remain authoritative</footer>
+</body>
+</html>

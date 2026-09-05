@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}概览 · Knowlume{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">LOCAL · READ ONLY</p>
+  <h1>知识库概览</h1>
+  <p>从同一次 Vault 扫描中查看对象、工作流与索引状态。</p>
+</section>
+
+<section aria-labelledby="object-summary">
+  <div class="section-heading">
+    <h2 id="object-summary">对象</h2>
+    <span class="status status-{{ dashboard.index.state }}">Index · {{ dashboard.index.state }}</span>
+  </div>
+  <div class="metric-grid">
+    {% for key, value in dashboard.object_counts.items() %}
+    <article class="metric"><strong>{{ value }}</strong><span>{{ key }}</span></article>
+    {% endfor %}
+    {% for key, value in dashboard.visibility_counts.items() %}
+    <article class="metric"><strong>{{ value }}</strong><span>{{ key }}</span></article>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="two-column">
+  <section class="panel" aria-labelledby="source-summary">
+    <h2 id="source-summary">Source 类型与进度</h2>
+    <dl class="compact-list">
+      {% for key, value in dashboard.source_type_counts.items() %}<div><dt>{{ key }}</dt><dd>{{ value }}</dd></div>{% endfor %}
+      {% for key, value in dashboard.workflow_counts.items() %}<div><dt>{{ key }}</dt><dd>{{ value }}</dd></div>{% endfor %}
+    </dl>
+  </section>
+  <section class="panel" aria-labelledby="note-summary">
+    <h2 id="note-summary">Note 与 AI 审核</h2>
+    <dl class="compact-list">
+      {% for key, value in dashboard.note_type_counts.items() %}<div><dt>{{ key }}</dt><dd>{{ value }}</dd></div>{% endfor %}
+      {% for key, value in dashboard.review_counts.items() %}<div><dt>{{ key }}</dt><dd>{{ value }}</dd></div>{% endfor %}
+    </dl>
+  </section>
+</div>
+
+<section class="panel" aria-labelledby="health-summary">
+  <div class="section-heading">
+    <h2 id="health-summary">Knowledge Health</h2>
+    <a href="/health">查看完整诊断</a>
+  </div>
+  <p><strong>{{ dashboard.finding_counts.error }}</strong> errors · <strong>{{ dashboard.finding_counts.warning }}</strong> warnings</p>
+  <p>objects {{ dashboard.index.counts.objects }} · segments {{ dashboard.index.counts.segments }}</p>
+</section>
+
+<div class="two-column">
+  <section aria-labelledby="recent-sources">
+    <div class="section-heading"><h2 id="recent-sources">最近更新的 Source</h2><a href="/sources">全部</a></div>
+    {% with items=dashboard.recent_sources, kind='source' %}{% include "partials/recent-list.html" %}{% endwith %}
+  </section>
+  <section aria-labelledby="recent-notes">
+    <div class="section-heading"><h2 id="recent-notes">最近更新的 Note</h2><a href="/notes">全部</a></div>
+    {% with items=dashboard.recent_notes, kind='note' %}{% include "partials/recent-list.html" %}{% endwith %}
+  </section>
+</div>
+{% endblock %}

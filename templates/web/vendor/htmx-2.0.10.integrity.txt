@@ -1,0 +1,8 @@
+name: htmx
+version: 2.0.10
+source: https://raw.githubusercontent.com/bigskysoftware/htmx/v2.0.10/dist/htmx.min.js
+license_source: https://raw.githubusercontent.com/bigskysoftware/htmx/v2.0.10/LICENSE
+asset: assets/htmx.min.js
+asset_sha256: 71ea67185bfa8c98c39d31717c6fce5d852370fcdfd129db4543774d3145c0de
+license: vendor/HTMX-LICENSE.txt
+license_sha256: d3d2456f76414f2456104660ebd65aff1c04cd7966b942bdabd63f3cdb316a38

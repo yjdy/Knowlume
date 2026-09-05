@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · Knowlume{% endblock %}
+{% block content %}
+<section class="error-page" aria-labelledby="error-title"><p class="eyebrow">{{ code }}</p><h1 id="error-title">请求未完成</h1><p>{{ message }}</p>{% if recovery %}<p>请在终端显式运行：<code>{{ recovery }}</code></p>{% endif %}{% if correlation_id is defined and correlation_id %}<p class="meta">correlation ID: <code>{{ correlation_id }}</code></p>{% endif %}<p><a href="/">返回概览</a></p></section>
+{% endblock %}

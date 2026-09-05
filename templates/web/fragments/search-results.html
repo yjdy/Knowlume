@@ -1,0 +1,7 @@
+<section id="search-results" aria-live="polite" aria-label="搜索结果">
+  {% if not query_text.strip() %}<p class="empty">输入查询后开始搜索；空查询不会访问索引。</p>
+  {% elif search_result %}
+  <div class="result-summary"><strong>{{ search_result.count }}</strong> 项结果 · {{ search_result.scope }}</div>
+  {% if search_result.hits %}<ol class="search-results">{% for hit in search_result.hits %}<li><article><header><span class="status">{{ hit.classification.role }}</span>{% set href = object_href(hit.object_id) %}{% if href %}<a href="{{ href }}"><h2>{{ hit.title }}</h2></a>{% else %}<h2>{{ hit.title }}</h2>{% endif %}<code>{{ hit.object_id }}{% if hit.section_id %}#{{ hit.section_id }}{% endif %}</code></header><p>{{ hit.snippet }}</p><p class="meta">{{ hit.classification.kind }} · {{ hit.classification.subtype or '—' }} · {{ hit.visibility }} · {{ hit.record_status }}</p>{% if hit.tags %}<ul class="tag-list" aria-label="Tags">{% for tag in hit.tags %}<li>{{ tag }}</li>{% endfor %}</ul>{% endif %}{% if hit.citations %}<ol class="citations">{% for citation in hit.citations %}<li><a href="/sources/{{ citation.source_id }}"><code>{{ citation.source_id }}</code></a> {{ citation.locator|display }}</li>{% endfor %}</ol>{% endif %}</article></li>{% endfor %}</ol>{% else %}<p class="empty">没有结果。</p>{% endif %}
+  {% endif %}
+</section>

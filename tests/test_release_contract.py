@@ -17,6 +17,8 @@ def test_python_distribution_metadata_is_frozen() -> None:
     assert set(project["optional-dependencies"]) == {"web", "zotero", "all"}
     assert project["optional-dependencies"]["zotero"] == ["httpx>=0.28.1,<1"]
     assert "httpx>=0.28.1,<1" in project["optional-dependencies"]["all"]
+    assert "markdown-it-py>=4.2,<5" in project["optional-dependencies"]["web"]
+    assert "markdown-it-py>=4.2,<5" in project["optional-dependencies"]["all"]
     assert not {
         "fastapi>=0.115",
         "httpx>=0.28.1,<1",
@@ -31,6 +33,7 @@ def test_python_distribution_metadata_is_frozen() -> None:
         "templates/config": "knowlume/_assets/templates/config",
         "templates/v1": "knowlume/_assets/templates/v1",
         "templates/v2": "knowlume/_assets/templates/v2",
+        "templates/web": "knowlume/_assets/templates/web",
     }
     assert config["tool"]["knowlume"]["release"] == {
         "testpypi-enabled": True,
@@ -75,6 +78,7 @@ def test_release_workflows_cover_required_trust_and_platform_gates() -> None:
     assert "python-version: ${{ matrix.python }}" in smoke
     assert "scripts/verify_installed_phase1.py" in smoke
     assert "scripts/verify_installed_phase3.py" in smoke
+    assert "scripts/verify_installed_phase4.py" in smoke
     assert "scripts/verify_install_lifecycle.py" in smoke
     assert "scripts/release_plan.py" in release
     assert "if: needs.release-plan.outputs.testpypi == 'true'" in release

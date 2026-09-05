@@ -1,0 +1,7 @@
+<dl class="metadata">
+  {% for key, value in metadata.items() %}
+    {% if value is not none and key not in excluded %}
+    <div><dt>{{ key }}</dt><dd>{% if value is iterable and value is not string %}<code>{{ value|display }}</code>{% else %}{{ value }}{% endif %}</dd></div>
+    {% endif %}
+  {% endfor %}
+</dl>

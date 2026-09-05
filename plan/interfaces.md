@@ -4,8 +4,9 @@
 > Authoritative for: user-facing commands, machine output, vault discovery, and management surfaces
 
 All interfaces call shared application services. Phase 1 Vault/core, Phase 2 Source/capture, and
-Phase 3 query/index commands are implemented; the Phase 3 remote completion gates and Web service
-remain outstanding.
+Phase 3 query/index commands are implemented. The frozen Phase 4 Web interface is defined by
+[`ADR-0017`](decisions/0017-phase4-local-read-only-application-backed-web.md); its local and remote
+executable gates have passed.
 
 ## Command surface and ownership
 
@@ -320,6 +321,42 @@ extend it with vault and adapter capability probes without changing its command 
 
 ## Web management interface
 
-The first Web slice is read-only and follows the search projection. Dashboard, Sources, Notes, Search, and Knowledge Health views derive from the same services as CLI. Mutations wait for atomic writes, conflict detection, CSRF protection, and audit behavior.
+Phase 4 exposes only:
 
-The local service binds to loopback by default and validates Host and Origin. It does not enable permissive CORS. Markdown is sanitized, responses use security headers, and file operations enforce configured path boundaries.
+```text
+kb serve [--host 127.0.0.1|localhost|::1] [--port PORT] [--open-browser]
+```
+
+It defaults to `127.0.0.1:8765`; `--open-browser` is opt-in. Invalid host or port values are usage
+errors. Web dependencies are imported only when the command executes, so `kb serve --help` and all
+core commands remain available without the `web` extra. Ctrl+C is a normal exit.
+
+The HTML routes are `/`, `/sources`, `/sources/{source_id}`, `/notes`, `/notes/{note_id}`,
+`/search`, and `/health`; exact local assets are `/assets/app.css` and `/assets/htmx.min.js`.
+Dashboard, catalog, details, and health derive from one-request scanner snapshots through a shared
+application catalog service and work without SQLite. Search calls Phase 3 `QueryService`, defaults
+to trusted-local with limit 20, exposes the existing filters and scopes, and requires a fresh
+compatible index. Index failures produce a 503 page and an explicit `kb index build` or
+`kb index rebuild` instruction; the Web interface never performs either action.
+
+Source and Note lists have fixed 50-item pages, repeatable AND tags, domain-value filters, and sort
+by `updated` descending then stable ID ascending. Detail pages show normalized values, stable IDs,
+Note roles and sections, citations, relations, Vault-relative paths, checksums, and attachment
+metadata. They never show absolute paths, attachment or snapshot bodies, private adapter details, or
+arbitrary files. AI Artifact details and all mutation actions remain outside Phase 4.
+
+Pages are Chinese-first semantic HTML. Ordinary GET forms preserve all functionality without
+JavaScript; HTMX GETs may return equivalent controlled fragments. Markdown uses a raw-HTML-disabled
+safe subset and only HTTP(S) links. Jinja2 autoescape remains global, and only renderer-produced
+HTML crosses the safe boundary. There is no HTTP JSON API, OpenAPI, external resource, telemetry,
+cookie, session, or authentication surface.
+
+Host and Origin are allowlisted, proxy headers are not trusted, permissive CORS is disabled, and
+only GET/HEAD routes are registered. Invalid query input is 400, rejected Host/Origin is 403,
+missing or wrong-kind objects are 404, disallowed methods are 405, unavailable search is 503, and
+unexpected failures use a generic 500 page with a correlation ID. Detailed server and rendering
+security is owned by [`security-publishing.md`](security-publishing.md); the complete decision is
+frozen by [`ADR-0017`](decisions/0017-phase4-local-read-only-application-backed-web.md).
+
+Phase 4 reserves `WEB_ARGUMENT_INVALID` (exit 2), `WEB_CAPABILITY_UNAVAILABLE` (exit 5),
+`WEB_SERVER_UNAVAILABLE` (exit 5), and the non-fatal `WEB_BROWSER_OPEN_FAILED` warning.

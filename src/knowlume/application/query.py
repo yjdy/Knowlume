@@ -114,12 +114,17 @@ def _relation_data(from_id: str, relation: Relation) -> dict[str, object]:
     return result
 
 
-def get_object(vault: Vault, object_id_value: str) -> dict[str, object]:
+def get_object(
+    vault: Vault,
+    object_id_value: str,
+    *,
+    scan: ScanResult | None = None,
+) -> dict[str, object]:
     try:
         object_id = ObjectId(object_id_value)
     except DomainError as error:
         raise DomainError("OBJECT_NOT_FOUND", "object ID was not found") from error
-    scan = scan_vault(vault)
+    scan = scan or scan_vault(vault)
     scanned = scan.objects.get(object_id)
     if scanned is None:
         raise DomainError("OBJECT_NOT_FOUND", "object ID was not found")

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ detail.object.title }} · Source · Knowlume{% endblock %}
+{% block content %}
+<article>
+  <header class="detail-heading">
+    <p class="eyebrow">SOURCE · {{ detail.object.source_type }}</p>
+    <h1>{{ detail.object.title }}</h1>
+    <p><code>{{ detail.object_id }}</code></p>
+    {% if detail.object.external_url %}<p><a href="{{ detail.object.external_url }}" rel="noopener noreferrer">打开 canonical URL</a></p>{% endif %}
+  </header>
+  <section class="panel" aria-labelledby="traceability"><h2 id="traceability">可追溯信息</h2><dl class="metadata"><div><dt>path</dt><dd><code>{{ detail.path }}</code></dd></div><div><dt>checksum</dt><dd><code>{{ detail.checksum }}</code></dd></div></dl></section>
+  <section aria-labelledby="source-fields"><h2 id="source-fields">规范化字段</h2>{% with metadata=detail.object, excluded=['external_url','attachment_exists'] %}{% include "partials/metadata.html" %}{% endwith %}</section>
+  <section class="panel" aria-labelledby="attachment"><h2 id="attachment">附件元数据</h2><p>已记录附件：<strong>{{ 'present' if detail.object.attachment_exists else 'absent' }}</strong></p>{% for key in ['attachment_filename','attachment_media_type','attachment_size','attachment_sha256'] %}{% if detail.object.get(key) %}<p><code>{{ key }}</code> · {{ detail.object.get(key) }}</p>{% endif %}{% endfor %}</section>
+  {% if detail.body %}<section class="prose" aria-labelledby="source-body"><h2 id="source-body">正文</h2>{{ detail.body|markdown }}</section>{% endif %}
+  {% include "partials/relations.html" %}
+</article>
+{% endblock %}

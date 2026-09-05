@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Notes · Knowlume{% endblock %}
+{% block content %}
+<section class="page-heading"><p class="eyebrow">CATALOG</p><h1>笔记（Notes）</h1><p>人的想法、事实、AI 与演化保持角色分离。</p></section>
+<form class="filters" action="/notes" method="get" hx-get="/notes" hx-target="#catalog-results" hx-swap="outerHTML" hx-push-url="true">
+  <label>类型<select name="note_type"><option value="">全部</option>{% for value in ['idea','literature','concept','synthesis'] %}<option value="{{ value }}"{% if catalog_page.filters.note_type == value %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>成熟度<select name="maturity"><option value="">全部</option>{% for value in ['seed','developing','mature','evergreen'] %}<option value="{{ value }}"{% if catalog_page.filters.maturity == value %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>状态<select name="record_status"><option value="">全部</option>{% for value in ['active','archived','superseded'] %}<option value="{{ value }}"{% if catalog_page.filters.record_status == value %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>可见性<select name="visibility"><option value="">全部</option>{% for value in ['private','public'] %}<option value="{{ value }}"{% if catalog_page.filters.visibility == value %} selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>标签 1（AND）<input name="tag" value="{{ catalog_page.filters.tags[0] if catalog_page.filters.tags else '' }}"></label>
+  <label>标签 2（AND）<input name="tag" value="{{ catalog_page.filters.tags[1] if catalog_page.filters.tags|length > 1 else '' }}"></label>
+  <button type="submit">筛选</button>
+</form>
+{% include "fragments/catalog-list.html" %}
+{% endblock %}
