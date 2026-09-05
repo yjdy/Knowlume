@@ -138,6 +138,10 @@ open operations do not silently accept replacement material or rewrite Fact loca
   Web API access, OAuth, and Zotero mutation are deferred.
 - Resolve metadata and a primary attachment from library/item identifiers. Use disposable cache for
   recovered bytes and verify stored integrity before opening them through the operating system.
+- Zotero 10 local attachment endpoints may return an HTTP 302 with a local `file://` URL instead of
+  response bytes. The adapter accepts this only for binary recovery when the URL has an empty or
+  `localhost` authority, an absolute non-UNC path, and no query or fragment. Remote, credentialed,
+  relative, malformed, or unavailable redirects fail closed; the resolved path remains transient.
 - Translate adapter data into domain values without leaking Zotero internals into the domain layer.
 - Missing optional dependencies, disabled API, timeout, permission failure, missing items, and
   malformed responses produce typed capability or availability failures rather than partial writes.
