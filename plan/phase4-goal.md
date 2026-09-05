@@ -1,9 +1,10 @@
 # Phase 4 execution goal: Local read-only Web management
 
-> **Status:** Implemented locally — M0–M7 complete; M8 remote gate pending
+> **Status:** Complete — M0–M8 gates passed
 > **Target branch:** `Phase4`
 > **Implementation baseline commit:** `ab22542316788fc0924a672d4c70dd923b878394`
 > **Baseline state:** Phase 3 已合并到 `main`；本地实现从该提交开始；P4-C1～P4-C8 位于 `Phase4`
+> **Feature evidence:** [CI](https://github.com/yjdy/Knowlume/actions/runs/33882303896) and [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33882303627) passed for `7fdf1bb08b784ac6d5d0b3caad86ba0508cfdb38`
 
 ## 1. 当前基础与权威来源
 

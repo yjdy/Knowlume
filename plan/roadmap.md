@@ -22,9 +22,11 @@ projection/search behavior is complete under ADR-0016 after local, isolated-pack
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847) gates passed. Phase 4
 read-only Web design is frozen by
 [`ADR-0017`](decisions/0017-phase4-local-read-only-application-backed-web.md) and its
-[`execution goal`](phase4-goal.md). Its M1–M7 local implementation, complete suite, distribution,
-isolated-wheel, lifecycle, and browser gates are green; M8 cross-platform CI and package smoke are
-pending. TestPyPI and PyPI prerelease eligibility are open; stable publication
+[`execution goal`](phase4-goal.md). Its local implementation, complete suite, distribution,
+isolated-wheel, lifecycle, browser, Windows/macOS/Linux × Python 3.13/3.14
+[CI](https://github.com/yjdy/Knowlume/actions/runs/33882303896), and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/33882303627) gates passed. TestPyPI and
+PyPI prerelease eligibility are open; stable publication
 remains closed and every publication action remains separately authorized.
 
 ## Release track
@@ -207,8 +209,8 @@ when all of the following are directly proven:
 
 Phase 4 adds no mutation, HTTP JSON API, OpenAPI, LAN binding, authentication, attachment/snapshot
 delivery, AI review, index maintenance, package version, release action, or durable contract change.
-The local gate is green through M7. Completion status remains withheld until the M8 feature and
-package-smoke workflows pass on the supported platform matrix.
+The local and M8 feature gates are green. Phase 4 is complete; stable release and every package
+publication action remain separately gated.
 
 ## Deferred scope
 

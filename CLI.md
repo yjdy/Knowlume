@@ -2,9 +2,9 @@
 
 本文档记录所有已规划 `kb` 命令的用途、交付阶段、实现方案、当前状态和验证证据，用于每次 CLI 变更后的对比与验收。
 
-> Last synchronized: 2026-09-04
+> Last synchronized: 2026-09-05
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Phase 4 implemented and locally verified; remote completion gate pending
+> Current delivery state: Phase 4 Complete and remotely verified
 
 ## Authority and update rules
 
@@ -111,15 +111,14 @@ Linux with Python 3.13 and 3.14.
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `serve` | `kb serve [--host 127.0.0.1\|localhost\|::1] [--port PORT] [--open-browser]` | 启动 loopback 只读管理界面 | application-backed catalog/query、safe Markdown、FastAPI/Jinja2/HTMX、本地资源和严格 Host/Origin/只读边界 | `Implemented` | `tests/test_phase4_catalog.py`; `tests/test_phase4_web.py`; complete local suite; distribution audit; isolated core/Web wheel smoke; browser acceptance; remote CI pending |
+| `serve` | `kb serve [--host 127.0.0.1\|localhost\|::1] [--port PORT] [--open-browser]` | 启动 loopback 只读管理界面 | application-backed catalog/query、safe Markdown、FastAPI/Jinja2/HTMX、本地资源和严格 Host/Origin/只读边界 | `Verified` | `tests/test_phase4_catalog.py`; `tests/test_phase4_web.py`; complete local suite; distribution audit; isolated core/Web wheel smoke; browser acceptance; [CI](https://github.com/yjdy/Knowlume/actions/runs/33882303896); [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33882303627) |
 
 `serve` 默认监听 `127.0.0.1:8765`，只提供 Dashboard、Sources、Notes、Search、Knowledge
 Health 和两个精确静态资源路由。Web extra 延迟导入；普通 GET 在无 JavaScript 时完整可用；
 Web 不创建或修复索引，也不修改 Vault、配置或 disposable state。接口、安全、诊断和打包
 边界由 [`ADR-0017`](plan/decisions/0017-phase4-local-read-only-application-backed-web.md) 与
-[`phase4-goal.md`](plan/phase4-goal.md) 冻结。M1–M7 的本地、分发、隔离安装和真实浏览器
-门禁已通过；在 M8 跨平台 CI 与 package smoke 通过前保持 `Implemented`，不得标记
-`Verified`。
+[`phase4-goal.md`](plan/phase4-goal.md) 冻结。本地、分发、隔离安装、真实浏览器及 M8
+跨平台 CI 与 package smoke 门禁均已通过。
 
 ## Phase 5 — Automation and AI
 
@@ -166,6 +165,7 @@ Web 不创建或修复索引，也不修改 Vault、配置或 disposable state�
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-09-05 | 完成 Phase 4 local read-only Web | Feature commit `7fdf1bb08b784ac6d5d0b3caad86ba0508cfdb38` 通过 Windows/macOS/Linux × Python 3.13/3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33882303896) 与 core/Web [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33882303627)；`kb serve` 标记为 `Verified`；未创建 tag、上传包或创建 GitHub Release |
 | 2026-09-04 | 实现 Phase 4 local read-only Web | `kb serve`、共享只读 catalog、安全 Markdown、Dashboard/Health、Source/Note 浏览、Phase 3 Search、HTMX、本地资源、安全边界及 typed diagnostics 已通过完整本地套件、分发审计、隔离 core/Web wheel smoke、生命周期和真实浏览器验收；状态为 `Implemented`，远程 M8 门禁待执行 |
 | 2026-09-04 | 冻结 Phase 4 local read-only Web 设计 | ADR-0017 与 `phase4-goal.md` 固定 application-backed catalog、loopback/Host/Origin 边界、安全 Markdown、HTML-only routes、本地 HTMX 资源、typed Web diagnostics 和 installed-Web 门禁；`serve` 保持 `Planned` |
 | 2026-09-03 | 完成 Phase 3 projection/search/context | Feature commit `09c4a634a9fdf196dee0e7efe066ce3ab7eafd01` 通过跨平台 [CI](https://github.com/yjdy/Knowlume/actions/runs/33300551834) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33300551847)；release owner 已确认 PyPI Trusted Publisher 控制权，TestPyPI/PyPI prerelease gate 开放而 stable gate 保持关闭；未创建 tag、上传包或创建 GitHub Release |

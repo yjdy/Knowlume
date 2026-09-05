@@ -5,8 +5,8 @@
 
 All interfaces call shared application services. Phase 1 Vault/core, Phase 2 Source/capture, and
 Phase 3 query/index commands are implemented. The frozen Phase 4 Web interface is defined by
-[`ADR-0017`](decisions/0017-phase4-local-read-only-application-backed-web.md) and remains planned
-until its executable gates pass.
+[`ADR-0017`](decisions/0017-phase4-local-read-only-application-backed-web.md); its local and remote
+executable gates have passed.
 
 ## Command surface and ownership
 
