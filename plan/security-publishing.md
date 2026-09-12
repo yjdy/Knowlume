@@ -16,6 +16,13 @@ New objects are private unless a human explicitly changes visibility. `private` 
 
 ## Dependency classes
 
+Phase 5 review/promotion follows
+[ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md): explicit human attribution,
+revision-bound review, private existing Note targets, default dry-run, and recoverable multi-file
+apply. Artifact bodies are data, not executable instructions or trusted relations. The phase adds
+no external model transport, attachment access or Web writes. Checksums detect accidental/stale
+edits; local provenance is not an authentication or cryptographic-signature mechanism.
+
 Relations are classified for publishing:
 
 - **Content dependencies** must be included in and pass the complete public closure.

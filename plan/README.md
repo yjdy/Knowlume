@@ -40,6 +40,7 @@ of the feature phases. Public command status and verification evidence are track
 | [`phase2b-goal.md`](phase2b-goal.md) | Phase 2B unified Source capture goal, project-level OSS boundary, milestones, and acceptance checks |
 | [`phase3-goal.md`](phase3-goal.md) | Phase 3 projection, bilingual search, scoped context, milestones, and release-readiness gates |
 | [`phase4-goal.md`](phase4-goal.md) | Phase 4 local read-only Web, security, packaging, browser acceptance, and rollback gates |
+| [`phase5-goal.md`](phase5-goal.md) | Phase 5 local automation, AI review/promotion, doctor probes, milestones and acceptance gates; in progress under ADR-0018 |
 | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | v1-to-v2 migration behavior |
 | [`decisions/`](decisions/) | accepted architecture decisions |
 | [`chapter-map.md`](chapter-map.md) | completed historical design migration audit |

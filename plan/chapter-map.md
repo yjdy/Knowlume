@@ -21,6 +21,11 @@ The original design was audited and split into active thematic documents. The fr
 
 ## Completion checks
 
+Phase 5 execution is recorded in [`phase5-goal.md`](phase5-goal.md) under accepted
+[ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md). Thematic ownership for local
+review/promotion, revision evidence, machine interfaces and opt-in probes is recorded. Local gates
+passed; Git and supported-platform remote gates remain pending.
+
 - [x] Each topic has one active authority.
 - [x] README and AGENTS contain only entry-point and operational summaries.
 - [x] Machine fields and enums are owned by versioned schemas.

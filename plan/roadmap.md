@@ -212,7 +212,19 @@ delivery, AI review, index maintenance, package version, release action, or dura
 The local and M8 feature gates are green. Phase 4 is complete; stable release and every package
 publication action remain separately gated.
 
-## Deferred scope
+## Phase 5 executable gate
+
+Phase 5 follows [phase5-goal](phase5-goal.md) and
+[ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md). Local implementation, Windows
+Python 3.13/3.14 suites, distribution audit and installed-wheel gates passed; Git and the exact-SHA
+remote gates remain pending. Phase 5 is not Complete.
+Completion requires revision-bound human review, transactional idempotent promotion, private audit
+provenance, legacy-read compatibility, unchanged explicit-scope context, versioned AI JSON,
+opt-in read-only doctor probes, zero-write read/dry-run evidence, adversarial recovery tests,
+isolated core/optional wheel checks and both exact feature/completion supported-platform workflows.
+The detailed milestone evidence and rollback boundaries belong to the execution goal.
+
+## Deferred advanced scope
 
 Phase 7 includes vector/RAG implementation, MCP, graph databases/visualization, multi-agent memory, native readers/reference managers, browser extensions, and cloud synchronization. Snippet creation is unassigned and indefinitely deferred; existing Contract v2 Snippets remain readable, and any future creation workflow requires a new accepted ADR. Full OSS clones, private attachment collections, generated public output, and direct AI modification of trusted facts are never default durable content.
 

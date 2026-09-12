@@ -44,6 +44,10 @@ Core and `zotero` imports and installations do not gain Web dependencies.
 
 The wheel allowlist is the `knowlume` Python package, bundled schemas/templates, distribution metadata, and license metadata. It excludes plans, tests, fixtures, vault files, databases, caches, logs, credentials, and machine-specific paths.
 
+The source distribution additionally includes the repository's public `scripts/` tooling. Phase 5's
+local workflow example and installed-wheel verifier are required source-distribution members and
+are audited against their source bytes. They are not wheel runtime modules or extra CLI commands.
+
 ## User state and compatibility
 
 `platformdirs` supplies per-user configuration, cache, state, and log directories. These directories contain no durable knowledge. A user-level configuration may point to a default independent vault, but no command implicitly creates or selects a vault when resolution is ambiguous.
@@ -51,6 +55,12 @@ The wheel allowlist is the `knowlume` Python package, bundled schemas/templates,
 Install, upgrade, downgrade, and uninstall operations do not alter vault files. Each application build declares its readable and writable contract range. A newer unsupported vault fails closed; package installation never invokes migration. Contract migration remains explicit, dry-run-first, conflict-aware, and recoverable.
 
 ## Update discovery
+
+Phase 5 retains core-only AI review/promotion and adds installed-wheel tests under
+[ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md). Optional Zotero probes load the
+existing extra only when selected. New evidence is a v2 extension readable by the new parser;
+older strict parsers may reject extended objects. Package downgrade never strips evidence.
+The default doctor report remains v1; explicit probes use report v2. No release gate changes.
 
 `kb update-check [--pre] [--json]` is the only package update network operation. It queries public package metadata only when invoked, sends no vault or object information, and never installs an update. Stable releases are selected by default; `--pre` permits prereleases. Network and malformed-response failures use exit code 5.
 

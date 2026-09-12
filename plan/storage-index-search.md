@@ -21,6 +21,12 @@ Single-file writes use an expected checksum, a temporary file in the destination
 
 ## Git history
 
+Phase 5 extends recoverable transaction preconditions to read dependencies under
+[ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md). Read guards are checked during
+commit without rewriting those dependencies. Review/promotion evidence remains in Artifact files,
+never solely in transaction state or SQLite. Parser version 2 invalidates parser-1 projections;
+only an explicit index rebuild makes an old projection compatible.
+
 `kb history <id>` will resolve an object by stable ID across file renames. Identity and actor information cannot be inferred from prose or a filename; operations that need attribution record structured actor metadata.
 
 ## SQLite projection v2

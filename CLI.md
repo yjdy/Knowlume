@@ -2,9 +2,9 @@
 
 本文档记录所有已规划 `kb` 命令的用途、交付阶段、实现方案、当前状态和验证证据，用于每次 CLI 变更后的对比与验收。
 
-> Last synchronized: 2026-09-05
+> Last synchronized: 2026-09-12
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Phase 4 Complete and remotely verified
+> Current delivery state: Phase 4 Complete; Phase 5 in progress
 
 ## Authority and update rules
 
@@ -122,11 +122,18 @@ Web 不创建或修复索引，也不修改 Vault、配置或 disposable state�
 
 ## Phase 5 — Automation and AI
 
+Phase 5 is being committed in bounded checkpoints under
+[ADR-0018](plan/decisions/0018-phase5-local-revision-bound-ai-review.md).
+Only the commands marked Implemented below are registered at this checkpoint.
+Final suite, distribution and exact-SHA remote evidence is recorded at M8/M9.
+
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `ai.list` | `kb ai list` | 列出待审核及已处理 AI Artifacts | Artifact query、默认私有过滤 | `Planned` | — |
-| `ai.review` | `kb ai review ID` | 记录接受或拒绝的人工审核 | reviewer/time/action provenance、冲突安全写入 | `Planned` | — |
-| `ai.promote` | `kb ai promote ID` | 将已审核 Artifact 晋升到普通 Note | promoted state、Note block、`promoted_from` 私有审计关系事务 | `Planned` | — |
+| `ai.list` | `kb ai list [--review-status STATUS] [--type TYPE] [--status STATUS] [--limit N] [--offset N] [--json]` | 列出待审核及已处理 AI Artifacts | scanner-backed、默认 active/unreviewed、只读分页 | `Planned` | — |
+| `ai.review` | `kb ai review ID --decision accepted\|rejected --reviewer HUMAN --expect-checksum HASH [--json]` | 对已查看版本记录人工决定 | 内容与输入版本证据、原子写入、旧 accepted 显式重审 | `Planned` | — |
+| `ai.promote` | `kb ai promote ID --into NOTE --section SECTION --actor HUMAN --expect-artifact-checksum HASH --expect-note-checksum HASH [--dry-run\|--apply] [--json]` | 将已接受 Artifact 追加为私有 Note 的新 AI section | 默认预览、多文件可恢复事务、持久审计与幂等 | `Planned` | — |
+| `doctor.probes` | `kb doctor [--probe vault\|sqlite\|git\|zotero]... [--json]` | 显式、只读检查本地能力 | 默认 report v1 不变；显式 probes 为 v2 | `Planned` | — |
+
 `doctor` 的稳定命令入口已在 Release foundation 实现。Phase 5 只扩展 Git、SQLite、Zotero、vault 和外部 adapter probes，不新增第二个命令。
 
 ## Phase 6A — Evolution and history

@@ -117,6 +117,13 @@ Canonical relation identity excludes reason, time, and actor. AI may propose a r
 
 ## Evolution and contract versions
 
+Phase 5 adds optional, independently versioned Artifact review and promotion evidence under
+[ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md). Review binds candidate content
+and observed input revisions; promotion binds a resulting Note/section and private audit relation.
+Legacy v2 objects remain readable, while new promotion requires evidence and cannot fabricate it.
+Exact fields remain owned by the v2 objects schema. This records caller-supplied human attribution,
+not authenticated identity or undocumented model-generation-time input versions.
+
 Merge and supersession preserve old objects instead of deleting them. Search and publishing surface or audit superseded dependencies. Contract v1 fixed sections and duplicated frontmatter links are migration inputs only; the active mapping and blockers are defined in [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md).
 
 Phase 2A extends Paper metadata compatibly within Contract v2 and keeps existing v2 Sources

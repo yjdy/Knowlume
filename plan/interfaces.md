@@ -319,7 +319,33 @@ extend it with vault and adapter capability probes without changing its command 
 
 `kb update-check` is the only package-update network operation. It runs only when invoked, never installs an update, defaults to stable versions, and uses `--pre` to consider prereleases. JSON success data follows [update-check result v1](../schemas/interfaces/update-check-result-v1.schema.json). Unavailable or malformed package metadata emits `UPDATE_CHECK_UNAVAILABLE` with exit code 5. No vault path, object identity, content, or usage data is sent.
 
-## Web management interface
+## Phase 5 AI and diagnostic interface
+
+The following interface is frozen by
+[ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md), with implementation status in
+[CLI.md](../CLI.md). It is not verified until its executable gates pass.
+
+```text
+kb ai list [--review-status unreviewed|accepted|rejected|promoted|all] [--type TYPE|all] [--status active|archived|superseded|all] [--limit 50] [--offset 0] [--json]
+kb ai review ID --decision accepted|rejected --reviewer HUMAN_ID --expect-checksum SHA256 [--json]
+kb ai promote ID --into NOTE_ID --section SECTION_ID --actor HUMAN_ID --expect-artifact-checksum SHA256 --expect-note-checksum SHA256 [--dry-run|--apply] [--json]
+kb doctor [--probe vault|sqlite|git|zotero]... [--json]
+```
+
+Vault selection remains a root option. AI list defaults to active, unreviewed, all types, limit 50
+(1–200), offset 0, sorted by creation date then ID. AI operations are trusted-local and require no
+index or model capability. Existing get supplies explicit body/checksum inspection. Promotion
+defaults to dry-run; flags are mutually exclusive. Review requires a caller's human attribution;
+promotion requires a private active existing Note and appends a new AI section without changing
+existing roles. Missing/stale checksums fail closed, including on retries.
+
+AI JSON uses envelope v1 and independently versioned result schemas. No-probe doctor keeps its
+existing report v1. Explicit probes select report v2 with fixed ordering, sanitized results and
+passed/skipped/unavailable/failed states; only explicitly selected Zotero uses the supported local
+API. Review/promotion provenance, state transitions, diagnostics and compatibility are frozen in
+ADR-0018 and [phase5-goal](phase5-goal.md).
+
+## Phase 4 Web management interface
 
 Phase 4 exposes only:
 
