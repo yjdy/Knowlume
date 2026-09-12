@@ -168,6 +168,49 @@
         "tags": { "$ref": "#/$defs/tags" }
       }
     },
+    "evidenceChecksum": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "evidencePath": { "type": "string", "minLength": 1, "pattern": "^(?![\\s\\S]*[:\\\\\\u0000-\\u001f])(?!(?:\\.{1,2})(?:/|$))(?![\\s\\S]*/\\.{1,2}(?:/|$))[^/]+(?:/[^/]+)*$" },
+    "evidenceHuman": { "type": "string", "minLength": 1, "pattern": "^(?![\\s\\S]*[\\u0000-\\u001f])\\S(?:[\\s\\S]*\\S)?$" },
+    "fileRevision": {
+      "type": "object", "additionalProperties": false, "required": ["path", "checksum"],
+      "properties": {
+        "path": { "$ref": "#/$defs/evidencePath" },
+        "checksum": { "oneOf": [{ "$ref": "#/$defs/evidenceChecksum" }, { "type": "null" }] }
+      }
+    },
+    "reviewAttribution": {
+      "type": "object", "additionalProperties": false, "required": ["reviewed_by", "reviewed_at"],
+      "properties": {
+        "reviewed_by": { "$ref": "#/$defs/evidenceHuman" },
+        "reviewed_at": { "$ref": "#/$defs/dateTime" }
+      }
+    },
+    "reviewEvidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "content_checksum", "decision", "reviewed_by", "reviewed_at", "dependencies"],
+      "properties": {
+        "version": { "type": "integer", "const": 1 },
+        "content_checksum": { "$ref": "#/$defs/evidenceChecksum" },
+        "decision": { "enum": ["accepted", "rejected"] },
+        "reviewed_by": { "$ref": "#/$defs/evidenceHuman" },
+        "reviewed_at": { "$ref": "#/$defs/dateTime" },
+        "dependencies": { "type": "array", "items": { "$ref": "#/$defs/fileRevision" }, "uniqueItems": true },
+        "prior_review": { "$ref": "#/$defs/reviewAttribution" }
+      }
+    },
+    "promotionEvidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "note_id", "section_id", "actor", "promoted_at", "note_checksum", "relation_checksum"],
+      "properties": {
+        "version": { "type": "integer", "const": 1 },
+        "note_id": { "$ref": "#/$defs/noteId" },
+        "section_id": { "$ref": "#/$defs/sectionId" },
+        "actor": { "allOf": [{ "$ref": "#/$defs/actor" }, { "properties": { "type": { "const": "human" }, "id": { "$ref": "#/$defs/evidenceHuman" } } }] },
+        "promoted_at": { "$ref": "#/$defs/dateTime" },
+        "note_checksum": { "$ref": "#/$defs/evidenceChecksum" },
+        "relation_checksum": { "$ref": "#/$defs/evidenceChecksum" }
+      }
+    },
     "aiArtifact": {
       "type": "object",
       "additionalProperties": false,
@@ -187,10 +230,15 @@
         "model": { "type": "string", "minLength": 1 },
         "prompt_ref": { "type": ["string", "null"], "pattern": "^(?![A-Za-z]:[\\\\/])(?![\\\\/]).+" },
         "reviewed_by": { "type": ["string", "null"] },
-        "reviewed_at": { "oneOf": [{ "$ref": "#/$defs/dateTime" }, { "type": "null" }] }
+        "reviewed_at": { "oneOf": [{ "$ref": "#/$defs/dateTime" }, { "type": "null" }] },
+        "review_evidence": { "$ref": "#/$defs/reviewEvidence" },
+        "promotion": { "$ref": "#/$defs/promotionEvidence" }
       },
       "allOf": [
-        { "if": { "properties": { "review_status": { "const": "unreviewed" } } }, "then": { "properties": { "reviewed_by": { "type": "null" }, "reviewed_at": { "type": "null" } } } },
+        { "if": { "properties": { "review_status": { "const": "unreviewed" } } }, "then": { "properties": { "reviewed_by": { "type": "null" }, "reviewed_at": { "type": "null" } }, "not": { "anyOf": [{ "required": ["review_evidence"] }, { "required": ["promotion"] }] } } },
+        { "if": { "required": ["promotion"] }, "then": { "required": ["review_evidence"], "properties": { "review_status": { "const": "promoted" } } } },
+        { "if": { "required": ["review_evidence"], "properties": { "review_status": { "enum": ["accepted", "promoted"] } } }, "then": { "properties": { "review_evidence": { "properties": { "decision": { "const": "accepted" } } } } } },
+        { "if": { "required": ["review_evidence"], "properties": { "review_status": { "const": "rejected" } } }, "then": { "properties": { "review_evidence": { "properties": { "decision": { "const": "rejected" } } } } } },
         { "if": { "properties": { "review_status": { "enum": ["accepted", "rejected", "promoted"] } } }, "then": { "properties": { "reviewed_by": { "type": "string", "minLength": 1 }, "reviewed_at": { "$ref": "#/$defs/dateTime" } } } }
       ]
     }

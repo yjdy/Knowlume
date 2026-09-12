@@ -16,3 +16,8 @@ Interface contracts have independent versions from durable object and projection
 - `index-result-v1.schema.json`: build, rebuild, and read-only status results.
 - `search-result-v1.schema.json`: ranked, traceable FTS results and explicit filters.
 - `context-result-v1.schema.json`: scoped, grouped context with exclusions and character bounds.
+- `ai-list-result-v1.schema.json`: local Artifact queue with filters, stable order and revision tokens.
+- `ai-review-result-v1.schema.json`: explicit human review and byte-preserving retry outcome.
+- `ai-promote-result-v1.schema.json`: promotion preview/apply and durable result mapping.
+- `doctor-result-v1.schema.json`: unchanged legacy installation report.
+- `doctor-result-v2.schema.json`: opt-in, read-only diagnostic probes with explicit outcomes.

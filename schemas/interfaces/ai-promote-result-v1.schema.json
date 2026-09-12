@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/ai-promote-result-v1.schema.json",
+  "title": "Knowlume ai-promote-result-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "result_version",
+    "artifact_id",
+    "note_id",
+    "section_id",
+    "mode",
+    "changed",
+    "already_promoted",
+    "files",
+    "preview",
+    "promotion"
+  ],
+  "properties": {
+    "result_version": {
+      "const": 1
+    },
+    "artifact_id": {
+      "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/aiId"
+    },
+    "note_id": {
+      "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/noteId"
+    },
+    "section_id": {
+      "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/sectionId"
+    },
+    "mode": {
+      "enum": [
+        "dry-run",
+        "apply"
+      ]
+    },
+    "changed": {
+      "type": "boolean"
+    },
+    "already_promoted": {
+      "type": "boolean"
+    },
+    "files": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/evidencePath"
+      }
+    },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "heading",
+        "text",
+        "artifact_id"
+      ],
+      "properties": {
+        "heading": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_id": {
+          "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/aiId"
+        }
+      }
+    },
+    "promotion": {
+      "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/promotionEvidence"
+    }
+  }
+}

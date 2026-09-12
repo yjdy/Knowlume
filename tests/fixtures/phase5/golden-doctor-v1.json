@@ -1,0 +1,52 @@
+{
+  "interface_version": 1,
+  "command": "doctor",
+  "success": true,
+  "exit_code": 0,
+  "data": {
+    "report_version": 1,
+    "healthy": true,
+    "versions": {
+      "package": "0.1.0",
+      "object_contract": 2,
+      "locator": 2,
+      "relation_schema": 2,
+      "interface": 1,
+      "projection": 2,
+      "parser": 2,
+      "tokenizer": 1,
+      "configuration": 1,
+      "transaction": 1
+    },
+    "contract_compatibility": {
+      "readable": [
+        2,
+        2
+      ],
+      "writable": [
+        2,
+        2
+      ]
+    },
+    "checks": [
+      {
+        "name": "python",
+        "success": true,
+        "detail": "3.14.0"
+      },
+      {
+        "name": "package-assets",
+        "success": true,
+        "detail": "ok"
+      }
+    ],
+    "user_paths": {
+      "config": "local-config",
+      "cache": "local-cache",
+      "state": "local-state",
+      "logs": "local-logs"
+    }
+  },
+  "warnings": [],
+  "errors": []
+}

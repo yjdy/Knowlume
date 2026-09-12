@@ -14,9 +14,9 @@ model: "<model identifier>"
 prompt_ref: null
 reviewed_by: null
 reviewed_at: null
+# review_evidence and promotion are written by kb ai review/promote, never guessed.
 ---
 
 # <title>
 
 <Unreviewed AI content.>
-

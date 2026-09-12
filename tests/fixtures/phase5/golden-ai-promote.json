@@ -1,0 +1,39 @@
+{
+  "interface_version": 1,
+  "command": "ai promote",
+  "success": true,
+  "exit_code": 0,
+  "data": {
+    "result_version": 1,
+    "artifact_id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "note_id": "note_01JSTAG7N9Q3V5X8Y2Z4A6B8D0",
+    "section_id": "sec_reviewed_ai",
+    "mode": "dry-run",
+    "changed": false,
+    "already_promoted": false,
+    "files": [
+      "ai/artifacts/candidate.md",
+      "notes/ideas/idea.md",
+      "relations/note_01JSTAG7N9Q3V5X8Y2Z4A6B8D0.yaml"
+    ],
+    "preview": {
+      "heading": "Reviewed AI",
+      "text": "# Unreviewed candidate\n\nPrivate unreviewed candidate.",
+      "artifact_id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1"
+    },
+    "promotion": {
+      "version": 1,
+      "note_id": "note_01JSTAG7N9Q3V5X8Y2Z4A6B8D0",
+      "section_id": "sec_reviewed_ai",
+      "actor": {
+        "type": "human",
+        "id": "promoter"
+      },
+      "promoted_at": "2026-09-11T08:00:00+00:00",
+      "note_checksum": "sha256:6da664bc97a195fd7d9b1f0c3bc332f9dabeb7b962be15a47900db1c8bd249f3",
+      "relation_checksum": "sha256:c200fb37f4883c2134c45ab503a7aebb3190a31daf174594826ac1ddcafc1f77"
+    }
+  },
+  "warnings": [],
+  "errors": []
+}

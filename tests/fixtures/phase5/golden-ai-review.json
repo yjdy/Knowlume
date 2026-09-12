@@ -1,0 +1,19 @@
+{
+  "interface_version": 1,
+  "command": "ai review",
+  "success": true,
+  "exit_code": 0,
+  "data": {
+    "result_version": 1,
+    "artifact_id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "path": "ai/artifacts/candidate.md",
+    "checksum": "sha256:1ac528452a2373702488d4834ef98ddc7a07be4d046da6e01942ec4796ce9ec4",
+    "review_status": "accepted",
+    "reviewed_by": "reviewer",
+    "reviewed_at": "2026-09-11T08:00:00+00:00",
+    "changed": true,
+    "evidence_version": 1
+  },
+  "warnings": [],
+  "errors": []
+}

@@ -1,0 +1,37 @@
+{
+  "interface_version": 1,
+  "command": "ai list",
+  "success": true,
+  "exit_code": 0,
+  "data": {
+    "result_version": 1,
+    "scope": "trusted-local",
+    "filters": {
+      "review_status": "unreviewed",
+      "type": "all",
+      "status": "active"
+    },
+    "limit": 50,
+    "offset": 0,
+    "total": 1,
+    "items": [
+      {
+        "object_id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+        "path": "ai/artifacts/candidate.md",
+        "checksum": "sha256:1e10da58a933c2c626e7fab55a29051132dd5cc5fd4a09e941372d451ea56a02",
+        "artifact_type": "draft",
+        "title": "Unreviewed candidate",
+        "record_status": "active",
+        "review_status": "unreviewed",
+        "created": "2026-08-26",
+        "generated_by": "codex",
+        "model": "gpt-5",
+        "reviewed_by": null,
+        "reviewed_at": null,
+        "evidence_version": null
+      }
+    ]
+  },
+  "warnings": [],
+  "errors": []
+}

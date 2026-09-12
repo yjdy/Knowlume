@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/ai-review-result-v1.schema.json",
+  "title": "Knowlume ai-review-result-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "result_version",
+    "artifact_id",
+    "path",
+    "checksum",
+    "review_status",
+    "reviewed_by",
+    "reviewed_at",
+    "changed",
+    "evidence_version"
+  ],
+  "properties": {
+    "result_version": {
+      "const": 1
+    },
+    "artifact_id": {
+      "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/aiId"
+    },
+    "path": {
+      "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/evidencePath"
+    },
+    "checksum": {
+      "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/evidenceChecksum"
+    },
+    "review_status": {
+      "enum": [
+        "accepted",
+        "rejected"
+      ]
+    },
+    "reviewed_by": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewed_at": {
+      "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/dateTime"
+    },
+    "changed": {
+      "type": "boolean"
+    },
+    "evidence_version": {
+      "const": 1
+    }
+  }
+}

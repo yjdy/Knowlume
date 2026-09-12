@@ -1,0 +1,286 @@
+[
+  {
+    "schema_version": 2,
+    "id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "kind": "ai_artifact",
+    "artifact_type": "draft",
+    "title": "Candidate",
+    "visibility": "private",
+    "record_status": "active",
+    "review_status": "unreviewed",
+    "created": "2026-09-11",
+    "input_refs": [],
+    "generated_by": "offline-example",
+    "model": "recorded-model",
+    "prompt_ref": null,
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "review_evidence": {
+      "version": 1,
+      "content_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "decision": "accepted",
+      "reviewed_by": "maintainer",
+      "reviewed_at": "2026-09-11T08:00:00+00:00",
+      "dependencies": []
+    }
+  },
+  {
+    "schema_version": 2,
+    "id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "kind": "ai_artifact",
+    "artifact_type": "draft",
+    "title": "Candidate",
+    "visibility": "private",
+    "record_status": "active",
+    "review_status": "accepted",
+    "created": "2026-09-11",
+    "input_refs": [],
+    "generated_by": "offline-example",
+    "model": "recorded-model",
+    "prompt_ref": null,
+    "reviewed_by": "maintainer",
+    "reviewed_at": "2026-09-11T08:00:00+00:00",
+    "review_evidence": {
+      "version": 2,
+      "content_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "decision": "accepted",
+      "reviewed_by": "maintainer",
+      "reviewed_at": "2026-09-11T08:00:00+00:00",
+      "dependencies": []
+    }
+  },
+  {
+    "schema_version": 2,
+    "id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "kind": "ai_artifact",
+    "artifact_type": "draft",
+    "title": "Candidate",
+    "visibility": "private",
+    "record_status": "active",
+    "review_status": "accepted",
+    "created": "2026-09-11",
+    "input_refs": [],
+    "generated_by": "offline-example",
+    "model": "recorded-model",
+    "prompt_ref": null,
+    "reviewed_by": "maintainer",
+    "reviewed_at": "2026-09-11T08:00:00+00:00",
+    "review_evidence": {
+      "version": 1,
+      "content_checksum": "bad",
+      "decision": "accepted",
+      "reviewed_by": "maintainer",
+      "reviewed_at": "2026-09-11T08:00:00+00:00",
+      "dependencies": []
+    }
+  },
+  {
+    "schema_version": 2,
+    "id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "kind": "ai_artifact",
+    "artifact_type": "draft",
+    "title": "Candidate",
+    "visibility": "private",
+    "record_status": "active",
+    "review_status": "accepted",
+    "created": "2026-09-11",
+    "input_refs": [],
+    "generated_by": "offline-example",
+    "model": "recorded-model",
+    "prompt_ref": null,
+    "reviewed_by": "maintainer",
+    "reviewed_at": "2026-09-11T08:00:00+00:00",
+    "review_evidence": {
+      "version": 1,
+      "content_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "decision": "accepted",
+      "reviewed_by": "maintainer",
+      "reviewed_at": "2026-09-11T08:00:00+00:00",
+      "dependencies": [
+        {
+          "path": "../private",
+          "checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 2,
+    "id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "kind": "ai_artifact",
+    "artifact_type": "draft",
+    "title": "Candidate",
+    "visibility": "private",
+    "record_status": "active",
+    "review_status": "accepted",
+    "created": "2026-09-11",
+    "input_refs": [],
+    "generated_by": "offline-example",
+    "model": "recorded-model",
+    "prompt_ref": null,
+    "reviewed_by": "maintainer",
+    "reviewed_at": "2026-09-11T08:00:00+00:00",
+    "review_evidence": {
+      "version": 1,
+      "content_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "decision": "accepted",
+      "reviewed_by": "maintainer",
+      "reviewed_at": "2026-09-11T08:00:00+00:00",
+      "dependencies": [
+        {
+          "path": "C:/private",
+          "checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 2,
+    "id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "kind": "ai_artifact",
+    "artifact_type": "draft",
+    "title": "Candidate",
+    "visibility": "private",
+    "record_status": "active",
+    "review_status": "accepted",
+    "created": "2026-09-11",
+    "input_refs": [],
+    "generated_by": "offline-example",
+    "model": "recorded-model",
+    "prompt_ref": null,
+    "reviewed_by": "maintainer",
+    "reviewed_at": "2026-09-11T08:00:00+00:00",
+    "review_evidence": {
+      "version": 1,
+      "content_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "decision": "rejected",
+      "reviewed_by": "maintainer",
+      "reviewed_at": "2026-09-11T08:00:00+00:00",
+      "dependencies": []
+    }
+  },
+  {
+    "schema_version": 2,
+    "id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "kind": "ai_artifact",
+    "artifact_type": "draft",
+    "title": "Candidate",
+    "visibility": "private",
+    "record_status": "active",
+    "review_status": "accepted",
+    "created": "2026-09-11",
+    "input_refs": [],
+    "generated_by": "offline-example",
+    "model": "recorded-model",
+    "prompt_ref": null,
+    "reviewed_by": "maintainer",
+    "reviewed_at": "2026-09-11T08:00:00+00:00",
+    "review_evidence": {
+      "version": 1,
+      "content_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "decision": "accepted",
+      "reviewed_by": "maintainer",
+      "reviewed_at": "2026-09-11T08:00:00+00:00",
+      "dependencies": []
+    },
+    "promotion": {
+      "version": 1,
+      "note_id": "note_01JSTAG7N9Q3V5X8Y2Z4A6B8D0",
+      "section_id": "sec_reviewed_ai",
+      "actor": {
+        "type": "human",
+        "id": "promoter"
+      },
+      "promoted_at": "2026-09-11T08:00:00+00:00",
+      "note_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "relation_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  {
+    "schema_version": 2,
+    "id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "kind": "ai_artifact",
+    "artifact_type": "draft",
+    "title": "Candidate",
+    "visibility": "private",
+    "record_status": "active",
+    "review_status": "promoted",
+    "created": "2026-09-11",
+    "input_refs": [],
+    "generated_by": "offline-example",
+    "model": "recorded-model",
+    "prompt_ref": null,
+    "reviewed_by": "maintainer",
+    "reviewed_at": "2026-09-11T08:00:00+00:00",
+    "review_evidence": {
+      "version": 1,
+      "content_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "decision": "accepted",
+      "reviewed_by": "maintainer",
+      "reviewed_at": "2026-09-11T08:00:00+00:00",
+      "dependencies": []
+    },
+    "promotion": {
+      "version": 1,
+      "note_id": "note_01JSTAG7N9Q3V5X8Y2Z4A6B8D0",
+      "section_id": "sec_reviewed_ai",
+      "actor": {
+        "type": "system",
+        "id": "bot"
+      },
+      "promoted_at": "2026-09-11T08:00:00+00:00",
+      "note_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "relation_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  {
+    "schema_version": 2,
+    "id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "kind": "ai_artifact",
+    "artifact_type": "draft",
+    "title": "Candidate",
+    "visibility": "private",
+    "record_status": "active",
+    "review_status": "accepted",
+    "created": "2026-09-11",
+    "input_refs": [],
+    "generated_by": "offline-example",
+    "model": "recorded-model",
+    "prompt_ref": null,
+    "reviewed_by": "maintainer",
+    "reviewed_at": null,
+    "review_evidence": {
+      "version": 1,
+      "content_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "decision": "accepted",
+      "reviewed_by": "maintainer",
+      "reviewed_at": "2026-09-11T08:00:00+00:00",
+      "dependencies": []
+    }
+  },
+  {
+    "schema_version": 2,
+    "id": "ai_01JSTAG7N9Q3V5X8Y2Z4A6B8E1",
+    "kind": "ai_artifact",
+    "artifact_type": "draft",
+    "title": "Candidate",
+    "visibility": "public",
+    "record_status": "active",
+    "review_status": "accepted",
+    "created": "2026-09-11",
+    "input_refs": [],
+    "generated_by": "offline-example",
+    "model": "recorded-model",
+    "prompt_ref": null,
+    "reviewed_by": "maintainer",
+    "reviewed_at": "2026-09-11T08:00:00+00:00",
+    "review_evidence": {
+      "version": 1,
+      "content_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "decision": "accepted",
+      "reviewed_by": "maintainer",
+      "reviewed_at": "2026-09-11T08:00:00+00:00",
+      "dependencies": []
+    }
+  }
+]

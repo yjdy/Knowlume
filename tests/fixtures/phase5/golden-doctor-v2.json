@@ -1,0 +1,71 @@
+{
+  "interface_version": 1,
+  "command": "doctor",
+  "success": true,
+  "exit_code": 0,
+  "data": {
+    "report_version": 2,
+    "healthy": true,
+    "versions": {
+      "package": "0.1.0",
+      "object_contract": 2,
+      "locator": 2,
+      "relation_schema": 2,
+      "interface": 1,
+      "projection": 2,
+      "parser": 2,
+      "tokenizer": 1,
+      "configuration": 1,
+      "transaction": 1
+    },
+    "probes": [
+      "git"
+    ],
+    "checks": [
+      {
+        "name": "python",
+        "status": "passed",
+        "code": "DOCTOR_CHECK_PASSED",
+        "message": "Local diagnostic.",
+        "exit_code": 0
+      },
+      {
+        "name": "package-assets",
+        "status": "passed",
+        "code": "DOCTOR_CHECK_PASSED",
+        "message": "Local diagnostic.",
+        "exit_code": 0
+      },
+      {
+        "name": "vault",
+        "status": "skipped",
+        "code": "DOCTOR_CHECK_SKIPPED",
+        "message": "Local diagnostic.",
+        "exit_code": 0
+      },
+      {
+        "name": "sqlite",
+        "status": "skipped",
+        "code": "DOCTOR_CHECK_SKIPPED",
+        "message": "Local diagnostic.",
+        "exit_code": 0
+      },
+      {
+        "name": "git",
+        "status": "passed",
+        "code": "DOCTOR_CHECK_PASSED",
+        "message": "Local diagnostic.",
+        "exit_code": 0
+      },
+      {
+        "name": "zotero",
+        "status": "skipped",
+        "code": "DOCTOR_CHECK_SKIPPED",
+        "message": "Local diagnostic.",
+        "exit_code": 0
+      }
+    ]
+  },
+  "warnings": [],
+  "errors": []
+}

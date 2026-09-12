@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/doctor-result-v1.schema.json",
+  "title": "Knowlume doctor-result-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_version",
+    "healthy",
+    "versions",
+    "contract_compatibility",
+    "checks",
+    "user_paths"
+  ],
+  "properties": {
+    "report_version": {
+      "const": 1
+    },
+    "healthy": {
+      "type": "boolean"
+    },
+    "versions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "object_contract",
+        "locator",
+        "relation_schema",
+        "interface",
+        "projection",
+        "parser",
+        "tokenizer",
+        "configuration",
+        "transaction"
+      ],
+      "properties": {
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "object_contract": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "locator": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "relation_schema": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "interface": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "projection": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "parser": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tokenizer": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "configuration": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "transaction": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "contract_compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "readable",
+        "writable"
+      ],
+      "properties": {
+        "readable": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "writable": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "success",
+          "detail"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "user_paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "config",
+        "cache",
+        "state",
+        "logs"
+      ],
+      "properties": {
+        "config": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cache": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "logs": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

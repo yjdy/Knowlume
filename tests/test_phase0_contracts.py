@@ -451,6 +451,11 @@ def test_interface_and_migration_report_contracts(
     schemas, registry = interface_contracts
     assert set(schemas) == {
         "add-result-v1",
+        "ai-list-result-v1",
+        "ai-review-result-v1",
+        "ai-promote-result-v1",
+        "doctor-result-v1",
+        "doctor-result-v2",
             "cli-envelope-v1",
             "context-result-v1",
             "finding-v1",
@@ -465,7 +470,7 @@ def test_interface_and_migration_report_contracts(
         "source-workflow-result-v1",
         "update-check-result-v1",
     }
-    assert all("v1.schema.json" in schema["$id"] for schema in schemas.values())
+    assert all(schema["$id"].endswith(f"/{name}.schema.json") for name, schema in schemas.items())
     envelope = load_json(ROOT / "tests" / "fixtures" / "interfaces" / "valid-cli-envelope.json")
     assert validation_errors(envelope, schemas["cli-envelope-v1"], registry) == []
     findings: dict[str, dict[str, Any]] = {}

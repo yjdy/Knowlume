@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/ai-list-result-v1.schema.json",
+  "title": "Knowlume ai-list-result-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "result_version",
+    "scope",
+    "filters",
+    "limit",
+    "offset",
+    "total",
+    "items"
+  ],
+  "properties": {
+    "result_version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "trusted-local"
+    },
+    "filters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review_status",
+        "type",
+        "status"
+      ],
+      "properties": {
+        "review_status": {
+          "enum": [
+            "unreviewed",
+            "accepted",
+            "rejected",
+            "promoted",
+            "all"
+          ]
+        },
+        "type": {
+          "enum": [
+            "summary",
+            "extraction",
+            "relation_candidate",
+            "draft",
+            "all"
+          ]
+        },
+        "status": {
+          "enum": [
+            "active",
+            "archived",
+            "superseded",
+            "all"
+          ]
+        }
+      }
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200
+    },
+    "offset": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object_id",
+          "path",
+          "checksum",
+          "artifact_type",
+          "title",
+          "record_status",
+          "review_status",
+          "created",
+          "generated_by",
+          "model",
+          "reviewed_by",
+          "reviewed_at",
+          "evidence_version"
+        ],
+        "properties": {
+          "object_id": {
+            "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/aiId"
+          },
+          "path": {
+            "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/evidencePath"
+          },
+          "checksum": {
+            "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/evidenceChecksum"
+          },
+          "artifact_type": {
+            "enum": [
+              "summary",
+              "extraction",
+              "relation_candidate",
+              "draft"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "record_status": {
+            "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/recordStatus"
+          },
+          "review_status": {
+            "enum": [
+              "unreviewed",
+              "accepted",
+              "rejected",
+              "promoted"
+            ]
+          },
+          "created": {
+            "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/date"
+          },
+          "generated_by": {
+            "type": "string",
+            "minLength": 1
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reviewed_by": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reviewed_at": {
+            "oneOf": [
+              {
+                "$ref": "https://knowlume.dev/schemas/v2/objects.schema.json#/$defs/dateTime"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence_version": {
+            "oneOf": [
+              {
+                "const": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
