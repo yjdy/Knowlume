@@ -48,7 +48,7 @@ def test_registered_cli_inventory_through_phase5_is_exact() -> None:
         "update-check",
     }
     assert groups == {"ai", "index", "note", "relation", "source"}
-    assert _surface(ai_app) == ({"list", "review"}, set())
+    assert _surface(ai_app) == ({"list", "review", "promote"}, set())
     assert _surface(note_app) == ({"evolve", "new", "show"}, set())
     assert _surface(relation_app) == ({"add", "list", "remove"}, set())
     assert _surface(source_app) == ({"list", "open", "show", "sync"}, set())
@@ -86,7 +86,7 @@ def test_every_phase1_command_has_help() -> None:
         ["context", "--help"],
         ["ai", "list", "--help"],
         ["ai", "review", "--help"],
-        ["ai", "--help"],
+        ["ai", "promote", "--help"],
     )
     for command in commands:
         result = runner.invoke(app, command, color=False)

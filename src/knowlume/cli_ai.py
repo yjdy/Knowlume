@@ -194,3 +194,40 @@ def review_artifact(
             expected_checksum=expected_checksum,
         ),
     )
+
+
+@ai_app.command("promote")
+def promote_artifact(
+    ctx: typer.Context,
+    artifact_id: Annotated[str, typer.Argument()],
+    note_id: Annotated[str, typer.Option("--into")],
+    section_id: Annotated[str, typer.Option("--section")],
+    actor: Annotated[str, typer.Option("--actor")],
+    expected_artifact_checksum: Annotated[str, typer.Option("--expect-artifact-checksum")],
+    expected_note_checksum: Annotated[str, typer.Option("--expect-note-checksum")],
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+    apply: Annotated[bool, typer.Option("--apply")] = False,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Preview by default; explicitly apply a recoverable promotion to a private Note."""
+    if apply and dry_run:
+        _failure(
+            "ai promote",
+            DomainError("AI_ARGUMENT_INVALID", "--apply and --dry-run are mutually exclusive"),
+            json_output,
+        )
+    _run(
+        ctx,
+        "ai promote",
+        json_output,
+        lambda vault: AIService().promote(
+            vault,
+            artifact_id,
+            note_id=note_id,
+            section_id=section_id,
+            actor=actor,
+            expected_artifact_checksum=expected_artifact_checksum,
+            expected_note_checksum=expected_note_checksum,
+            apply=apply,
+        ),
+    )

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable, Mapping
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -11,12 +12,14 @@ from knowlume.adapters.contract_v2 import (
     object_data,
     parse_object_document,
     render_object_document,
+    render_relation_shard,
 )
 from knowlume.adapters.filesystem import checksum_bytes, checksum_file, parse_vault_config
 from knowlume.adapters.transactions import RecoverableTransactions, WriteRequest
 from knowlume.application.scanning import ScannedObject, ScanResult, scan_vault
 from knowlume.domain.ai import (
     FileRevision,
+    PromotionEvidence,
     ReviewAttribution,
     ReviewEvidence,
     human_identity,
@@ -24,12 +27,23 @@ from knowlume.domain.ai import (
     valid_checksum,
 )
 from knowlume.domain.models import (
+    Actor,
     AIArtifact,
+    AIBlock,
     FactBlock,
+    Note,
     NoteBody,
     ObjectDocument,
+    Relation,
+    RelationShard,
+)
+from knowlume.domain.validation import (
+    validate_object_references,
+    validate_relation_cardinality,
+    validate_relation_shard,
 )
 from knowlume.domain.values import (
+    ActorType,
     ArtifactType,
     DomainError,
     ObjectId,
@@ -37,6 +51,8 @@ from knowlume.domain.values import (
     RelationType,
     ReviewStatus,
     SectionId,
+    SectionRole,
+    Visibility,
 )
 from knowlume.ports.vault import Vault
 
@@ -422,4 +438,204 @@ class AIService:
             "reviewed_at": obj.reviewed_at.isoformat(),
             "changed": changed,
             "evidence_version": 1,
+        }
+
+    def promote(
+        self,
+        vault: Vault,
+        artifact_id: str,
+        *,
+        note_id: str,
+        section_id: str,
+        actor: str,
+        expected_artifact_checksum: str,
+        expected_note_checksum: str,
+        apply: bool = False,
+    ) -> dict[str, Any]:
+        actor = _identity(actor)
+        try:
+            target_id, section = ObjectId(note_id), SectionId(section_id)
+        except DomainError as error:
+            raise DomainError(
+                "AI_ARGUMENT_INVALID", "target or section identity is invalid"
+            ) from error
+        configuration_checksum = _configuration_revision(vault)
+        scan = self._scan(vault)
+        guard = _read_guard(vault, scan, configuration_checksum)
+        item = _artifact(scan, artifact_id)
+        obj = item.document.object
+        assert isinstance(obj, AIArtifact) and isinstance(item.document.body, str)
+        note_item = scan.objects.get(target_id)
+        if (
+            note_item is None
+            or not isinstance(note_item.document.object, Note)
+            or not isinstance(note_item.document.body, NoteBody)
+        ):
+            raise DomainError("AI_TARGET_INVALID", "promotion target must be an existing Note")
+        note = note_item.document.object
+        _expected(item.checksum, expected_artifact_checksum)
+        _expected(note_item.checksum, expected_note_checksum)
+        if (
+            note.visibility is not Visibility.PRIVATE
+            or note.record_status is not RecordStatus.ACTIVE
+            or obj.record_status is not RecordStatus.ACTIVE
+        ):
+            raise DomainError("AI_TARGET_INVALID", "promotion requires active private objects")
+        if any(
+            r.relation_type is RelationType.SUPERSEDES and r.to_id in {target_id, obj.id}
+            for shard in scan.relation_shards.values()
+            for r in shard.shard.relations
+        ):
+            raise DomainError("AI_TARGET_INVALID", "superseded objects cannot be promoted")
+        existing = scan.relation_shards.get(target_id)
+        relation_path = f"{vault.config.relations}/{target_id}.yaml"
+        body = item.document.body
+        if obj.review_status is ReviewStatus.PROMOTED:
+            self._verify_review(vault, scan, item, inputs=False)
+            proof = obj.promotion
+            if (
+                proof is None
+                or (proof.note_id, proof.section_id, proof.actor_id) != (target_id, section, actor)
+                or proof.note_checksum != note_item.checksum
+                or existing is None
+                or proof.relation_checksum != existing.checksum
+            ):
+                raise DomainError(
+                    "AI_PROMOTION_CONFLICT",
+                    "completed promotion does not match this request or current result",
+                )
+            matching = [s for s in note_item.document.body.sections if s.section_id == section]
+            if (
+                len(matching) != 1
+                or matching[0].role is not SectionRole.AI
+                or matching[0].blocks != (AIBlock(body, obj.id),)
+                or not any(
+                    r.to_id == obj.id
+                    and r.relation_type is RelationType.PROMOTED_FROM
+                    and r.actor == Actor(ActorType.HUMAN, actor)
+                    and r.created_at == proof.promoted_at
+                    for r in existing.shard.relations
+                )
+            ):
+                raise DomainError(
+                    "AI_PROMOTION_CONFLICT", "promotion content or audit relation changed"
+                )
+            guard({})
+            return self._promotion_result(
+                obj, item.path, note_item.path, relation_path, apply, False, True, body
+            )
+        if obj.review_status is not ReviewStatus.ACCEPTED:
+            raise DomainError("AI_STATE_INVALID", "only an accepted Artifact can be promoted")
+        self._verify_review(vault, scan, item)
+        if any(s.section_id == section for s in note_item.document.body.sections):
+            raise DomainError("AI_PROMOTION_CONFLICT", "target section already exists")
+        if not body.strip() or re.search(r"<!--\s*knowlume\s*:", body, re.IGNORECASE):
+            raise DomainError(
+                "AI_CONTENT_UNSAFE",
+                "candidate contains empty content or reserved structural metadata",
+            )
+        now = self._clock()
+        append = (
+            f"\n\n<!-- knowlume:section id={section} role=ai -->\n## Reviewed AI\n\n"
+            f"<!-- knowlume:ai\nartifact_id: {obj.id}\n-->\n{body}\n"
+        )
+        note_document = replace(note_item.document, object=replace(note, updated=now.date()))
+        note_content = _preserve_body(
+            note_document, _checked_bytes(vault, note_item), append=append
+        )
+        reparsed = parse_object_document(note_content.decode("utf-8"))
+        assert isinstance(reparsed.body, NoteBody)
+        if (
+            reparsed.body.sections[:-1] != note_item.document.body.sections
+            or reparsed.body.sections[-1].blocks != (AIBlock(body, obj.id),)
+            or reparsed.body.sections[-1].role is not SectionRole.AI
+        ):
+            raise DomainError("AI_CONTENT_UNSAFE", "candidate failed faithful AI-only round-trip")
+        relations = list(existing.shard.relations) if existing else []
+        candidate = Relation(obj.id, RelationType.PROMOTED_FROM, now, Actor(ActorType.HUMAN, actor))
+        if any(r.canonical_key == candidate.canonical_key for r in relations):
+            raise DomainError(
+                "AI_PROMOTION_CONFLICT",
+                "an audit relation already exists without matching promotion",
+            )
+        relations.append(candidate)
+        relations.sort(key=lambda r: r.canonical_key)
+        shard = RelationShard(target_id, tuple(relations))
+        relation_content = render_relation_shard(shard).encode("utf-8")
+        proof = PromotionEvidence(
+            1,
+            target_id,
+            section,
+            actor,
+            now,
+            checksum_bytes(note_content),
+            checksum_bytes(relation_content),
+        )
+        promoted = replace(obj, review_status=ReviewStatus.PROMOTED, promotion=proof)
+        artifact_document = replace(item.document, object=promoted)
+        artifact_content = _preserve_body(artifact_document, _checked_bytes(vault, item))
+        parse_object_document(artifact_content.decode("utf-8"))
+        documents = {key: value.document for key, value in scan.objects.items()} | {
+            target_id: reparsed,
+            obj.id: artifact_document,
+        }
+        sections = {
+            key: {str(s.section_id) for s in value.body.sections}
+            for key, value in documents.items()
+            if isinstance(value.body, NoteBody)
+        }
+        errors = [
+            error
+            for document in documents.values()
+            for error in validate_object_references(document, documents)
+        ]
+        errors.extend(
+            validate_relation_shard(
+                shard, shard_name=str(target_id), objects=documents, sections=sections
+            )
+        )
+        errors.extend(
+            validate_relation_cardinality(
+                documents,
+                {key: value.shard for key, value in scan.relation_shards.items()}
+                | {target_id: shard},
+            )
+        )
+        if errors:
+            raise DomainError("AI_TARGET_INVALID", "candidate object graph failed validation")
+        writes = (
+            WriteRequest(item.path, artifact_content, item.checksum),
+            WriteRequest(note_item.path, note_content, note_item.checksum),
+            WriteRequest(relation_path, relation_content, existing.checksum if existing else None),
+        )
+        guard({})
+        if apply:
+            self._transactions.commit(vault, "ai-promote", writes, validate_reads=guard)
+        return self._promotion_result(
+            promoted, item.path, note_item.path, relation_path, apply, apply, False, body
+        )
+
+    @staticmethod
+    def _promotion_result(
+        obj: AIArtifact,
+        artifact_path: str,
+        note_path: str,
+        relation_path: str,
+        apply: bool,
+        changed: bool,
+        already: bool,
+        body: str,
+    ) -> dict[str, Any]:
+        assert obj.promotion is not None
+        return {
+            "result_version": 1,
+            "artifact_id": str(obj.id),
+            "note_id": str(obj.promotion.note_id),
+            "section_id": str(obj.promotion.section_id),
+            "mode": "apply" if apply else "dry-run",
+            "changed": changed,
+            "already_promoted": already,
+            "files": [artifact_path, note_path, relation_path],
+            "preview": {"heading": "Reviewed AI", "text": body, "artifact_id": str(obj.id)},
+            "promotion": object_data(obj)["promotion"],
         }
