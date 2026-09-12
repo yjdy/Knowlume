@@ -216,8 +216,11 @@ publication action remain separately gated.
 
 Phase 5 follows [phase5-goal](phase5-goal.md) and
 [ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md). Local implementation, Windows
-Python 3.13/3.14 suites, distribution audit and installed-wheel gates passed; Git and the exact-SHA
-remote gates remain pending. Phase 5 is not Complete.
+Python 3.13/3.14 suites, distribution audit and installed-wheel gates passed. Feature
+`3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` passed the complete Windows/macOS/Linux × Python
+3.13/3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402) matrices.
+Phase 5's Complete record takes effect only after P5-C10 passes the same exact-SHA remote gates.
 Completion requires revision-bound human review, transactional idempotent promotion, private audit
 provenance, legacy-read compatibility, unchanged explicit-scope context, versioned AI JSON,
 opt-in read-only doctor probes, zero-write read/dry-run evidence, adversarial recovery tests,

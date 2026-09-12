@@ -24,7 +24,8 @@ The original design was audited and split into active thematic documents. The fr
 Phase 5 execution is recorded in [`phase5-goal.md`](phase5-goal.md) under accepted
 [ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md). Thematic ownership for local
 review/promotion, revision evidence, machine interfaces and opt-in probes is recorded. Local gates
-passed; Git and supported-platform remote gates remain pending.
+passed; feature `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` passed all supported-platform remote
+gates. The Phase 5 completion record requires P5-C10's own matching CI/package gates as well.
 
 - [x] Each topic has one active authority.
 - [x] README and AGENTS contain only entry-point and operational summaries.

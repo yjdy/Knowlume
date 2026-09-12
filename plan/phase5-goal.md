@@ -1,9 +1,10 @@
 # Phase 5 execution goal: Local automation and auditable AI review/promotion
 
-> **Status:** In progress — 本地实现与验收通过；P5-C1～C9 提交/推送已授权，M9 远程门禁待执行
+> **Status:** Complete — 完成记录；仅在 P5-C10 自身 CI/Package smoke 全绿后生效，见第 8.4 节
 > **Target branch:** `Phase5`（用户已在本地创建，继续使用该分支）
 > **Inspected baseline commit:** `0961d17baee690170d749ddfc8c073f29ec2dfca`
-> **Baseline state:** Phase 5 实施从上述提交开始；本地实现已验收，正在整理阶段提交
+> **Baseline state:** Phase 5 实施从上述提交开始；P5-C1～C9 已提交、推送并通过 feature 远程门禁
+> **Feature evidence:** `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` — [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) / [Package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402)
 > **Updated:** 2026-09-12
 > **Execution boundary:** 用户已授权提交并推送 P5-C1～C9；feature 远程检查通过后再提交、推送并验证 P5-C10；不创建 PR、不合并、不打 tag、不发布
 
@@ -67,7 +68,7 @@ SQLite projection、显式作用域 context、CLI envelope、安装包资源与�
 接入说明必须提供可以完整复现的样例，不能只让开发者手改 `review_status` 演示晋升。
 程序内不新增 Artifact 生成、导入或模型调用命令；这也不授权任何外部工具读取或发送私有数据。
 
-下列调用形式已在本地实现，完整阶段门禁仍在验收；大写变量需替换为实际值。
+下列调用形式已实现并通过 feature 阶段门禁；大写变量需替换为实际值。
 可复现的合成样例与脚本说明见 [phase5-usage](phase5-usage.md)：
 
 ```text
@@ -507,7 +508,7 @@ prompt_ref 仅作安全相对引用，不跟随它读取任意文件；禁止 tr
 
 ## 5. 完成前必须检查什么
 
-以下勾选表示 2026-09-12 当前实现的本地验证结论（见第 8 节），不替代 M9 的精确提交远程验收。
+以下勾选表示 2026-09-12 的实际验证结论（见第 8 节）；completion gate 另按第 8.4 节生效条款判断。
 
 ### 5.1 功能、知识完整性与兼容性
 
@@ -546,7 +547,8 @@ prompt_ref 仅作安全相对引用，不跟随它读取任意文件；禁止 tr
 - [x] 完整测试、Ruff、mypy、wheel/sdist 构建与 distribution audit 通过。
 - [x] core-only 与可选依赖环境完成隔离 wheel 验收，执行位置不依赖源码树。
 - [x] Phase 1/2B、3、4、5 installed smoke 与生命周期测试通过；Vault 字节未被安装操作改变。
-- [ ] CI 和 Package smoke 都覆盖 Phase5，feature/completion 两次精确 SHA 门禁成功。
+- [x] CI 和 Package smoke 覆盖 Phase5；feature 精确 SHA 的六种平台/Python 组合全部成功。
+- 最终 Complete 必须另满足 completion 精确 SHA 的同矩阵门禁；其定位与回执要求见第 8.4 节。
 - [x] CLI ledger、目标状态、文档链接和证据一致；未提交私有或生成文件。
 
 ### 5.5 必需检查命令
@@ -629,7 +631,7 @@ Git/远程门禁待完成”；只有 M9 全部满足才写“Phase 5 Complete�
 
 ### 8.1 本地实施记录（2026-09-12）
 
-当前工作分支为 `Phase5`，本地实现与验证已完成，P5-C1～C8 已提交，P5-C9 纳入完整分发门禁。
+当前工作分支为 `Phase5`，P5-C1～C9 已提交并推送，完整 feature 远程门禁已通过。
 以下本地记录不是远程 feature/completion SHA 的替代证据；M9 将分别验证两次精确提交。
 
 | 里程碑 | 已交付内容与可执行证据 | 当前边界 |
@@ -642,8 +644,8 @@ Git/远程门禁待完成”；只有 M9 全部满足才写“Phase 5 Complete�
 | M5 | `scripts/phase5_workflow.py`、真实 CLI golden 对照、写入后 Note/AI block/审计边验证；`test_phase5_workflow.py` 回归 scope、索引警告和只读 Web | context 仍排除全部 AI；脚本不自动作人工决定 |
 | M6 | doctor 默认 v1 与显式 probes v2；`test_phase5_doctor.py` 覆盖聚合、只读、能力缺失、超时和输出脱敏 | 未选择的 probe 不执行，不自动修复 |
 | M7 | Windows Python 3.13.14/3.14.6 完整套件各 668 passed、3 skipped；Ruff 与 mypy（100 个源文件）均通过 | 平台跳过不能当成跨平台通过 |
-| M8 | wheel/sdist 构建与审计、两版本 Phase 1/2B、3、4、5 core/optional 安装验收与生命周期检查均通过；CI/Package smoke 已接入 Phase5 | 本地验收通过，远程尚未触发 |
-| M9 | Git 已授权，正在提交/推送 | feature 全绿后才可提交 P5-C10；两次精确 SHA 均需远程门禁 |
+| M8 | wheel/sdist 构建与审计、两版本 Phase 1/2B、3、4、5 core/optional 安装验收与生命周期检查均通过；CI/Package smoke 已接入 Phase5 | 六种平台/Python 组合的远程安装与生命周期检查均通过 |
+| M9 | P5-C1～C9 已推送；feature 的 CI 及 Package smoke 共 14 个 job 全部成功 | P5-C10 仅含完成文档；自身同矩阵全绿后本完成记录生效 |
 
 兼容性核对使用基线提交中的真实 `schemas/v2/objects.schema.json`：16 个旧 Artifact
 样例全部通过，4 个带新证据的样例全部被旧 strict schema 拒绝，与 ADR-0018 的降级限制一致。
@@ -651,7 +653,8 @@ Git/远程门禁待完成”；只有 M9 全部满足才写“Phase 5 Complete�
 
 Windows 本地既有 3 个平台跳过项为：长路径未启用、当前账户不能创建目录 symlink、
 POSIX 权限语义。已有 Windows junction 安全测试及 Phase 5 的内外部路径别名测试实际通过；
-POSIX 和其余平台覆盖仍需 M9 的 Linux/macOS 运行，不能由 Windows 结果推定。
+M9 的 Linux/macOS feature CI 已实际通过 POSIX 和链接安全覆盖，未用 Windows 结果推定。
+Linux/macOS 唯一平台 skip 是 Windows junction 专属用例；Phase 5 用例不含 skip。
 
 ### 8.2 构建与验证记录
 
@@ -666,8 +669,8 @@ POSIX 和其余平台覆盖仍需 M9 的 Linux/macOS 运行，不能由 Windows 
   `b0a0d6757595bab1a6113db6766d4b4cd286ea5a603616b0f5a572b6bdbd1674`。
   此为同步 README 后重新构建并在两版本重新通过全部 installed smoke/lifecycle 的交付包。
   生成包和临时测试环境均不纳入 Git。
-- 阶段提交按本次明确授权进行；远程 feature/completion SHA 和 CI 链接在 M9 实际产生后记录。
-  两次精确 SHA 的远程门禁通过前，不宣布 Phase 5 Complete。
+- 阶段提交按本次明确授权进行；feature 精确 SHA 与链接见第 8.4 节。
+  completion 采用该节的自指提交定位与最终回执规则；两次门禁通过前，不宣布 Phase 5 Complete。
 
 ### 8.3 Git checkpoint 验证（2026-09-12）
 
@@ -677,3 +680,43 @@ P5-C5 晋升快照 106 passed；P5-C6 自动化快照 14 passed；P5-C7 诊断�
 P5-C8 对抗与跨阶段快照 132 passed。C3/C4/C5/C7 的 Ruff 和完整类型检查均通过。
 这些 focused checks 不替代第 8.2 节完整本地门禁或 M9 精确 SHA 的远程矩阵。
 所有临时检出、类型检查缓存和提交拆分辅助脚本均位于已忽略的 `tmp/`，未纳入 Git。
+
+| Checkpoint | Commit | 交付 |
+|---|---|---|
+| P5-C1 | `637dd20` | 冻结设计与兼容性决策 |
+| P5-C2 | `bee0596` | schema、模板与契约样例 |
+| P5-C3 | `6f9bef5` | Artifact 查询、解析与接入 |
+| P5-C4 | `cfa0c52` | 人工审核与版本绑定 |
+| P5-C5 | `dbecab8` | 事务晋升、恢复与幂等 |
+| P5-C6 | `52695f4` | 显式 scope/人工决定的本地工作流 |
+| P5-C7 | `dba4f39` | 显式只读 doctor probes |
+| P5-C8 | `15067ec` | 对抗性与跨阶段验收 |
+| P5-C9 | `3c03ccf` | 完整本地和分发门禁、CI 接入 |
+
+### 8.4 远程精确提交证据与完成记录生效条件
+
+Feature SHA 为 `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a`：
+
+- [CI run 34683929401](https://github.com/yjdy/Knowlume/actions/runs/34683929401)：
+  Windows/macOS/Linux × Python 3.13/3.14 六个测试 job 与 build job 全部 `success`。
+  每个测试 job 的完整 pytest、Ruff、mypy 均成功，构建与分发审计成功。
+  六个 job 的 pytest 日志均为 670 passed、1 skipped；Windows 跳过 POSIX 专属权限检查，
+  Linux/macOS 跳过 Windows 专属 junction 检查。无 Phase 5 用例被跳过。
+- [Package smoke run 34683929402](https://github.com/yjdy/Knowlume/actions/runs/34683929402)：
+  build 与六个 install job 全部 `success`；每个环境的 uv tool、pipx、Phase 1/2B、3、4、5
+  installed smoke 和 Vault-preserving lifecycle 步骤均成功，没有跳过必需步骤。
+- 两个 workflow 的 `head_sha` 均已核对为上述 feature SHA，不使用其他分支或旧提交的绿灯。
+
+P5-C10 是紧接此 feature 的 `docs: mark phase 5 complete` 提交，只更新状态、使用说明和证据，
+不改变源码、契约、模板、测试、工作流或发布配置。README 作为包 metadata 会重新构建并由
+completion 的 Package smoke 重新验证；本地第 8.2 节 wheel hash 是 feature 包的历史证据。
+
+Git 提交无法在自己的文件中嵌入自身 SHA 或提交之后才产生的运行 ID，因此本文件不伪造这些值。
+实际 completion SHA、对应 CI/Package smoke 两条永久链接与最终远端一致性由本次执行最终回执给出。
+复查时可定位父提交为上述 feature SHA、主题为 `docs: mark phase 5 complete` 的直接后继提交，
+核对其 GitHub Actions `head_sha`；不得只查看分支最近的任意成功运行。
+
+**生效条款：** 只有该 completion SHA 的 CI 和 Package smoke 均为 completed/success，
+六种矩阵组合及全部必需步骤成功，且本地 `Phase5` 与 `origin/Phase5` 指向该 SHA、工作区干净时，
+本文及导航中的 Complete 状态才生效。等待、取消、失败、跳过必要检查均不满足此条件。
+这不授权创建 PR、合并、分支删除、tag、版本发布或启动 Phase 6。

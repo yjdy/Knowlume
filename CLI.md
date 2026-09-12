@@ -4,7 +4,7 @@
 
 > Last synchronized: 2026-09-12
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Phase 4 Complete; Phase 5 local gates passed, remote gate pending
+> Current delivery state: Phase 4 Complete; Phase 5 commands Verified, completion record subject to its exact-SHA gate
 
 ## Authority and update rules
 
@@ -126,16 +126,19 @@ Execution steps and frozen parameter/contract decisions are recorded in
 [`phase5-goal.md`](plan/phase5-goal.md) and
 [ADR-0018](plan/decisions/0018-phase5-local-revision-bound-ai-review.md).
 The new commands and probes passed command-level tests, complete Windows Python 3.13/3.14 suites
-and isolated-wheel checks. Their final supported-platform remote gate remains pending under M9.
+and isolated-wheel checks. Feature `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` passed
+[CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402) on Windows/macOS/Linux
+with Python 3.13/3.14. P5-C10's completion record additionally requires its own matching M9 gates.
 See the [local workflow guide](plan/phase5-usage.md) for the synthetic intake example,
 required revision tokens and explicit human decisions.
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `ai.list` | `kb ai list [--review-status STATUS] [--type TYPE] [--status STATUS] [--limit N] [--offset N] [--json]` | 列出待审核及已处理 AI Artifacts | scanner-backed、默认 active/unreviewed、只读分页 | `Implemented` | `tests/test_phase5_ai.py`; complete local suites passed; remote gate pending |
-| `ai.review` | `kb ai review ID --decision accepted\|rejected --reviewer HUMAN --expect-checksum HASH [--json]` | 对已查看版本记录人工决定 | 内容与输入版本证据、原子写入、旧 accepted 显式重审 | `Implemented` | `tests/test_phase5_ai.py`; `tests/test_phase5_adversarial.py`; complete local suites passed; remote gate pending |
-| `ai.promote` | `kb ai promote ID --into NOTE --section SECTION --actor HUMAN --expect-artifact-checksum HASH --expect-note-checksum HASH [--dry-run\|--apply] [--json]` | 将已接受 Artifact 追加为私有 Note 的新 AI section | 默认预览、多文件可恢复事务、持久审计与幂等 | `Implemented` | `tests/test_phase5_workflow.py`; `tests/test_phase5_adversarial.py`; complete local suites passed; remote gate pending |
-| `doctor.probes` | `kb doctor [--probe vault\|sqlite\|git\|zotero]... [--json]` | 显式、只读检查本地能力 | 默认 report v1 不变；显式 probes 为 v2 | `Implemented` | `tests/test_phase5_doctor.py`; installed/full local gates passed; remote gate pending |
+| `ai.list` | `kb ai list [--review-status STATUS] [--type TYPE] [--status STATUS] [--limit N] [--offset N] [--json]` | 列出待审核及已处理 AI Artifacts | scanner-backed、默认 active/unreviewed、只读分页 | `Verified` | `tests/test_phase5_ai.py`; complete local suites; six-platform feature CI/package gates above |
+| `ai.review` | `kb ai review ID --decision accepted\|rejected --reviewer HUMAN --expect-checksum HASH [--json]` | 对已查看版本记录人工决定 | 内容与输入版本证据、原子写入、旧 accepted 显式重审 | `Verified` | `tests/test_phase5_ai.py`; `tests/test_phase5_adversarial.py`; complete suites; feature CI/package gates above |
+| `ai.promote` | `kb ai promote ID --into NOTE --section SECTION --actor HUMAN --expect-artifact-checksum HASH --expect-note-checksum HASH [--dry-run\|--apply] [--json]` | 将已接受 Artifact 追加为私有 Note 的新 AI section | 默认预览、多文件可恢复事务、持久审计与幂等 | `Verified` | `tests/test_phase5_workflow.py`; `tests/test_phase5_adversarial.py`; complete suites; feature CI/package gates above |
+| `doctor.probes` | `kb doctor [--probe vault\|sqlite\|git\|zotero]... [--json]` | 显式、只读检查本地能力 | 默认 report v1 不变；显式 probes 为 v2 | `Verified` | `tests/test_phase5_doctor.py`; installed/full suites; six-platform feature CI/package gates above |
 
 `doctor` 的稳定命令入口已在 Release foundation 实现。Phase 5 只扩展 Git、SQLite、Zotero、vault 和外部 adapter probes，不新增第二个命令。
 
@@ -175,6 +178,7 @@ required revision tokens and explicit human decisions.
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-09-12 | 完成 Phase 5 local automation and auditable AI review/promotion | P5-C1～C9 feature `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` 通过六种平台/Python 组合的 [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402)；AI 命令和 doctor probes 标记 Verified；P5-C10 完成记录另须自身同矩阵通过，不包含 PR/合并/tag/发布 |
 | 2026-09-05 | 完成 Phase 4 local read-only Web | Feature commit `7fdf1bb08b784ac6d5d0b3caad86ba0508cfdb38` 通过 Windows/macOS/Linux × Python 3.13/3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33882303896) 与 core/Web [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33882303627)；`kb serve` 标记为 `Verified`；未创建 tag、上传包或创建 GitHub Release |
 | 2026-09-04 | 实现 Phase 4 local read-only Web | `kb serve`、共享只读 catalog、安全 Markdown、Dashboard/Health、Source/Note 浏览、Phase 3 Search、HTMX、本地资源、安全边界及 typed diagnostics 已通过完整本地套件、分发审计、隔离 core/Web wheel smoke、生命周期和真实浏览器验收；状态为 `Implemented`，远程 M8 门禁待执行 |
 | 2026-09-04 | 冻结 Phase 4 local read-only Web 设计 | ADR-0017 与 `phase4-goal.md` 固定 application-backed catalog、loopback/Host/Origin 边界、安全 Markdown、HTML-only routes、本地 HTMX 资源、typed Web diagnostics 和 installed-Web 门禁；`serve` 保持 `Planned` |

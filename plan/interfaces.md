@@ -323,7 +323,9 @@ extend it with vault and adapter capability probes without changing its command 
 
 The following interface is frozen by
 [ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md), with implementation status in
-[CLI.md](../CLI.md). It is not verified until its executable gates pass.
+[CLI.md](../CLI.md). Command-level tests, complete suites and the exact feature SHA's six-platform
+CI/package matrix passed; AI commands and the diagnostic extension are Verified. The completion
+record's separate exact-SHA gate is defined in [phase5-goal](phase5-goal.md).
 
 ```text
 kb ai list [--review-status unreviewed|accepted|rejected|promoted|all] [--type TYPE|all] [--status active|archived|superseded|all] [--limit 50] [--offset 0] [--json]

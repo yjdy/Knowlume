@@ -1,6 +1,6 @@
 # Phase 5 local AI workflow
 
-This guide covers the in-progress implementation under
+This guide covers the implemented and feature-verified workflow under
 [ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md). Delivery and gate status is in
 [phase5-goal](phase5-goal.md) and [CLI.md](../CLI.md).
 
