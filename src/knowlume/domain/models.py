@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime
 
+from knowlume.domain.ai import PromotionEvidence, ReviewEvidence, evidence_error
 from knowlume.domain.values import (
     ActorType,
     ArtifactType,
@@ -91,9 +92,7 @@ class BookLocator:
             raise DomainError("LOCATOR_INVALID", "book locator needs a position")
         if self.page is not None and not (self.edition or self.isbn):
             raise DomainError("LOCATOR_INVALID", "book page locator needs edition or ISBN")
-        if self.edition is not None and (
-            not self.edition or self.edition != self.edition.strip()
-        ):
+        if self.edition is not None and (not self.edition or self.edition != self.edition.strip()):
             raise DomainError("LOCATOR_INVALID", "book edition must be a trimmed string")
         if self.isbn is not None:
             try:
@@ -385,6 +384,8 @@ class AIArtifact:
     prompt_ref: str | None
     reviewed_by: str | None
     reviewed_at: datetime | None
+    review_evidence: ReviewEvidence | None = None
+    promotion: PromotionEvidence | None = None
 
     def __post_init__(self) -> None:
         if self.id.kind.value != "ai_artifact" or self.visibility is not Visibility.PRIVATE:
@@ -396,6 +397,25 @@ class AIArtifact:
             raise DomainError(
                 "AI_REVIEW_INVALID", "AI review provenance does not match review status"
             )
+        if len(set(self.input_refs)) != len(self.input_refs):
+            raise evidence_error("duplicate input references")
+        if self.review_evidence is not None:
+            evidence = self.review_evidence
+            decision = (
+                "accepted"
+                if self.review_status is ReviewStatus.PROMOTED
+                else self.review_status.value
+            )
+            if (
+                evidence.decision != decision
+                or evidence.reviewed_by != self.reviewed_by
+                or evidence.reviewed_at != self.reviewed_at
+            ):
+                raise evidence_error("review evidence does not match Artifact attribution or state")
+        if self.promotion is not None and (
+            self.review_status is not ReviewStatus.PROMOTED or self.review_evidence is None
+        ):
+            raise evidence_error("promotion requires promoted state and review evidence")
 
 
 type DurableObject = Source | Note | Snippet | AIArtifact

@@ -7,6 +7,7 @@ from typer.models import CommandInfo, TyperInfo
 from typer.testing import CliRunner
 
 from knowlume.cli import app, index_app, note_app, relation_app, source_app
+from knowlume.cli_ai import ai_app
 
 runner = CliRunner()
 
@@ -27,7 +28,7 @@ def _surface(typer: Typer) -> tuple[set[str], set[str]]:
     return _command_names(typer.registered_commands), _group_names(typer.registered_groups)
 
 
-def test_registered_cli_inventory_through_phase4_is_exact() -> None:
+def test_registered_cli_inventory_through_phase5_is_exact() -> None:
     commands, groups = _surface(app)
     assert commands == {
         "add",
@@ -46,7 +47,8 @@ def test_registered_cli_inventory_through_phase4_is_exact() -> None:
         "status",
         "update-check",
     }
-    assert groups == {"index", "note", "relation", "source"}
+    assert groups == {"ai", "index", "note", "relation", "source"}
+    assert _surface(ai_app) == ({"list"}, set())
     assert _surface(note_app) == ({"evolve", "new", "show"}, set())
     assert _surface(relation_app) == ({"add", "list", "remove"}, set())
     assert _surface(source_app) == ({"list", "open", "show", "sync"}, set())
@@ -82,6 +84,9 @@ def test_every_phase1_command_has_help() -> None:
         ["index", "status", "--help"],
         ["search", "--help"],
         ["context", "--help"],
+        ["ai", "list", "--help"],
+        ["ai", "--help"],
+        ["ai", "--help"],
     )
     for command in commands:
         result = runner.invoke(app, command, color=False)

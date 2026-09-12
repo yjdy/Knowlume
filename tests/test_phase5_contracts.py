@@ -7,8 +7,13 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml  # type: ignore[import-untyped]
 from jsonschema import Draft202012Validator, FormatChecker  # type: ignore[import-untyped]
 from referencing import Registry, Resource
+
+from knowlume.adapters.contract_v2 import object_data, parse_object_document
+from knowlume.domain.ai import FileRevision, human_identity
+from knowlume.domain.values import DomainError
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests/fixtures/phase5"
@@ -35,6 +40,10 @@ def test_phase5_new_and_legacy_artifact_contracts() -> None:
     check = validator("objects.schema.json")
     for document in fixture("valid-artifacts.json"):
         assert not list(check.iter_errors(document)), document
+        parsed = parse_object_document(
+            "---\n" + yaml.safe_dump(document) + "---\nSynthetic body.\n"
+        )
+        assert object_data(parsed.object) == document
     for document in fixture("invalid-artifacts.json"):
         assert list(check.iter_errors(document)), document
 
@@ -47,6 +56,8 @@ def test_new_evidence_path_schema_matches_runtime_rejections(path: str) -> None:
     document = fixture("golden-ai-review.json")["data"]
     document["path"] = path
     assert list(validator("ai-review-result-v1.schema.json").iter_errors(document))
+    with pytest.raises(DomainError):
+        FileRevision(path, None)
 
 
 @pytest.mark.parametrize("name", [" reviewer", "reviewer ", "reviewer\n", "", "\t", "a\x00b"])
@@ -54,6 +65,8 @@ def test_new_evidence_attribution_schema_matches_runtime_rejections(name: str) -
     document = fixture("golden-ai-promote.json")["data"]
     document["promotion"]["actor"]["id"] = name
     assert list(validator("ai-promote-result-v1.schema.json").iter_errors(document))
+    with pytest.raises(DomainError):
+        human_identity(name)
 
 
 @pytest.mark.parametrize(

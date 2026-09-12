@@ -9,6 +9,7 @@ from typing import Any, cast
 import yaml  # type: ignore[import-untyped]
 
 from knowlume.constants import LOCATOR_VERSION, OBJECT_CONTRACT_VERSION, RELATION_SCHEMA_VERSION
+from knowlume.domain.ai import FileRevision, PromotionEvidence, ReviewAttribution, ReviewEvidence
 from knowlume.domain.models import (
     Actor,
     AIArtifact,
@@ -428,7 +429,7 @@ def _parse_ai(data: dict[str, Any]) -> AIArtifact:
         "reviewed_by",
         "reviewed_at",
     }
-    _exact_keys(data, required=allowed, allowed=allowed)
+    _exact_keys(data, required=allowed, allowed=allowed | {"review_evidence", "promotion"})
     return AIArtifact(
         _common(data, ObjectKind.AI_ARTIFACT),
         enum_value(ArtifactType, data["artifact_type"], field="artifact type"),
@@ -443,6 +444,67 @@ def _parse_ai(data: dict[str, Any]) -> AIArtifact:
         _optional_string(data["prompt_ref"], "prompt_ref"),
         _optional_string(data["reviewed_by"], "reviewed_by"),
         _datetime(data["reviewed_at"], "reviewed_at") if data["reviewed_at"] is not None else None,
+        _review_evidence(data["review_evidence"]) if "review_evidence" in data else None,
+        _promotion_evidence(data["promotion"]) if "promotion" in data else None,
+    )
+
+
+def _review_evidence(value: object) -> ReviewEvidence:
+    data = _mapping(value, "review evidence")
+    keys = {"version", "content_checksum", "decision", "reviewed_by", "reviewed_at", "dependencies"}
+    _exact_keys(data, required=keys, allowed=keys | {"prior_review"})
+    dependencies = []
+    for value in _sequence(data["dependencies"], "dependencies"):
+        item = _mapping(value, "file revision")
+        _exact_keys(item, required={"path", "checksum"}, allowed={"path", "checksum"})
+        dependencies.append(
+            FileRevision(
+                _string(item["path"], "path"), _optional_string(item["checksum"], "checksum")
+            )
+        )
+    prior = None
+    if "prior_review" in data:
+        previous = _mapping(data["prior_review"], "prior review")
+        keys = {"reviewed_by", "reviewed_at"}
+        _exact_keys(previous, required=keys, allowed=keys)
+        prior = ReviewAttribution(
+            _string(previous["reviewed_by"], "reviewer"),
+            _datetime(previous["reviewed_at"], "reviewed_at"),
+        )
+    return ReviewEvidence(
+        _integer(data["version"], "evidence version"),
+        _string(data["content_checksum"], "content checksum"),
+        _string(data["decision"], "decision"),
+        _string(data["reviewed_by"], "reviewer"),
+        _datetime(data["reviewed_at"], "reviewed_at"),
+        tuple(dependencies),
+        prior,
+    )
+
+
+def _promotion_evidence(value: object) -> PromotionEvidence:
+    data = _mapping(value, "promotion evidence")
+    keys = {
+        "version",
+        "note_id",
+        "section_id",
+        "actor",
+        "promoted_at",
+        "note_checksum",
+        "relation_checksum",
+    }
+    _exact_keys(data, required=keys, allowed=keys)
+    actor = _actor(data["actor"])
+    if actor.type is not ActorType.HUMAN:
+        raise DomainError("AI_REVIEW_EVIDENCE_INVALID", "promotion actor must be human")
+    return PromotionEvidence(
+        _integer(data["version"], "promotion version"),
+        ObjectId(_string(data["note_id"], "note_id")),
+        SectionId(_string(data["section_id"], "section_id")),
+        actor.id,
+        _datetime(data["promoted_at"], "promoted_at"),
+        _string(data["note_checksum"], "note_checksum"),
+        _string(data["relation_checksum"], "relation_checksum"),
     )
 
 
@@ -504,6 +566,7 @@ def parse_note_body(text: str, note_id: ObjectId) -> NoteBody:
 
 
 def parse_object_document(text: str) -> ObjectDocument:
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
     data, body = _frontmatter(text)
     kind = enum_value(ObjectKind, data.get("kind"), field="object kind")
     parsers = {
@@ -610,6 +673,33 @@ def locator_data(locator: Locator) -> dict[str, Any]:
 
 
 def _value(value: Any) -> Any:
+    if isinstance(value, FileRevision):
+        return {"path": value.path, "checksum": value.checksum}
+    if isinstance(value, ReviewEvidence):
+        result = {
+            "version": value.version,
+            "content_checksum": value.content_checksum,
+            "decision": value.decision,
+            "reviewed_by": value.reviewed_by,
+            "reviewed_at": value.reviewed_at.isoformat(),
+            "dependencies": [_value(item) for item in value.dependencies],
+        }
+        if value.prior_review is not None:
+            result["prior_review"] = {
+                "reviewed_by": value.prior_review.reviewed_by,
+                "reviewed_at": value.prior_review.reviewed_at.isoformat(),
+            }
+        return result
+    if isinstance(value, PromotionEvidence):
+        return {
+            "version": value.version,
+            "note_id": str(value.note_id),
+            "section_id": str(value.section_id),
+            "actor": {"type": "human", "id": value.actor_id},
+            "promoted_at": value.promoted_at.isoformat(),
+            "note_checksum": value.note_checksum,
+            "relation_checksum": value.relation_checksum,
+        }
     if isinstance(value, StrEnum):
         return value.value
     if isinstance(value, (date, datetime)):
@@ -725,6 +815,8 @@ def _object_data(obj: DurableObject) -> dict[str, Any]:
             "prompt_ref",
             "reviewed_by",
             "reviewed_at",
+            "review_evidence",
+            "promotion",
         ),
     }[type(obj)]
     required_values = {

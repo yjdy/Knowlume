@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from knowlume.adapters.contract_v2 import parse_object_document, parse_relation_shard
-from knowlume.adapters.filesystem import checksum_file
+from knowlume.adapters.filesystem import checksum_bytes
 from knowlume.domain.models import Note, NoteBody, ObjectDocument, RelationShard, Source
 from knowlume.domain.validation import (
     validate_object_references,
@@ -202,7 +202,8 @@ def scan_vault(vault: Vault) -> ScanResult:
             )
             continue
         try:
-            document = parse_object_document(path.read_text(encoding="utf-8"))
+            content = path.read_bytes()
+            document = parse_object_document(content.decode("utf-8"))
         except (OSError, UnicodeDecodeError):
             findings.append(
                 _finding(DomainError("OBJECT_READ_FAILED", "object cannot be read"), path=relative)
@@ -224,8 +225,7 @@ def scan_vault(vault: Vault) -> ScanResult:
         layout_error = _expected_layout(vault, path, document)
         if layout_error:
             findings.append(_finding(layout_error, path=relative, object_id=str(object_id)))
-        checksum = checksum_file(path)
-        assert checksum is not None
+        checksum = checksum_bytes(content)
         objects[object_id] = ScannedObject(relative, checksum, document)
 
     relation_root = vault.path("relations")
@@ -256,7 +256,8 @@ def scan_vault(vault: Vault) -> ScanResult:
             )
             continue
         try:
-            shard = parse_relation_shard(path.read_text(encoding="utf-8"))
+            content = path.read_bytes()
+            shard = parse_relation_shard(content.decode("utf-8"))
         except (OSError, UnicodeDecodeError):
             findings.append(
                 _finding(
@@ -277,8 +278,7 @@ def scan_vault(vault: Vault) -> ScanResult:
                 )
             )
             continue
-        checksum = checksum_file(path)
-        assert checksum is not None
+        checksum = checksum_bytes(content)
         relation_shards[shard.from_id] = ScannedRelationShard(relative, checksum, shard)
 
     documents = {object_id: scanned.document for object_id, scanned in objects.items()}

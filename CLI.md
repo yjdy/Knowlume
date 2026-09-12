@@ -129,7 +129,7 @@ Final suite, distribution and exact-SHA remote evidence is recorded at M8/M9.
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
-| `ai.list` | `kb ai list [--review-status STATUS] [--type TYPE] [--status STATUS] [--limit N] [--offset N] [--json]` | 列出待审核及已处理 AI Artifacts | scanner-backed、默认 active/unreviewed、只读分页 | `Planned` | — |
+| `ai.list` | `kb ai list [--review-status STATUS] [--type TYPE] [--status STATUS] [--limit N] [--offset N] [--json]` | 列出待审核及已处理 AI Artifacts | scanner-backed、默认 active/unreviewed、只读分页 | `Implemented` | checkpoint tests; final gates pending |
 | `ai.review` | `kb ai review ID --decision accepted\|rejected --reviewer HUMAN --expect-checksum HASH [--json]` | 对已查看版本记录人工决定 | 内容与输入版本证据、原子写入、旧 accepted 显式重审 | `Planned` | — |
 | `ai.promote` | `kb ai promote ID --into NOTE --section SECTION --actor HUMAN --expect-artifact-checksum HASH --expect-note-checksum HASH [--dry-run\|--apply] [--json]` | 将已接受 Artifact 追加为私有 Note 的新 AI section | 默认预览、多文件可恢复事务、持久审计与幂等 | `Planned` | — |
 | `doctor.probes` | `kb doctor [--probe vault\|sqlite\|git\|zotero]... [--json]` | 显式、只读检查本地能力 | 默认 report v1 不变；显式 probes 为 v2 | `Planned` | — |

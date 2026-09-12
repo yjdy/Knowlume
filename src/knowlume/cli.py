@@ -20,6 +20,7 @@ from knowlume.application.relations import ListedRelation, RelationService
 from knowlume.application.scanning import Finding, changed_paths, scan_vault
 from knowlume.application.sources import SourceService
 from knowlume.application.vault import VaultService
+from knowlume.cli_ai import ai_app
 from knowlume.doctor import doctor_report
 from knowlume.domain.search import ContextScope, SearchFilters
 from knowlume.domain.values import DomainError
@@ -42,6 +43,7 @@ app.add_typer(note_app, name="note")
 app.add_typer(relation_app, name="relation")
 app.add_typer(source_app, name="source")
 app.add_typer(index_app, name="index")
+app.add_typer(ai_app, name="ai")
 
 
 def _configure_cli_streams() -> None:
@@ -742,8 +744,7 @@ def _run_index(ctx: typer.Context, operation: str, json_output: bool) -> None:
     counts = cast(dict[str, int], result["counts"])
     changed = cast(list[str], result["changed_paths"])
     typer.echo(
-        f"Index is {result['state']}: {counts['objects']} objects, "
-        f"{counts['segments']} segments."
+        f"Index is {result['state']}: {counts['objects']} objects, {counts['segments']} segments."
     )
     if changed:
         typer.echo(f"{len(changed)} changed path(s).")
@@ -912,9 +913,7 @@ def serve_command(
     except ValueError:
         _exit_web_error(DomainError("WEB_ARGUMENT_INVALID", "port must be an integer"))
     if str(selected_port) != port or not 1 <= selected_port <= 65535:
-        _exit_web_error(
-            DomainError("WEB_ARGUMENT_INVALID", "port must be between 1 and 65535")
-        )
+        _exit_web_error(DomainError("WEB_ARGUMENT_INVALID", "port must be between 1 and 65535"))
     vault = _resolved_vault(ctx)
     try:
         from knowlume.web.server import run_server
