@@ -81,3 +81,27 @@ content requires a new unreviewed Artifact, not an automatic retry with a replac
 If a response was lost after apply, get the Artifact and Note again, check the durable promotion
 mapping, and retry the same target/section/actor with current checksums. It returns the existing
 result without inserting a duplicate. Changed post-promotion files produce a conflict.
+
+## Script composition and scope
+
+The runnable [workflow example](../scripts/phase5_workflow.py) composes existing JSON commands.
+It is supplied in the repository and source distribution; a core wheel alone installs the `kb`
+commands, not this optional example script.
+It requires an explicit scope, human decision and inspected revision tokens. It calls no model and
+has no network transport. It first requests bounded context, so build a test index explicitly with
+`kb --vault VAULT index build` before using this example. Direct AI commands do not require an index.
+
+```text
+python scripts/phase5_workflow.py --vault VAULT --query knowledge --scope trusted-local --artifact ARTIFACT_ID --decision accepted --reviewer HUMAN_ID --expect-checksum INSPECTED_CHECKSUM --into NOTE_ID --section sec_reviewed_ai --actor HUMAN_ID --expect-note-checksum NOTE_CHECKSUM
+```
+
+This records the explicitly supplied review decision and previews promotion. Add `--apply` only
+when the caller also explicitly intends to promote. To reject, use `--decision rejected` with the
+Artifact/reviewer/checksum arguments; omit the Note and promotion arguments. The script emits the
+final versioned command envelope; a failing command stops subsequent steps. Current checksum
+conflicts require human inspection before re-running. No credentials or real model access are needed.
+
+`trusted-local` can contain private content. JSON or piping is not an external release permission.
+`public-safe` retains existing per-result dependency checks and is not a publication certification.
+Context excludes all AI; default search excludes AI. Explicit local AI search remains available
+without redefining unreviewed candidates as knowledge.
