@@ -210,6 +210,15 @@ class ZoteroLocalApi:
                 "ZOTERO_RESPONSE_INVALID", "Zotero returned malformed JSON"
             ) from error
 
+    def probe(self) -> None:
+        """Check local metadata availability without attachments or response disclosure."""
+        response = self._request("users/0/items?limit=1")
+        if not isinstance(response, list) or len(response) > 1 or any(
+            not isinstance(item, dict) or not isinstance(item.get("data"), dict)
+            for item in response
+        ):
+            raise DomainError("ZOTERO_RESPONSE_INVALID", "Zotero probe returned malformed metadata")
+
     def metadata(self, reference: ZoteroReference) -> PaperMetadata:
         prefix = _library_path(reference)
         document = _mapping(self._request(f"{prefix}/items/{reference.item_key}"), "item")

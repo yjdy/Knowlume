@@ -105,3 +105,18 @@ conflicts require human inspection before re-running. No credentials or real mod
 `public-safe` retains existing per-result dependency checks and is not a publication certification.
 Context excludes all AI; default search excludes AI. Explicit local AI search remains available
 without redefining unreviewed candidates as knowledge.
+
+## Read-only diagnostics
+
+`kb doctor --json` keeps the legacy installation report v1. Select individual probes to request v2:
+
+```text
+kb --vault VAULT doctor --probe vault --probe sqlite --json
+kb doctor --probe git --json
+kb doctor --probe zotero --json
+```
+
+Only the last command contacts the supported loopback Zotero API and requires its optional extra.
+Skipped probes were not executed. Unavailable is different from passed. Diagnostics do not repair
+transactions, create indexes, start applications or download attachments. The v2 report retains all
+selected results even when its failure envelope has a nonzero exit code.

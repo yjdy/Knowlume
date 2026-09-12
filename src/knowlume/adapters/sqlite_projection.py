@@ -141,7 +141,9 @@ class SQLiteProjection:
             for name in ("objects", "relations", "sections", "segments", "citations")
         }
 
-    def status(self, vault: Vault, *, scan: ScanResult | None = None) -> dict[str, object]:
+    def status(
+        self, vault: Vault, *, scan: ScanResult | None = None, immutable: bool = False
+    ) -> dict[str, object]:
         database = self.database_path(vault)
         scan = scan or scan_vault(vault)
         current_snapshot = snapshot_hash(scan)
@@ -158,8 +160,15 @@ class SQLiteProjection:
         }
         if not database.exists():
             return base
+        if immutable and any(
+            Path(f"{database}{suffix}").exists() for suffix in ("-wal", "-shm", "-journal")
+        ):
+            base["state"] = "busy"
+            return base
         try:
             uri = database.resolve().as_uri() + "?mode=ro"
+            if immutable:
+                uri += "&immutable=1"
             with closing(sqlite3.connect(uri, uri=True)) as connection:
                 if connection.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                     raise sqlite3.DatabaseError("integrity check failed")

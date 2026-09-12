@@ -21,6 +21,7 @@ from knowlume.application.scanning import Finding, changed_paths, scan_vault
 from knowlume.application.sources import SourceService
 from knowlume.application.vault import VaultService
 from knowlume.cli_ai import ai_app
+from knowlume.cli_errors import DoctorCommand
 from knowlume.doctor import doctor_report
 from knowlume.domain.search import ContextScope, SearchFilters
 from knowlume.domain.values import DomainError
@@ -1022,15 +1023,60 @@ def update_check(
         typer.echo(f"Knowlume {result['current_version']} is up to date.")
 
 
-@app.command()
+@app.command(cls=DoctorCommand)
 def doctor(
+    ctx: typer.Context,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Emit one machine-readable JSON document."),
     ] = False,
+    probes: Annotated[
+        list[str] | None,
+        typer.Option("--probe", help="Explicit read-only vault, sqlite, git or zotero probe."),
+    ] = None,
 ) -> None:
     """Check the installed runtime and bundled release assets."""
 
+    json_output = json_output or bool(ctx.meta.get("doctor_json_requested"))
+    if probes:
+        from knowlume.application.diagnostics import diagnostic_report
+
+        try:
+            report, exit_code = diagnostic_report(
+                tuple(probes), explicit_vault=ctx.obj.get("vault"), installation=doctor_report
+            )
+        except DomainError as error:
+            if json_output:
+                typer.echo(
+                    render_json(
+                        error_envelope(
+                            "doctor",
+                            exit_code=2,
+                            code="DOCTOR_ARGUMENT_INVALID",
+                            message=str(error),
+                        )
+                    )
+                )
+            else:
+                typer.echo(f"DOCTOR_ARGUMENT_INVALID: {error}", err=True)
+            raise typer.Exit(2) from error
+        envelope = success_envelope("doctor", report)
+        if exit_code:
+            envelope.update(
+                success=False,
+                exit_code=exit_code,
+                errors=[
+                    {"code": check["code"], "message": check["message"]}
+                    for check in report["checks"]
+                    if check["exit_code"]
+                ],
+            )
+        if json_output:
+            typer.echo(render_json(envelope))
+        else:
+            for check in report["checks"]:
+                typer.echo(f"[{check['status']}] {check['name']}: {check['code']}")
+        raise typer.Exit(exit_code)
     report = doctor_report()
     if json_output:
         typer.echo(render_json(success_envelope("doctor", report)))
