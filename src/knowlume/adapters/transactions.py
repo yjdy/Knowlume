@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 import tempfile
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
@@ -199,10 +199,18 @@ class RecoverableTransactions:
         writes: Sequence[WriteRequest],
         *,
         interrupt: Callable[[str], None] | None = None,
+        validate_reads: Callable[[Mapping[str, str]], None] | None = None,
     ) -> tuple[str, ...]:
-        if operation not in {"relation-update", "migration"} or not writes:
+        if (
+            operation not in {"relation-update", "migration", "ai-review", "ai-promote"}
+            or not writes
+        ):
             raise DomainError("VAULT_INVALID", "transaction operation or entries are invalid")
+        if len({request.path for request in writes}) != len(writes):
+            raise DomainError("VAULT_INVALID", "duplicate transaction destination")
         callback = interrupt or (lambda _: None)
+        guard = validate_reads or (lambda _: None)
+        replacements: dict[str, str] = {}
         transaction_id = f"txn_{new_ulid()}"
         lock_path, transactions_root = self._paths(vault)
         self._acquire_lock(lock_path, transaction_id)
@@ -215,6 +223,7 @@ class RecoverableTransactions:
                     "an unfinished transaction must be recovered before writing",
                 )
             destinations = [_destination(vault, request.path) for request in writes]
+            guard(replacements)
             for destination, request in zip(destinations, writes, strict=True):
                 if checksum_file(destination) != request.expected_checksum:
                     raise DomainError(
@@ -255,6 +264,7 @@ class RecoverableTransactions:
             manifest["state"] = "prepared"
             _write_manifest(manifest_path, manifest)
             callback("after-prepared")
+            guard(replacements)
             for destination, request in zip(destinations, writes, strict=True):
                 if checksum_file(destination) != request.expected_checksum:
                     raise DomainError(
@@ -265,6 +275,11 @@ class RecoverableTransactions:
             callback("after-committing")
             for index, (destination, entry) in enumerate(zip(destinations, entries, strict=True)):
                 callback(f"before-entry-{index}")
+                guard(replacements)
+                if checksum_file(destination) != entry["expected_checksum"]:
+                    raise DomainError(
+                        "VAULT_WRITE_CONFLICT", "durable file changed before replacement"
+                    )
                 backup = vault.root.joinpath(*PurePosixPath(entry["backup_path"]).parts)
                 if destination.exists():
                     shutil.copyfile(destination, backup)
@@ -273,13 +288,18 @@ class RecoverableTransactions:
                 entry["state"] = "backed_up"
                 _write_manifest(manifest_path, manifest)
                 callback(f"after-backup-{index}")
+                guard(replacements)
+                if checksum_file(destination) != entry["expected_checksum"]:
+                    raise DomainError("VAULT_WRITE_CONFLICT", "durable file changed after backup")
                 staged = vault.root.joinpath(*PurePosixPath(entry["staged_path"]).parts)
                 os.replace(staged, destination)
                 _fsync_parent(destination)
                 callback(f"after-replace-{index}")
                 entry["state"] = "replaced"
+                replacements[entry["path"]] = entry["replacement_checksum"]
                 _write_manifest(manifest_path, manifest)
                 callback(f"after-entry-{index}")
+            guard(replacements)
             manifest["state"] = "committed"
             _write_manifest(manifest_path, manifest)
             callback("after-committed")
@@ -316,7 +336,16 @@ class RecoverableTransactions:
             if not _inside(transaction_root, backup.resolve(strict=False)):
                 raise DomainError("VAULT_RECOVERY_FAILED", "backup path escapes transaction")
             if entry["state"] in {"backed_up", "replaced"}:
+                actual = checksum_file(destination)
+                if actual not in {entry["expected_checksum"], entry["replacement_checksum"]}:
+                    raise DomainError(
+                        "VAULT_RECOVERY_FAILED", "recovery preserves an externally changed file"
+                    )
                 if backup.exists():
+                    if checksum_file(backup) != entry["expected_checksum"]:
+                        raise DomainError(
+                            "VAULT_RECOVERY_FAILED", "recovery backup checksum differs"
+                        )
                     os.replace(backup, destination)
                     _fsync_parent(destination)
                 elif entry["expected_checksum"] is None:

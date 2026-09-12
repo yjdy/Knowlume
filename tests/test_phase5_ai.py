@@ -11,7 +11,7 @@ from typer.testing import CliRunner
 
 from knowlume.adapters.contract_v2 import parse_object_document, render_object_document
 from knowlume.adapters.filesystem import FilesystemVault, checksum_file
-from knowlume.application.ai import AIService
+from knowlume.application.ai import AIService, artifact_digest
 from knowlume.application.scanning import scan_vault
 from knowlume.cli import app
 from knowlume.domain.values import ArtifactType, DomainError, ObjectId, RecordStatus, ReviewStatus
@@ -56,6 +56,18 @@ def service() -> AIService:
     return AIService(clock=lambda: NOW)
 
 
+def review(
+    vault: Vault, *, decision: str = "accepted", target: AIService | None = None
+) -> dict[str, object]:
+    return (target or service()).review(
+        vault,
+        ARTIFACT_ID,
+        decision=decision,
+        reviewer="reviewer",
+        expected_checksum=checksum(vault, "ai/artifacts/candidate.md"),
+    )
+
+
 def change_artifact(vault: Vault, **changes: Any) -> None:
     path = vault.root / "ai/artifacts/candidate.md"
     document = parse_object_document(path.read_text(encoding="utf-8"))
@@ -63,6 +75,22 @@ def change_artifact(vault: Vault, **changes: Any) -> None:
         render_object_document(replace(document, object=replace(document.object, **changes))),
         encoding="utf-8",
     )
+
+
+@pytest.mark.parametrize("decision", ["accepted", "rejected"])
+def test_review_decisions_preserve_body_and_noop_time(vault: Vault, decision: str) -> None:
+    before = parse_object_document(
+        (vault.root / "ai/artifacts/candidate.md").read_text(encoding="utf-8")
+    )
+    review(vault, decision=decision)
+    after = parse_object_document(
+        (vault.root / "ai/artifacts/candidate.md").read_text(encoding="utf-8")
+    )
+    assert before.body == after.body
+    assert artifact_digest(before) == artifact_digest(after)
+    state = snapshot(vault)
+    assert review(vault, decision=decision)["changed"] is False
+    assert snapshot(vault) == state
 
 
 @pytest.mark.parametrize("artifact_type", list(ArtifactType))
@@ -120,9 +148,48 @@ def test_queue_empty_success_and_broken_file_failure_are_distinct(vault: Vault) 
     assert caught.value.code == "VAULT_INVALID"
 
 
-def test_ai_cli_list_checkpoint(vault: Vault) -> None:
-    before = snapshot(vault)
-    result = runner.invoke(app, ["--vault", str(vault.root), "ai", "list", "--json"])
+def test_ai_cli_list_and_review(vault: Vault) -> None:
+    args = ["--vault", str(vault.root), "ai"]
+    result = runner.invoke(app, [*args, "list", "--json"])
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout)["data"]["total"] == 1
+    result = runner.invoke(
+        app,
+        [
+            *args,
+            "review",
+            ARTIFACT_ID,
+            "--decision",
+            "accepted",
+            "--reviewer",
+            "reviewer",
+            "--expect-checksum",
+            checksum(vault, "ai/artifacts/candidate.md"),
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["review_status"] == "accepted"
+
+
+def test_json_flag_consumed_as_reviewer_never_becomes_human_attribution(vault: Vault) -> None:
+    before = snapshot(vault)
+    result = runner.invoke(
+        app,
+        [
+            "--vault",
+            str(vault.root),
+            "ai",
+            "review",
+            ARTIFACT_ID,
+            "--decision",
+            "accepted",
+            "--expect-checksum",
+            checksum(vault, "ai/artifacts/candidate.md"),
+            "--reviewer",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 2
+    assert json.loads(result.stdout)["errors"][0]["code"] == "AI_ARGUMENT_INVALID"
     assert snapshot(vault) == before

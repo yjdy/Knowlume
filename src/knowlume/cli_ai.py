@@ -170,3 +170,27 @@ def list_artifacts(
             offset=offset,
         ),
     )
+
+
+@ai_app.command("review")
+def review_artifact(
+    ctx: typer.Context,
+    artifact_id: Annotated[str, typer.Argument()],
+    decision: Annotated[str, typer.Option("--decision")],
+    reviewer: Annotated[str, typer.Option("--reviewer")],
+    expected_checksum: Annotated[str, typer.Option("--expect-checksum")],
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Record a human's explicit decision about an inspected Artifact revision."""
+    _run(
+        ctx,
+        "ai review",
+        json_output,
+        lambda vault: AIService().review(
+            vault,
+            artifact_id,
+            decision=decision,
+            reviewer=reviewer,
+            expected_checksum=expected_checksum,
+        ),
+    )

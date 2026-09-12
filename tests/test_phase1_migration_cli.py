@@ -230,12 +230,14 @@ class SimulatedCrash(BaseException):
 
 
 class CrashingTransactions(RecoverableTransactions):
-    def commit(self, vault, operation, writes, *, interrupt=None):  # type: ignore[no-untyped-def]
+    def commit(self, vault, operation, writes, *, interrupt=None, validate_reads=None):  # type: ignore[no-untyped-def]
         def crash(point: str) -> None:
             if point == "after-replace-0":
                 raise SimulatedCrash
 
-        return super().commit(vault, operation, writes, interrupt=crash)
+        return super().commit(
+            vault, operation, writes, interrupt=crash, validate_reads=validate_reads
+        )
 
 
 def test_crash_is_recovered_and_retry_succeeds(tmp_path: Path) -> None:

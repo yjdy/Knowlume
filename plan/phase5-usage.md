@@ -50,3 +50,34 @@ kb --vault VAULT get ARTIFACT_ID --json
 The get response contains the full body, input references and `sha256:...` file checksum. Read the
 candidate and its referenced material before choosing a decision. `ai list` is metadata-only and
 defaults to active unreviewed candidates; use `--review-status all` to inspect prior decisions.
+
+## Review, preview and apply
+
+After inspection, explicitly record accepted or rejected and your local human attribution:
+
+```text
+kb --vault VAULT ai review ARTIFACT_ID --decision accepted --reviewer HUMAN_ID --expect-checksum INSPECTED_CHECKSUM --json
+```
+
+Rejected content remains a private Artifact. Accepted content is still outside ordinary Notes.
+The command changes the checksum; get the Artifact again before promotion. A legacy accepted
+Artifact needs this explicit re-review to acquire evidence, while preserving its prior attribution.
+
+Create a target using an existing `kb note new` command and write its human section yourself. Read
+the private active Note with `kb get NOTE_ID --json` to obtain its current checksum. Promotion
+appends one new AI section; it does not create human conclusions or rewrite existing sections.
+
+```text
+kb --vault VAULT ai promote ARTIFACT_ID --into NOTE_ID --section sec_reviewed_ai --actor HUMAN_ID --expect-artifact-checksum ACCEPTED_CHECKSUM --expect-note-checksum NOTE_CHECKSUM --dry-run --json
+kb --vault VAULT ai promote ARTIFACT_ID --into NOTE_ID --section sec_reviewed_ai --actor HUMAN_ID --expect-artifact-checksum ACCEPTED_CHECKSUM --expect-note-checksum NOTE_CHECKSUM --apply --json
+```
+
+Omitting both mode flags previews only. Inspect preview text and target before apply. Reserved
+knowlume structural markers inside candidates are refused, even inside code fences; they cannot be
+used to impersonate human/fact sections. This phase accepts private Note targets only.
+
+If a checksum or reviewed input changed, re-read the relevant objects. Changed reviewed candidate
+content requires a new unreviewed Artifact, not an automatic retry with a replacement checksum.
+If a response was lost after apply, get the Artifact and Note again, check the durable promotion
+mapping, and retry the same target/section/actor with current checksums. It returns the existing
+result without inserting a duplicate. Changed post-promotion files produce a conflict.

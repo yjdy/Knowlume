@@ -2,19 +2,23 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Mapping
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Any
 
 from knowlume.adapters.contract_v2 import (
     FRONTMATTER_RE,
     object_data,
+    parse_object_document,
     render_object_document,
 )
 from knowlume.adapters.filesystem import checksum_bytes, checksum_file, parse_vault_config
-from knowlume.adapters.transactions import RecoverableTransactions
+from knowlume.adapters.transactions import RecoverableTransactions, WriteRequest
 from knowlume.application.scanning import ScannedObject, ScanResult, scan_vault
 from knowlume.domain.ai import (
     FileRevision,
+    ReviewAttribution,
+    ReviewEvidence,
     human_identity,
     safe_evidence_path,
     valid_checksum,
@@ -327,4 +331,95 @@ class AIService:
             "offset": offset,
             "total": len(selected),
             "items": items,
+        }
+
+    def _verify_review(
+        self, vault: Vault, scan: ScanResult, item: ScannedObject, *, inputs: bool = True
+    ) -> None:
+        obj = item.document.object
+        assert isinstance(obj, AIArtifact)
+        evidence = obj.review_evidence
+        if evidence is None or evidence.content_checksum != artifact_digest(item.document):
+            raise DomainError(
+                "AI_REVIEW_EVIDENCE_INVALID",
+                "review evidence is absent or candidate content changed",
+            )
+        if inputs and evidence.dependencies != _dependencies(vault, scan, obj.id):
+            raise DomainError(
+                "AI_INPUT_CHANGED", "reviewed input revisions changed; create a new candidate"
+            )
+
+    def review(
+        self,
+        vault: Vault,
+        artifact_id: str,
+        *,
+        decision: str,
+        reviewer: str,
+        expected_checksum: str,
+    ) -> dict[str, Any]:
+        reviewer = _identity(reviewer)
+        if decision not in {"accepted", "rejected"}:
+            raise DomainError("AI_ARGUMENT_INVALID", "review decision must be accepted or rejected")
+        configuration_checksum = _configuration_revision(vault)
+        scan = self._scan(vault)
+        guard = _read_guard(vault, scan, configuration_checksum)
+        item = _artifact(scan, artifact_id)
+        _expected(item.checksum, expected_checksum)
+        obj = item.document.object
+        assert isinstance(obj, AIArtifact)
+        dependencies = _dependencies(vault, scan, obj.id)
+        if obj.review_status is ReviewStatus.PROMOTED or (
+            obj.review_status is not ReviewStatus.UNREVIEWED and obj.review_status.value != decision
+        ):
+            raise DomainError("AI_STATE_INVALID", "review transition is not allowed")
+        if obj.review_evidence is not None:
+            self._verify_review(vault, scan, item)
+            if obj.reviewed_by != reviewer:
+                raise DomainError("AI_STATE_INVALID", "review retry cannot change the reviewer")
+            guard({})
+            return self._review_result(obj, item.path, item.checksum, False)
+        if obj.review_status is ReviewStatus.REJECTED:
+            raise DomainError("AI_REVIEW_EVIDENCE_INVALID", "legacy rejected Artifact is read-only")
+        now = self._clock()
+        prior = (
+            ReviewAttribution(obj.reviewed_by, obj.reviewed_at)
+            if obj.reviewed_by and obj.reviewed_at
+            else None
+        )
+        evidence = ReviewEvidence(
+            1, artifact_digest(item.document), decision, reviewer, now, dependencies, prior
+        )
+        reviewed = replace(
+            obj,
+            review_status=ReviewStatus(decision),
+            reviewed_by=reviewer,
+            reviewed_at=now,
+            review_evidence=evidence,
+        )
+        content = _preserve_body(
+            replace(item.document, object=reviewed), _checked_bytes(vault, item)
+        )
+        parse_object_document(content.decode("utf-8"))
+        (checksum,) = self._transactions.commit(
+            vault,
+            "ai-review",
+            (WriteRequest(item.path, content, item.checksum),),
+            validate_reads=guard,
+        )
+        return self._review_result(reviewed, item.path, checksum, True)
+
+    @staticmethod
+    def _review_result(obj: AIArtifact, path: str, checksum: str, changed: bool) -> dict[str, Any]:
+        assert obj.reviewed_at is not None
+        return {
+            "result_version": 1,
+            "artifact_id": str(obj.id),
+            "path": path,
+            "checksum": checksum,
+            "review_status": obj.review_status.value,
+            "reviewed_by": obj.reviewed_by,
+            "reviewed_at": obj.reviewed_at.isoformat(),
+            "changed": changed,
+            "evidence_version": 1,
         }
