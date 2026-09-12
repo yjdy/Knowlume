@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import shutil
 import subprocess
@@ -50,6 +51,17 @@ def main() -> int:
         vault = root / "independent-vault"
         vault.mkdir()
         (vault / "durable.md").write_text("stable knowledge\n", encoding="utf-8")
+        # Install operations must preserve both legacy and evidence-extended Artifact bytes.
+        artifacts = vault / "ai/artifacts"
+        artifacts.mkdir(parents=True)
+        examples = json.loads(
+            (ROOT / "tests/fixtures/phase5/valid-artifacts.json").read_text(encoding="utf-8")
+        )
+        for index, example in enumerate(examples):
+            (artifacts / f"example-{index:02d}.md").write_text(
+                "---\n" + json.dumps(example, ensure_ascii=False) + "\n---\nSynthetic candidate.\n",
+                encoding="utf-8",
+            )
         before = _snapshot(vault)
         operations = (
             ["uv", "pip", "install", "--no-deps", "--python", str(python), str(older_wheel)],

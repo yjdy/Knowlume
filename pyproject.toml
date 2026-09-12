@@ -83,6 +83,7 @@ packages = ["src/knowlume"]
 [tool.hatch.build.targets.sdist]
 include = [
     "/src",
+    "/scripts",
     "/schemas",
     "/templates/v1",
     "/templates/v2",

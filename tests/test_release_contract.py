@@ -28,6 +28,7 @@ def test_python_distribution_metadata_is_frozen() -> None:
 
     wheel = config["tool"]["hatch"]["build"]["targets"]["wheel"]
     assert wheel["packages"] == ["src/knowlume"]
+    assert "/scripts" in config["tool"]["hatch"]["build"]["targets"]["sdist"]["include"]
     assert wheel["force-include"] == {
         "schemas": "knowlume/_assets/schemas",
         "templates/config": "knowlume/_assets/templates/config",
@@ -79,6 +80,8 @@ def test_release_workflows_cover_required_trust_and_platform_gates() -> None:
     assert "scripts/verify_installed_phase1.py" in smoke
     assert "scripts/verify_installed_phase3.py" in smoke
     assert "scripts/verify_installed_phase4.py" in smoke
+    assert "scripts/verify_installed_phase5.py" in smoke
+    assert "Phase5" in ci and "Phase5" in smoke
     assert "scripts/verify_install_lifecycle.py" in smoke
     assert "scripts/release_plan.py" in release
     assert "if: needs.release-plan.outputs.testpypi == 'true'" in release

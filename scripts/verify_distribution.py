@@ -84,6 +84,16 @@ def verify_sdist(path: Path) -> list[str]:
             for name in names
         ):
             errors.append("source distribution has no src/knowlume package")
+        for relative in ("scripts/phase5_workflow.py", "scripts/verify_installed_phase5.py"):
+            matches = [member for member in members if member.name.endswith("/" + relative)]
+            if len(matches) != 1 or not matches[0].isfile():
+                errors.append(f"source distribution is missing required tooling: {relative}")
+                continue
+            stream = archive.extractfile(matches[0])
+            assert stream is not None
+            with stream:
+                if stream.read() != (ROOT / relative).read_bytes():
+                    errors.append(f"source distribution tooling differs: {relative}")
     return errors
 
 
