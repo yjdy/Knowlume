@@ -2,9 +2,9 @@
 
 本文档记录所有已规划 `kb` 命令的用途、交付阶段、实现方案、当前状态和验证证据，用于每次 CLI 变更后的对比与验收。
 
-> Last synchronized: 2026-09-12
+> Last synchronized: 2026-09-14
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Phase 4 Complete; Phase 5 review follow-up Verified locally; new Git/remote gates pending
+> Current delivery state: Phase 4 Complete; Phase 5 Verified including review fixes; completion record subject to its exact-SHA gate
 
 ## Authority and update rules
 
@@ -130,20 +130,23 @@ and isolated-wheel checks. Feature `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` pa
 [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) and
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402) on Windows/macOS/Linux
 with Python 3.13/3.14. P5-C10's completion record additionally requires its own matching M9 gates.
-Those historical gates passed, but do not verify the current uncommitted review fixes. Source
-dependency completeness and probe isolation/aggregation passed command-level regressions and
-complete Python 3.13/3.14 suites (680 passed, 3 platform skips each). The table's Verified status
-now includes these local checks, not renewed remote proof. Current installation evidence and the
-Git/remote boundary are recorded in [goal §8.5](plan/phase5-goal.md#85-审查后本地修复).
+The review fixes in `1cf410cf9e7168394e907424732ed8c860964d4d` additionally passed
+[CI](https://github.com/yjdy/Knowlume/actions/runs/34797875616) and
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/34797875619): all six supported
+platform/Python combinations, 14 jobs, every required step successful. Source dependency
+completeness and probe isolation/aggregation have command-level and regression evidence;
+local suites had 680 passed/3 platform skips each, remote suites 682 passed/1 platform skip each.
+The table's Verified status includes these fixes. This completion record requires its own gates,
+defined in [goal §8.6](plan/phase5-goal.md#86-审查修复远程证据与最终完成记录).
 See the [local workflow guide](plan/phase5-usage.md) for the synthetic intake example,
 required revision tokens and explicit human decisions.
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
 | `ai.list` | `kb ai list [--review-status STATUS] [--type TYPE] [--status STATUS] [--limit N] [--offset N] [--json]` | 列出待审核及已处理 AI Artifacts | scanner-backed、默认 active/unreviewed、只读分页 | `Verified` | `tests/test_phase5_ai.py`; complete local suites; six-platform feature CI/package gates above |
-| `ai.review` | `kb ai review ID --decision accepted\|rejected --reviewer HUMAN --expect-checksum HASH [--json]` | 对已查看版本记录人工决定 | 内容与输入版本证据（含 Snippet Source）、原子写入、旧 accepted 显式重审 | `Verified` | `tests/test_phase5_ai.py`; `tests/test_phase5_adversarial.py`; `tests/test_phase5_review_regressions.py`; complete local suites; renewed remote gates pending |
-| `ai.promote` | `kb ai promote ID --into NOTE --section SECTION --actor HUMAN --expect-artifact-checksum HASH --expect-note-checksum HASH [--dry-run\|--apply] [--json]` | 将已接受 Artifact 追加为私有 Note 的新 AI section | 默认预览、多文件可恢复事务、持久审计与幂等 | `Verified` | `tests/test_phase5_workflow.py`; `tests/test_phase5_adversarial.py`; `tests/test_phase5_review_regressions.py`; complete local suites; renewed remote gates pending |
-| `doctor.probes` | `kb doctor [--probe vault\|sqlite\|git\|zotero]... [--json]` | 显式、只读检查本地能力 | 默认 report v1 不变；显式 probes 为 v2；发现失败仍聚合 | `Verified` | `tests/test_phase5_doctor.py`; `tests/test_phase5_review_regressions.py`; complete local suites; renewed remote gates pending |
+| `ai.review` | `kb ai review ID --decision accepted\|rejected --reviewer HUMAN --expect-checksum HASH [--json]` | 对已查看版本记录人工决定 | 内容与输入版本证据（含 Snippet Source）、原子写入、旧 accepted 显式重审 | `Verified` | `tests/test_phase5_ai.py`; `tests/test_phase5_adversarial.py`; `tests/test_phase5_review_regressions.py`; complete suites; review-fix CI/package gates above |
+| `ai.promote` | `kb ai promote ID --into NOTE --section SECTION --actor HUMAN --expect-artifact-checksum HASH --expect-note-checksum HASH [--dry-run\|--apply] [--json]` | 将已接受 Artifact 追加为私有 Note 的新 AI section | 默认预览、多文件可恢复事务、持久审计与幂等 | `Verified` | `tests/test_phase5_workflow.py`; `tests/test_phase5_adversarial.py`; `tests/test_phase5_review_regressions.py`; complete suites; review-fix CI/package gates above |
+| `doctor.probes` | `kb doctor [--probe vault\|sqlite\|git\|zotero]... [--json]` | 显式、只读检查本地能力 | 默认 report v1 不变；显式 probes 为 v2；发现失败仍聚合 | `Verified` | `tests/test_phase5_doctor.py`; `tests/test_phase5_review_regressions.py`; complete suites; review-fix CI/package gates above |
 
 `doctor` 的稳定命令入口已在 Release foundation 实现。Phase 5 只扩展 Git、SQLite、Zotero、vault 和外部 adapter probes，不新增第二个命令。
 
@@ -183,6 +186,7 @@ required revision tokens and explicit human decisions.
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-09-14 | 修复 Phase 5 审查发现的三项问题并重新验收 | `1cf410cf9e7168394e907424732ed8c860964d4d` 的 [CI](https://github.com/yjdy/Knowlume/actions/runs/34797875616) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/34797875619) 全部通过；Snippet Source 纳入审核证据，doctor 发现失败保持聚合，具体 probes 经 port 注入；完成记录须通过自身相同门禁 |
 | 2026-09-12 | 完成 Phase 5 local automation and auditable AI review/promotion | P5-C1～C9 feature `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` 通过六种平台/Python 组合的 [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402)；AI 命令和 doctor probes 标记 Verified；P5-C10 完成记录另须自身同矩阵通过，不包含 PR/合并/tag/发布 |
 | 2026-09-05 | 完成 Phase 4 local read-only Web | Feature commit `7fdf1bb08b784ac6d5d0b3caad86ba0508cfdb38` 通过 Windows/macOS/Linux × Python 3.13/3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33882303896) 与 core/Web [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33882303627)；`kb serve` 标记为 `Verified`；未创建 tag、上传包或创建 GitHub Release |
 | 2026-09-04 | 实现 Phase 4 local read-only Web | `kb serve`、共享只读 catalog、安全 Markdown、Dashboard/Health、Source/Note 浏览、Phase 3 Search、HTMX、本地资源、安全边界及 typed diagnostics 已通过完整本地套件、分发审计、隔离 core/Web wheel smoke、生命周期和真实浏览器验收；状态为 `Implemented`，远程 M8 门禁待执行 |

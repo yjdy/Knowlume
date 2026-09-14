@@ -1,6 +1,6 @@
 # Phase 5 execution goal: Local automation and auditable AI review/promotion
 
-> **Status:** In progress — 三项审查问题已修复并完成本地验收；修复与完成记录的 Git 已授权，远程门禁待完成
+> **Status:** Complete — 三项审查问题已修复并通过远程门禁；本完成记录按第 8.6 节精确提交门禁生效
 > **Target branch:** `Phase5`（用户已在本地创建，继续使用该分支）
 > **Inspected baseline commit:** `0961d17baee690170d749ddfc8c073f29ec2dfca`
 > **Baseline state:** Phase 5 实施从上述提交开始；P5-C1～C9 已提交、推送并通过 feature 远程门禁
@@ -510,7 +510,7 @@ prompt_ref 仅作安全相对引用，不跟随它读取任意文件；禁止 tr
 ## 5. 完成前必须检查什么
 
 以下勾选表示 2026-09-12 的历史验证结论（见第 8 节）；后续审查使其不足以证明当前阶段完成。
-当前修复验收及重新收口条件见第 8.5 节，旧 completion 门禁不能替代新代码的远程验证。
+当前修复验收及重新收口证据见第 8.5–8.6 节，旧 completion 门禁不能替代新代码的远程验证。
 
 ### 5.1 功能、知识完整性与兼容性
 
@@ -728,7 +728,7 @@ Git 提交无法在自己的文件中嵌入自身 SHA 或提交之后才产生�
 2026-09-13：P5-C10 `aca4de01ea4a4e9ef8ac04d57dc80f4b0ed0398d` 已通过
 [CI](https://github.com/yjdy/Knowlume/actions/runs/34684713600) 和
 [Package smoke](https://github.com/yjdy/Knowlume/actions/runs/34684713613)，两个 workflow
-各 7 个 job 及必需步骤全部成功。此证据只证明该提交，不证明本节未提交的后续修复。
+各 7 个 job 及必需步骤全部成功。此证据只证明该提交，后续修复另有第 8.6 节的精确提交证据。
 
 分支相对 main 的双轴审查发现三个 P2 问题，阶段重新进入 In progress：
 
@@ -759,3 +759,47 @@ Git 边界：2026-09-14 用户已明确授权提交、推送本次修复；远�
 并验证完成记录。先验证本次修复精确 SHA 的完整 CI 与 Package smoke，再更新并验证完成记录。
 本修复提交的 SHA、远程链接及随后完成记录的定位规则将在通过门禁后的文档中记录；
 未获得两次精确提交的成功证据前，不宣布 Phase 5 Complete。
+
+### 8.6 审查修复远程证据与最终完成记录
+
+2026-09-14：修复提交 `1cf410cf9e7168394e907424732ed8c860964d4d`
+（`fix: close phase 5 review and diagnostic gaps`）已提交、推送并通过：
+
+- [CI run 34797875616](https://github.com/yjdy/Knowlume/actions/runs/34797875616)：
+  Windows/macOS/Linux × Python 3.13/3.14 六个测试 job 与 build 全部 completed/success。
+  每个测试 job 为 682 passed、1 skipped，Ruff、mypy（103 个源文件）成功；构建、资源审计成功。
+  Windows 仅跳过 POSIX 权限，Linux/macOS 仅跳过 Windows junction；Phase 5 无跳过。
+- [Package smoke run 34797875619](https://github.com/yjdy/Knowlume/actions/runs/34797875619)：
+  build 与六个 install job 全部 completed/success，uv tool、pipx、Phase 1/2B、3、4、5
+  installed smoke 和生命周期步骤全部成功，无必需步骤被跳过。
+- 两个 workflow 的 head_sha 已逐一核对为上述修复 SHA；14 个 job 的步骤结果全部成功。
+  本地提交前再次执行完整套件，680 passed、3 skipped；Ruff、mypy 与分发审计通过。
+
+完成审计对应关系（历史 checkpoint 保留，不重编号或改写）：
+
+| 要求 | 当前实现和自动验收证据 |
+|---|---|
+| §3.1 / M2 查询、四种类型/状态、模板入口 | AIService/list/get；`test_phase5_ai.py`；`phase5-usage.md` 合成接入及 installed Phase 5 |
+| §3.2–3.3 / M1/M3 审核、版本、身份、旧文件 | v2 provenance schema/parser、ADR-0018；contracts/ai/adversarial 测试；新增 review_regressions 覆盖 Snippet Source 与旧不完整证据拒绝 |
+| §3.4 / M4 角色、三文件事务、冲突、恢复、幂等 | AIService/promote、RecoverableTransactions；ai/adversarial/workflow 测试覆盖正文保留、故障/中断恢复与已完成重试 |
+| §3.5 / M5 scope、JSON、脚本与跨阶段兼容 | 独立结果 schemas、golden fixtures、`scripts/phase5_workflow.py`；workflow 测试覆盖 scope、索引警告、AI 排除和只读 Web |
+| §3.6 / M6 默认诊断兼容与显式只读探测 | diagnostic port/adapter/CLI composition；doctor/review_regressions 测试；core/optional 安装验收 |
+| §5.1–5.3 / M7 完整性、安全、零写入 | 全部契约、事务、安全和 Phase 0R–5 测试；六种远程组合完整套件，无 Phase 5 skip |
+| §5.4–5.5 / M8 分发和旧能力回归 | wheel/sdist 审计；两版本地五个安装/生命周期脚本；上述六种远程安装组合 |
+| M0/M9 文档、Git 与收口 | 原 C1～C10 历史、第 8.5–8.6 节、CLI ledger 与导航；本完成记录还须自身精确 SHA 检查 |
+
+最终完成记录是上述修复提交的直接后继，主题为
+`docs: mark phase 5 complete after review fixes`，只更新状态与证据，不再改变实现或契约。
+README 会进入 wheel metadata，故重新构建并审计包，最终 completion 的 Package smoke
+仍须执行完整矩阵。第 8.5 节 wheel hash 是修复包的历史证明，不作为最终文档包的 hash。
+
+完成记录提交前本地复验：完整套件 680 passed、3 skipped，Ruff、mypy、文档链接检查通过。
+重新构建的 wheel/sdist 通过分发审计；Python 3.13.14 与 3.14.6 均在源码树外对同一最终 wheel
+执行 Phase 1/2B、3、4、5 installed smoke 及生命周期检查，全部成功。此 wheel SHA-256 为
+`0132fb9f7c0c49be2b0808b026ce0b8dbc7864be288989e223d6be0017d2d5e8`。
+
+**最终生效条件：** 定位上述父提交/主题的 completion SHA，核对它自己的 CI 和 Package smoke
+均为 completed/success，六种组合、14 个 job 及全部必需步骤成功；本地 Phase5、origin/Phase5
+和实际远端均指向该 SHA，工作区干净。本文件不预填自指 SHA 或尚未产生的运行编号，最终回执
+提供 completion SHA 与两条永久链接。未满足时状态仍为等待验收，不以本文件标题代替绿灯。
+授权不包含 PR、合并、删除分支、tag、版本发布或 Phase 6 开发。

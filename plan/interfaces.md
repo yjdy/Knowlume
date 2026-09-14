@@ -326,8 +326,9 @@ The following interface is frozen by
 [CLI.md](../CLI.md). Command-level tests, complete suites and the exact feature SHA's six-platform
 CI/package matrix passed; AI commands and the diagnostic extension are Verified. The completion
 record's separate exact-SHA gate is defined in [phase5-goal](phase5-goal.md).
-The baseline gates passed; subsequent review fixes passed local verification and are not
-covered by those historical runs. Snippet input review includes its required Source even without
+The baseline gates passed; subsequent review fixes passed local and separate exact-SHA remote
+verification, recorded in [goal §8.6](phase5-goal.md#86-审查修复远程证据与最终完成记录).
+Snippet input review includes its required Source even without
 a relation shard. Each selected diagnostic probe includes discovery in its sanitized failure
 boundary, so one discovery failure does not suppress unrelated results. CLI/report versions stay
 unchanged; concrete local probes are supplied by the CLI through the diagnostic port.

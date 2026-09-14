@@ -29,12 +29,12 @@ loopback 服务、Dashboard/Health、Source/Note 浏览、FTS/HTMX 搜索、本�
 [CI](https://github.com/yjdy/Knowlume/actions/runs/33882303896) 与
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33882303627) 门禁均已通过。
 
-Phase 5 的本地 AI 队列、人工审核/晋升、脚本工作流与显式只读 doctor probes 已实现。
-Feature `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` 已通过 Windows/macOS/Linux ×
-Python 3.13/3.14 的 [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) 与
-[package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402)。
-P5-C10 已通过同一远程门禁；后续审查发现的依赖完整性、诊断容错与分层问题已在本地修复。
-当前尚不能关闭阶段；新修复的提交、推送及精确 SHA 远程门禁待完成，详见目标文档第 8.5 节。
+Phase 5 的本地 AI 队列、人工审核/晋升、脚本工作流与显式只读 doctor probes 已完成开发。
+审查发现的三项问题已修复；`1cf410cf9e7168394e907424732ed8c860964d4d` 已通过
+Windows/macOS/Linux × Python 3.13/3.14 的
+[CI](https://github.com/yjdy/Knowlume/actions/runs/34797875616) 与
+[package smoke](https://github.com/yjdy/Knowlume/actions/runs/34797875619)，全部必需检查成功。
+本次完成记录在自身同一远程门禁全绿且分支同步后生效；定位规则见目标文档第 8.6 节。
 使用方式见 [Phase 5 工作流](plan/phase5-usage.md)，验收证据见
 [Phase 5 目标](plan/phase5-goal.md)。本阶段不包含模型调用、Web 写入或软件包发布。
 
@@ -46,7 +46,7 @@ Phase 2A  Paper + Zotero                      Complete
 Phase 2B  Unified capture: Web, Book, OSS     Complete
 Phase 3   SQLite projection/search/context    Complete
 Phase 4   Read-only Web                       Complete
-Phase 5   Automation and AI promotion         In progress (review follow-up)
+Phase 5   Automation and AI promotion         Complete (completion gate required)
 Phase 6A  Evolution and history               Planned
 Phase 6B  Secure publishing                   Planned
 Phase 7   Semantic, MCP, graph, multi-agent   Deferred
