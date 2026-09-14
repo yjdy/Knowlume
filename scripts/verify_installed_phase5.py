@@ -76,6 +76,7 @@ OPTIONAL_PROBE = """
 import importlib.util
 from knowlume.adapters.zotero_local import ZoteroLocalApi
 from knowlume.application.diagnostics import diagnostic_report
+from knowlume.doctor import doctor_report
 assert importlib.util.find_spec('httpx') is not None
 assert importlib.util.find_spec('fastapi') is None
 calls = []
@@ -85,7 +86,11 @@ class OfflineApi(ZoteroLocalApi):
         calls.append(path)
         return [{'key': 'SYNTH001', 'data': {'title': 'Synthetic metadata'}}]
 api = OfflineApi()
-report, code = diagnostic_report(('zotero',), zotero_probe=api.probe)
+class OfflineProbes:
+    def probe(self, name):
+        assert name == 'zotero'
+        api.probe()
+report, code = diagnostic_report(('zotero',), runner=OfflineProbes(), installation=doctor_report)
 assert code == 0, report
 assert calls == ['users/0/items?limit=1'], calls
 assert report['checks'][-1]['status'] == 'passed'

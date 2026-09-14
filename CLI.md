@@ -4,7 +4,7 @@
 
 > Last synchronized: 2026-09-12
 > Contract baseline: Contract v2 / machine interface v1  
-> Current delivery state: Phase 4 Complete; Phase 5 commands Verified, completion record subject to its exact-SHA gate
+> Current delivery state: Phase 4 Complete; Phase 5 review follow-up Verified locally; new Git/remote gates pending
 
 ## Authority and update rules
 
@@ -130,15 +130,20 @@ and isolated-wheel checks. Feature `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` pa
 [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) and
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402) on Windows/macOS/Linux
 with Python 3.13/3.14. P5-C10's completion record additionally requires its own matching M9 gates.
+Those historical gates passed, but do not verify the current uncommitted review fixes. Source
+dependency completeness and probe isolation/aggregation passed command-level regressions and
+complete Python 3.13/3.14 suites (680 passed, 3 platform skips each). The table's Verified status
+now includes these local checks, not renewed remote proof. Current installation evidence and the
+Git/remote boundary are recorded in [goal §8.5](plan/phase5-goal.md#85-审查后本地修复).
 See the [local workflow guide](plan/phase5-usage.md) for the synthetic intake example,
 required revision tokens and explicit human decisions.
 
 | ID | Command | Description | Implementation plan | Status | Verification |
 |---|---|---|---|---|---|
 | `ai.list` | `kb ai list [--review-status STATUS] [--type TYPE] [--status STATUS] [--limit N] [--offset N] [--json]` | 列出待审核及已处理 AI Artifacts | scanner-backed、默认 active/unreviewed、只读分页 | `Verified` | `tests/test_phase5_ai.py`; complete local suites; six-platform feature CI/package gates above |
-| `ai.review` | `kb ai review ID --decision accepted\|rejected --reviewer HUMAN --expect-checksum HASH [--json]` | 对已查看版本记录人工决定 | 内容与输入版本证据、原子写入、旧 accepted 显式重审 | `Verified` | `tests/test_phase5_ai.py`; `tests/test_phase5_adversarial.py`; complete suites; feature CI/package gates above |
-| `ai.promote` | `kb ai promote ID --into NOTE --section SECTION --actor HUMAN --expect-artifact-checksum HASH --expect-note-checksum HASH [--dry-run\|--apply] [--json]` | 将已接受 Artifact 追加为私有 Note 的新 AI section | 默认预览、多文件可恢复事务、持久审计与幂等 | `Verified` | `tests/test_phase5_workflow.py`; `tests/test_phase5_adversarial.py`; complete suites; feature CI/package gates above |
-| `doctor.probes` | `kb doctor [--probe vault\|sqlite\|git\|zotero]... [--json]` | 显式、只读检查本地能力 | 默认 report v1 不变；显式 probes 为 v2 | `Verified` | `tests/test_phase5_doctor.py`; installed/full suites; six-platform feature CI/package gates above |
+| `ai.review` | `kb ai review ID --decision accepted\|rejected --reviewer HUMAN --expect-checksum HASH [--json]` | 对已查看版本记录人工决定 | 内容与输入版本证据（含 Snippet Source）、原子写入、旧 accepted 显式重审 | `Verified` | `tests/test_phase5_ai.py`; `tests/test_phase5_adversarial.py`; `tests/test_phase5_review_regressions.py`; complete local suites; renewed remote gates pending |
+| `ai.promote` | `kb ai promote ID --into NOTE --section SECTION --actor HUMAN --expect-artifact-checksum HASH --expect-note-checksum HASH [--dry-run\|--apply] [--json]` | 将已接受 Artifact 追加为私有 Note 的新 AI section | 默认预览、多文件可恢复事务、持久审计与幂等 | `Verified` | `tests/test_phase5_workflow.py`; `tests/test_phase5_adversarial.py`; `tests/test_phase5_review_regressions.py`; complete local suites; renewed remote gates pending |
+| `doctor.probes` | `kb doctor [--probe vault\|sqlite\|git\|zotero]... [--json]` | 显式、只读检查本地能力 | 默认 report v1 不变；显式 probes 为 v2；发现失败仍聚合 | `Verified` | `tests/test_phase5_doctor.py`; `tests/test_phase5_review_regressions.py`; complete local suites; renewed remote gates pending |
 
 `doctor` 的稳定命令入口已在 Release foundation 实现。Phase 5 只扩展 Git、SQLite、Zotero、vault 和外部 adapter probes，不新增第二个命令。
 

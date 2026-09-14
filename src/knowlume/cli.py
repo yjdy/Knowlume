@@ -1039,11 +1039,17 @@ def doctor(
 
     json_output = json_output or bool(ctx.meta.get("doctor_json_requested"))
     if probes:
+        from knowlume.adapters.diagnostic_probes import LocalDiagnosticProbes
         from knowlume.application.diagnostics import diagnostic_report
+        from knowlume.application.scanning import validate_vault_health
 
         try:
             report, exit_code = diagnostic_report(
-                tuple(probes), explicit_vault=ctx.obj.get("vault"), installation=doctor_report
+                tuple(probes),
+                runner=LocalDiagnosticProbes(
+                    explicit_vault=ctx.obj.get("vault"), validate_vault=validate_vault_health
+                ),
+                installation=doctor_report,
             )
         except DomainError as error:
             if json_output:

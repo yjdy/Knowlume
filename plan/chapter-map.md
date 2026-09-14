@@ -25,7 +25,8 @@ Phase 5 execution is recorded in [`phase5-goal.md`](phase5-goal.md) under accept
 [ADR-0018](decisions/0018-phase5-local-revision-bound-ai-review.md). Thematic ownership for local
 review/promotion, revision evidence, machine interfaces and opt-in probes is recorded. Local gates
 passed; feature `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` passed all supported-platform remote
-gates. The Phase 5 completion record requires P5-C10's own matching CI/package gates as well.
+gates, as did P5-C10. Phase 5 is reopened for review fixes; current local and renewed remote
+evidence is tracked in [goal §8.5](phase5-goal.md#85-审查后本地修复). Topic ownership is unchanged.
 
 - [x] Each topic has one active authority.
 - [x] README and AGENTS contain only entry-point and operational summaries.

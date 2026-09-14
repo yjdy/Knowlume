@@ -29,12 +29,21 @@ retained. This semantic digest is separate from the expected raw-file SHA-256 us
 Formatting-only input-file changes still invalidate input checksums conservatively.
 
 Input revisions record safe Vault-relative paths and raw SHA-256 values, including absence of
-relevant relation shards. Traverse input references, Note Fact citations and content relations
+relevant relation shards. Traverse input references, Note Fact citations, Snippet source_id and content relations
 recursively, deduplicate shared dependencies, reject cycles, missing sections and non-active or
 superseded dependencies. Exclude navigation and private audit edges from recursive expansion.
 An empty input_refs list is permitted and never confers Fact provenance. The snapshot certifies
 the locally reviewed versions, not undocumented model-generation-time versions. prompt_ref is a
 safe portable relative reference only: never dereference it or send it outside the machine.
+
+Review follow-up (2026-09-12): a Snippet's required Source field is a content dependency even when
+the optional snippet_from relation is absent. Capture that Source's revision and relation-shard
+absence/presence, and apply the same active/non-superseded checks as other dependencies. This fixes
+an incomplete dependency walk; it does not create Snippets or require a new relation on old files.
+The evidence shape, hash algorithm, parser and Contract versions stay unchanged. Existing files
+remain readable; accepted evidence produced by the incomplete walk cannot authorize promotion or
+be silently backfilled. Prepare a new unreviewed candidate in that case. Completed promotions still
+use their recorded post-state for no-op retries; no migration or retroactive rewrite occurs.
 
 Unreviewed may become accepted or rejected. Same-decision, same-reviewer retries with current
 checksums and valid evidence are byte-preserving. Other reversals, altered content, changed inputs
@@ -90,6 +99,14 @@ index inspection is read-only. Reports aggregate all selected outcomes; healthy 
 checks and all selected probes passed. V2 unhealthy reports use failure envelopes while retaining
 report data; exit priority is security (6), conflict (4), invalid data (3), unavailable (5). Bad probe
 names are usage errors (2). Unknown exceptions yield sanitized typed failures.
+
+Diagnostic composition follow-up (2026-09-12): concrete Git, Zotero, filesystem and SQLite probes
+live in a local adapter behind one probe port. The application module only selects probes,
+aggregates results and assigns exit policy; the CLI supplies the adapter and installation report.
+The existing application scanner's health check is passed into the adapter at composition time,
+so the diagnostic adapter does not import application services or duplicate scanning semantics.
+Vault discovery occurs inside the selected probe's protected call, so read/decoding failures are
+reported without suppressing unrelated selected probes. This changes no CLI or report version.
 
 ## Compatibility, versions and migration
 

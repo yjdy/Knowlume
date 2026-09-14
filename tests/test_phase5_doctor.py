@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -12,12 +13,23 @@ from test_phase5_contracts import validator
 from typer.testing import CliRunner
 
 import knowlume.application.diagnostics as diagnostics
+from knowlume.adapters.diagnostic_probes import LocalDiagnosticProbes
 from knowlume.adapters.sqlite_projection import SQLiteProjection
 from knowlume.adapters.zotero_local import ZoteroLocalApi
+from knowlume.application.scanning import validate_vault_health
 from knowlume.cli import app
 from knowlume.domain.values import DomainError
+from knowlume.ports.diagnostics import ProbeName
 from knowlume.ports.vault import Vault
 from knowlume.versioning import version_report
+
+
+class StubProbes:
+    def __init__(self, callbacks: dict[ProbeName, Callable[[], None]]) -> None:
+        self.callbacks = callbacks
+
+    def probe(self, name: ProbeName) -> None:
+        self.callbacks[name]()
 
 
 def installation() -> dict[str, Any]:
@@ -36,9 +48,13 @@ def test_explicit_probes_do_not_discover_unselected_vault_or_network(
     def forbidden(*args: Any, **kwargs: Any) -> None:
         raise AssertionError("unrequested operation")
 
-    monkeypatch.setattr("knowlume.application.diagnostics.VaultService.discover", forbidden)
+    monkeypatch.setattr("knowlume.adapters.diagnostic_probes.FilesystemVault.discover", forbidden)
+    monkeypatch.setattr("knowlume.adapters.diagnostic_probes._git_probe", lambda: None)
+    monkeypatch.setattr("knowlume.adapters.diagnostic_probes._zotero_probe", forbidden)
     report, code = diagnostics.diagnostic_report(
-        ("git", "git"), installation=installation, git_probe=lambda: None, zotero_probe=forbidden
+        ("git", "git"),
+        installation=installation,
+        runner=LocalDiagnosticProbes(validate_vault=forbidden),
     )
     assert code == 0 and report["probes"] == ["git"]
     assert [c["status"] for c in report["checks"]] == [
@@ -56,7 +72,11 @@ def test_vault_and_missing_sqlite_are_read_only(vault: Vault) -> None:
     before = snapshot(vault)
     directories = set(vault.root.rglob("*"))
     report, code = diagnostics.diagnostic_report(
-        ("sqlite", "vault"), explicit_vault=vault.root, installation=installation
+        ("sqlite", "vault"),
+        runner=LocalDiagnosticProbes(
+            explicit_vault=vault.root, validate_vault=validate_vault_health
+        ),
+        installation=installation,
     )
     assert code == 5 and report["healthy"] is False
     assert report["checks"][2]["status"] == "passed"
@@ -83,7 +103,11 @@ def test_sqlite_probe_does_not_create_journals_or_repair(vault: Vault, state: st
         Path(f"{database}-wal").write_bytes(b"writer state")
     before = snapshot(vault)
     report, code = diagnostics.diagnostic_report(
-        ("sqlite",), explicit_vault=vault.root, installation=installation
+        ("sqlite",),
+        runner=LocalDiagnosticProbes(
+            explicit_vault=vault.root, validate_vault=validate_vault_health
+        ),
+        installation=installation,
     )
     assert (code == 0) is (state == "fresh")
     assert snapshot(vault) == before
@@ -97,7 +121,11 @@ def test_vault_probe_reports_without_recovery(vault: Vault, kind: str) -> None:
     )
     before = snapshot(vault)
     report, code = diagnostics.diagnostic_report(
-        ("vault",), explicit_vault=vault.root, installation=installation
+        ("vault",),
+        runner=LocalDiagnosticProbes(
+            explicit_vault=vault.root, validate_vault=validate_vault_health
+        ),
+        installation=installation,
     )
     assert code == 4 and report["checks"][2]["status"] == "failed"
     assert snapshot(vault) == before and "private recovery state" not in json.dumps(report)
@@ -111,7 +139,9 @@ def test_probe_failures_are_aggregated_sanitized_and_prioritized() -> None:
         raise DomainError("ZOTERO_ENDPOINT_UNSAFE", "http://private-secret")
 
     report, code = diagnostics.diagnostic_report(
-        ("git", "zotero"), installation=installation, git_probe=absent, zotero_probe=unsafe
+        ("git", "zotero"),
+        installation=installation,
+        runner=StubProbes({"git": absent, "zotero": unsafe}),
     )
     assert code == 6
     assert [c["status"] for c in report["checks"]][-2:] == ["unavailable", "failed"]
@@ -123,21 +153,21 @@ def test_unexpected_probe_error_is_sanitized() -> None:
         raise RuntimeError("secret-body")
 
     report, code = diagnostics.diagnostic_report(
-        ("git",), installation=installation, git_probe=broken
+        ("git",), installation=installation, runner=StubProbes({"git": broken})
     )
     assert code == 3 and "secret-body" not in json.dumps(report)
 
 
 def test_git_probe_timeout_is_typed(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("knowlume.application.diagnostics.shutil.which", lambda _: "git")
+    monkeypatch.setattr("knowlume.adapters.diagnostic_probes.shutil.which", lambda _: "git")
 
     def timeout(*args: Any, **kwargs: Any) -> None:
         assert kwargs["timeout"] == 5
         raise subprocess.TimeoutExpired("private executable", 5)
 
-    monkeypatch.setattr("knowlume.application.diagnostics.subprocess.run", timeout)
+    monkeypatch.setattr("knowlume.adapters.diagnostic_probes.subprocess.run", timeout)
     with pytest.raises(DomainError) as caught:
-        diagnostics._git_probe()
+        LocalDiagnosticProbes(validate_vault=validate_vault_health).probe("git")
     assert caught.value.code == "GIT_CAPABILITY_UNAVAILABLE"
     assert "private" not in str(caught.value)
 

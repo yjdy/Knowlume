@@ -123,6 +123,9 @@ and observed input revisions; promotion binds a resulting Note/section and priva
 Legacy v2 objects remain readable, while new promotion requires evidence and cannot fabricate it.
 Exact fields remain owned by the v2 objects schema. This records caller-supplied human attribution,
 not authenticated identity or undocumented model-generation-time input versions.
+An input Snippet's `source_id` is an input dependency even without an explicit `snippet_from`
+relation. Review includes the Source revision and activity/supersession checks under ADR-0018;
+old incomplete evidence is readable but cannot silently gain authorization for a new promotion.
 
 Merge and supersession preserve old objects instead of deleting them. Search and publishing surface or audit superseded dependencies. Contract v1 fixed sections and duplicated frontmatter links are migration inputs only; the active mapping and blockers are defined in [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md).
 

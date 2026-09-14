@@ -36,6 +36,7 @@ from knowlume.domain.models import (
     ObjectDocument,
     Relation,
     RelationShard,
+    Snippet,
 )
 from knowlume.domain.validation import (
     validate_object_references,
@@ -225,6 +226,8 @@ def _dependencies(
                 _safe_checksum_path_only(vault, obj.prompt_ref)
             for input_ref in obj.input_refs:
                 walk(input_ref.object_id, input_ref.section_id)
+        if isinstance(obj, Snippet):
+            walk(obj.source_id)
         if isinstance(item.document.body, NoteBody):
             for section in item.document.body.sections:
                 for block in section.blocks:

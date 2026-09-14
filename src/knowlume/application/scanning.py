@@ -328,6 +328,17 @@ def scan_vault(vault: Vault) -> ScanResult:
     return ScanResult(objects, relation_shards, tuple(sorted(findings)), files_scanned)
 
 
+def validate_vault_health(vault: Vault) -> None:
+    """Require a healthy read-only scan without exposing private finding details."""
+    scan = scan_vault(vault)
+    if not scan.healthy:
+        unsafe = any(finding.code == "VAULT_PATH_UNSAFE" for finding in scan.findings)
+        raise DomainError(
+            "VAULT_PATH_UNSAFE" if unsafe else "VAULT_INVALID",
+            "Vault scan has blocking findings; inspect scan locally",
+        )
+
+
 def changed_paths(vault: Vault) -> set[str]:
     try:
         result = subprocess.run(

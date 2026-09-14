@@ -220,7 +220,9 @@ Python 3.13/3.14 suites, distribution audit and installed-wheel gates passed. Fe
 `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` passed the complete Windows/macOS/Linux × Python
 3.13/3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) and
 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402) matrices.
-Phase 5's Complete record takes effect only after P5-C10 passes the same exact-SHA remote gates.
+P5-C10 passed its exact-SHA remote gates. Phase 5 is reopened for the three review findings;
+the current local fixes require renewed verification and authorized Git/remote delivery before
+the phase can close again. See [review follow-up](phase5-goal.md#85-审查后本地修复).
 Completion requires revision-bound human review, transactional idempotent promotion, private audit
 provenance, legacy-read compatibility, unchanged explicit-scope context, versioned AI JSON,
 opt-in read-only doctor probes, zero-write read/dry-run evidence, adversarial recovery tests,

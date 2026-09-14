@@ -1,12 +1,12 @@
 # Phase 5 execution goal: Local automation and auditable AI review/promotion
 
-> **Status:** Complete — 完成记录；仅在 P5-C10 自身 CI/Package smoke 全绿后生效，见第 8.4 节
+> **Status:** In progress — 三项审查问题已修复并完成本地验收；修复与完成记录的 Git 已授权，远程门禁待完成
 > **Target branch:** `Phase5`（用户已在本地创建，继续使用该分支）
 > **Inspected baseline commit:** `0961d17baee690170d749ddfc8c073f29ec2dfca`
 > **Baseline state:** Phase 5 实施从上述提交开始；P5-C1～C9 已提交、推送并通过 feature 远程门禁
 > **Feature evidence:** `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` — [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) / [Package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402)
-> **Updated:** 2026-09-12
-> **Execution boundary:** 用户已授权提交并推送 P5-C1～C9；feature 远程检查通过后再提交、推送并验证 P5-C10；不创建 PR、不合并、不打 tag、不发布
+> **Updated:** 2026-09-14
+> **Execution boundary:** 已授权提交、推送本次修复；修复精确 SHA 远程全绿后，再提交、推送并验证完成记录；不创建 PR、不合并、不打 tag、不发布
 
 ## 1. 目标、基础与权威来源
 
@@ -157,6 +157,7 @@ M1 提供旧数据、新数据和不支持版本的可执行用例。对象主�
 - 明确版本的规范化与 SHA-256 算法，排除审核快照自身与后写入的晋升字段，避免自引用 hash；
 - 审核时每个实际输入对象的完整文件 checksum，以及被引用稳定 section 的存在性；
 - 参与输入验证的关系 shard/依赖读取版本，足以在提交前发现相关变化。
+- Snippet 的 `source_id` 即使没有可选 `snippet_from` shard，也必须展开并纳入上述版本与活动状态校验。
 
 具体规范化算法、空输入、重复引用、引用循环、已归档/被 supersede 输入和语义等价换行的行为
 在 M0 冻结、M1 用 fixtures 固定。建议新审核允许合法的空 `input_refs`，但不得据此生成 Facts；
@@ -508,7 +509,8 @@ prompt_ref 仅作安全相对引用，不跟随它读取任意文件；禁止 tr
 
 ## 5. 完成前必须检查什么
 
-以下勾选表示 2026-09-12 的实际验证结论（见第 8 节）；completion gate 另按第 8.4 节生效条款判断。
+以下勾选表示 2026-09-12 的历史验证结论（见第 8 节）；后续审查使其不足以证明当前阶段完成。
+当前修复验收及重新收口条件见第 8.5 节，旧 completion 门禁不能替代新代码的远程验证。
 
 ### 5.1 功能、知识完整性与兼容性
 
@@ -720,3 +722,40 @@ Git 提交无法在自己的文件中嵌入自身 SHA 或提交之后才产生�
 六种矩阵组合及全部必需步骤成功，且本地 `Phase5` 与 `origin/Phase5` 指向该 SHA、工作区干净时，
 本文及导航中的 Complete 状态才生效。等待、取消、失败、跳过必要检查均不满足此条件。
 这不授权创建 PR、合并、分支删除、tag、版本发布或启动 Phase 6。
+
+### 8.5 审查后本地修复
+
+2026-09-13：P5-C10 `aca4de01ea4a4e9ef8ac04d57dc80f4b0ed0398d` 已通过
+[CI](https://github.com/yjdy/Knowlume/actions/runs/34684713600) 和
+[Package smoke](https://github.com/yjdy/Knowlume/actions/runs/34684713613)，两个 workflow
+各 7 个 job 及必需步骤全部成功。此证据只证明该提交，不证明本节未提交的后续修复。
+
+分支相对 main 的双轴审查发现三个 P2 问题，阶段重新进入 In progress：
+
+- Snippet 的必需 `source_id` 未纳入审核依赖。现按既有闭包规则遍历 Source，绑定内容与
+  relation shard 的存在/缺失；归档或 superseded 来源不得通过审核/晋升。
+- 非 UTF-8 Vault 配置绕过 doctor 聚合。现将发现过程纳入每个已选 probe 的错误边界，
+  保留单一脱敏 JSON 和后续 probe 结果，不修改 Vault。
+- application diagnostics 直接实现具体探测。现由 CLI 注入 `DiagnosticProbePort`，
+  具体 Git/SQLite/Zotero/Vault 操作位于 adapter，应用层保留选择、聚合和退出策略。
+  既有 scanner 的健康检查由 CLI 注入，诊断 adapter 不反向导入应用服务。
+
+这是一项依赖完整性和实现边界修复，不改变 durable schema、review evidence 版本、CLI
+参数或 JSON 版本。旧不完整 evidence 保持可读，但不能静默补填或授权晋升，须准备新候选；
+既有已完成晋升的幂等重试规则保持不变。决策与兼容性说明见 ADR-0018 和 data-model。
+
+回归记录：修复前 5 个用例全部失败；修复后新增回归与 doctor 定向套件 33 passed，
+Ruff 和 mypy（103 个源文件）在两个环境均通过。最终代码在 Windows Python 3.13.14 与
+3.14.6 的完整套件各为 680 passed、3 skipped，退出 0。跳过仍仅为长路径、账户 symlink
+权限及 POSIX 权限语义；Phase 5 无跳过，既有 Starlette/httpx 弃用 warning 未新增。
+wheel/sdist 已重新构建并通过分发审计。两版 Python 均使用最终同一 wheel，在源码树外
+完成 Phase 1/2B、3、4、5 的 core/optional 安装验收，以及安装、升级、降级、卸载保持
+Vault 字节不变的生命周期检查；全部退出 0。最终 wheel SHA-256 为
+`9f688c66107f10c2615bb75ac9a74ebf3bbc0ce374fa9ca5f51e54dc241c02ff`。
+收口文档更新后另跑内部链接检查与 diff whitespace 检查，均通过。
+全部测试使用合成数据，临时重现脚本、环境和生成包保持忽略，未使用个人知识库。
+
+Git 边界：2026-09-14 用户已明确授权提交、推送本次修复；远程检查通过后，再提交、推送
+并验证完成记录。先验证本次修复精确 SHA 的完整 CI 与 Package smoke，再更新并验证完成记录。
+本修复提交的 SHA、远程链接及随后完成记录的定位规则将在通过门禁后的文档中记录；
+未获得两次精确提交的成功证据前，不宣布 Phase 5 Complete。
