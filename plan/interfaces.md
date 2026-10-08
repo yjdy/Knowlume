@@ -232,10 +232,12 @@ and the fixed message `invalid command arguments; consult command help`. AI and 
 `AI_ARGUMENT_INVALID` and `DOCTOR_ARGUMENT_INVALID` and their existing safe messages. Raw parser
 exceptions and user argument values must not appear in these JSON diagnostics.
 
-An independent `--json` token before the first `--` terminator requests this behavior. Tokens after
-the terminator and values supplied as `--option=--json` do not request it. A requested `--json`
-consumed as another option's value is rejected before any business operation, even when another
-`--json` flag is present. Explicit help keeps the framework's existing output and exit behavior;
+An independent `--json` token before the first `--` terminator requests this behavior. A `--`
+consumed as an option value is not a terminator; a subsequent independent `--json` still requests
+JSON. Tokens after the actual terminator and values supplied as `--option=--json` do not request it.
+A requested `--json` consumed as another option's value is rejected before any business
+operation, even when another `--json` flag is present. Explicit help keeps the framework's existing
+output and exit behavior;
 without JSON intent, ordinary text usage errors remain unchanged.
 
 This applies to `add`, `inbox`, `process`, `source list/show/sync`, `grep`, `get`, `search`,

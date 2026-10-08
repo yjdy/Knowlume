@@ -2,7 +2,7 @@
 
 本文档记录所有已规划 `kb` 命令的用途、交付阶段、实现方案、当前状态和验证证据，用于每次 CLI 变更后的对比与验收。
 
-> Last synchronized: 2026-10-04
+> Last synchronized: 2026-10-08
 > Contract baseline: Contract v2 / machine interface v1  
 > Current delivery state: Phase 4 Complete; Phase 5 Verified including review fixes; completion record subject to its exact-SHA gate
 
@@ -47,8 +47,22 @@ Ruff、mypy、内部文档链接、wheel/sdist 分发审计均通过。
 `verify_installed_phase1.py`（含 Phase 2A/2B）、`verify_installed_phase3.py`、
 `verify_installed_phase4.py`、`verify_installed_phase5.py` 及 `verify_install_lifecycle.py`
 全部通过，覆盖源码目录外 core-only/可选依赖和 vault 不受安装生命周期影响。
-此处既有远程链接只支持其对应历史提交，不作为本次修复的远程证据；
-本次未触发远程工作流，其他平台及 Python 3.13 的新修复结果尚未核验。
+2026-10-08 远程核验：用户推送的 `49b415558c033b8f527060a240e15f3654362940`
+通过 [CI](https://github.com/yjdy/Knowlume/actions/runs/37771623877) 和
+[Package smoke](https://github.com/yjdy/Knowlume/actions/runs/37771623892)。
+Windows、macOS、Linux × Python 3.13/3.14 六种组合的完整测试、Ruff、mypy 与安装检查均成功；
+两项构建及分发审计也通过，共 14 个作业，所有步骤均为 success。
+安装检查包含 uv tool、pipx、Phase 1–5 与保留 vault 的包生命周期。
+
+后续本地修复已针对审查发现的 P2 边界缺陷增加真实 CLI 回归：字符串选项消费 `--`
+为值时，后续 `--json` 仍触发安全 JSON 参数错误；若其再次被选项误消费，即使还有
+独立 `--json`，也会在业务入口前拒绝。第二个真正的 `--` 之后仍按普通参数终止规则处理。
+本次本地验收（Windows / Python 3.14.6）：JSON 命令回归 82 项通过，完整套件
+`762 passed, 3 skipped`（另有既有 Starlette/httpx 弃用提示），Ruff、mypy、
+内部文档链接、wheel/sdist 分发审计均通过。源码目录外的 Phase 1–5 安装检查
+及包安装生命周期检查全部通过，测试 vault 在安装、升级、降级、卸载后保持不变。
+前述远程成功结果仅对应 `49b4155`，不覆盖这项尚未提交的修复；
+本次修复的其他平台及 Python 3.13 结果仍待远程核验。
 
 ## Release foundation
 
@@ -210,6 +224,8 @@ required revision tokens and explicit human decisions.
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-10-08 | 修复选项值 `--` 被误判为参数终止符 | JSON 意图与误消费判断先按选项 arity 跳过值，再识别实际终止符；新增参数失败、业务零调用、显式值和实际终止符回归；本地完整套件、静态检查、分发及隔离安装验收通过，远程记录仍对应 `49b4155` |
+| 2026-10-08 | 核验 JSON 修复提交的跨平台 CI 与安装门禁 | `49b415558c033b8f527060a240e15f3654362940` 的 CI/Package smoke 六种组合、14 个作业及全部步骤通过；证据见上方共享记录；该提交仍含审查发现的 P2 终止符误判 |
 | 2026-10-04 | 统一现有 18 个 JSON 命令的参数错误输出 | 共享命令层处理解析错误和误消费标志；interface v1、AI/doctor 诊断码、业务行为及阶段归属不变；新增命令级与 core-only 安装回归，完整验收结果见上方共享记录 |
 | 2026-09-14 | 修复 Phase 5 审查发现的三项问题并重新验收 | `1cf410cf9e7168394e907424732ed8c860964d4d` 的 [CI](https://github.com/yjdy/Knowlume/actions/runs/34797875616) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/34797875619) 全部通过；Snippet Source 纳入审核证据，doctor 发现失败保持聚合，具体 probes 经 port 注入；完成记录须通过自身相同门禁 |
 | 2026-09-12 | 完成 Phase 5 local automation and auditable AI review/promotion | P5-C1～C9 feature `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` 通过六种平台/Python 组合的 [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402)；AI 命令和 doctor probes 标记 Verified；P5-C10 完成记录另须自身同矩阵通过，不包含 PR/合并/tag/发布 |

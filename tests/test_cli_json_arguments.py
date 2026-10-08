@@ -78,6 +78,7 @@ def no_operations(monkeypatch: pytest.MonkeyPatch) -> None:
         "_capture_service",
         "_source_service",
         "_projection",
+        "_query_service",
         "check_for_updates",
         "doctor_report",
     ):
@@ -210,9 +211,52 @@ def test_second_json_flag_does_not_allow_consumed_value(
 
 
 @pytest.mark.parametrize(
+    ("command", "arguments"),
+    [
+        ("search", ["knowledge", "--tag", "--", "--limit", "private-number", "--json"]),
+        ("source list", ["--type", "--", "--synthetic-private-input", "--json"]),
+        ("search", ["knowledge", "--tag", "--", "--tag", "--json", "--json"]),
+        ("doctor", ["--probe", "--", "--probe", "--json", "--json"]),
+        (
+            "ai review",
+            [
+                "synthetic-id",
+                "--reviewer",
+                "--",
+                "--reviewer",
+                "--json",
+                "--json",
+                "--decision",
+                "accepted",
+                "--expect-checksum",
+                "hash",
+            ],
+        ),
+    ],
+)
+def test_option_value_double_dash_does_not_end_json_intent(
+    command: str,
+    arguments: list[str],
+    no_operations: None,
+) -> None:
+    result = RUNNER.invoke(cli.app, [*command.split(), *arguments])
+    assert_failure(result, command)
+    assert "private-number" not in result.output
+    assert "synthetic-private-input" not in result.output
+
+
+def test_actual_terminator_after_double_dash_option_value_keeps_human_usage(
+    no_operations: None,
+) -> None:
+    result = RUNNER.invoke(cli.app, ["search", "knowledge", "--tag", "--", "--", "--json"])
+    assert result.exit_code == 2 and result.stdout == "" and "Usage:" in result.stderr
+
+
+@pytest.mark.parametrize(
     "arguments",
     [
         ["knowledge", "--tag=--json", "--json"],
+        ["knowledge", "--tag", "--", "--json"],
         ["knowledge", "--tag", "--scope", "--json"],
         ["--json", "--", "--json"],
     ],

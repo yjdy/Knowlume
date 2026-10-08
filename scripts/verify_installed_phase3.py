@@ -81,6 +81,11 @@ def _verify_json_arguments(kb: Path, work: Path) -> None:
             ("context", ["knowledge", "--json"]),
             ("context", ["knowledge", "--scope", "--json", "--json"]),
             ("search", ["knowledge", "--limit", "synthetic-private-input", "--json"]),
+            (
+                "search",
+                ["knowledge", "--tag", "--", "--limit", "synthetic-private-input", "--json"],
+            ),
+            ("search", ["knowledge", "--tag", "--", "--tag", "--json", "--json"]),
             ("source show", ["--json"]),
             ("doctor", ["--probe", "--json", "--json"]),
         ]

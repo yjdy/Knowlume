@@ -50,31 +50,36 @@ class JSONCommand(TyperCommand):
     argument_message = "invalid command arguments; consult command help"
     consumed_message = argument_message
 
-    def _consumed_json(self, ctx: Any, args: list[str]) -> bool:
-        # Use declared option arity to distinguish `--tag --json` from the literal
-        # value in `--tag=--json`. Skip values, so `--tag --scope --json` is valid.
+    def _json_intent(self, ctx: Any, args: list[str]) -> tuple[bool, bool]:
+        # Skip declared option values before looking for a terminator. A `--`
+        # consumed by `--tag` is a value, while the next `--` ends parsing.
         options = {
             name: param
             for param in self.get_params(ctx)
             for name in param.opts
             if name.startswith("-")
         }
-        tokens = _option_tokens(args)
+        requested = False
+        consumed = False
         index = 0
-        while index < len(tokens):
-            name, equals, _value = tokens[index].partition("=")
+        while index < len(args):
+            token = args[index]
+            if token == "--":
+                break
+            if token == "--json":
+                requested = True
+            name, equals, _value = token.partition("=")
             option = options.get(name)
             if option is not None and not getattr(option, "is_flag", False) and not equals:
-                values = tokens[index + 1 : index + 1 + option.nargs]
+                values = args[index + 1 : index + 1 + option.nargs]
                 if "--json" in values:
-                    return True
+                    requested = consumed = True
                 index += option.nargs
             index += 1
-        return False
+        return requested, consumed
 
     def parse_args(self, ctx: Any, args: list[str]) -> list[str]:
-        requested = json_requested(args)
-        consumed = self._consumed_json(ctx, args) if requested else False
+        requested, consumed = self._json_intent(ctx, args)
         try:
             remaining = super().parse_args(ctx, args)
         except UsageError:
