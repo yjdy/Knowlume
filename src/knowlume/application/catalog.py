@@ -7,7 +7,7 @@ from typing import Any, Literal, cast
 
 from knowlume.application.query import get_object
 from knowlume.application.scanning import ScanResult, scan_vault
-from knowlume.domain.models import AIArtifact, Note, Source
+from knowlume.domain.models import AIArtifact, Note, NoteBody, Source
 from knowlume.domain.values import (
     DomainError,
     Maturity,
@@ -295,6 +295,25 @@ class CatalogQueryService:
         result = get_object(vault, object_id, scan=scan)
         if cast(dict[str, object], result["object"])["kind"] != expected_kind:
             raise DomainError("OBJECT_NOT_FOUND", "object ID was not found")
+        relations = cast(dict[str, list[dict[str, object]]], result["relations"])
+        related_ids = {object_id}
+        for direction, entries in relations.items():
+            related_ids.update(
+                str(entry["to_id" if direction == "outgoing" else "from_id"])
+                for entry in entries
+            )
+        related_objects = {}
+        for scanned in scan.objects.values():
+            document = scanned.document
+            identity = str(document.object.id)
+            if identity in related_ids:
+                related_objects[identity] = {
+                    "title": document.object.title,
+                    "section_ids": [str(section.section_id) for section in document.body.sections]
+                    if isinstance(document.body, NoteBody)
+                    else [],
+                }
+        result["related_objects"] = related_objects
         return result
 
     def health(self, vault: Vault, *, page: int = 1) -> dict[str, object]:

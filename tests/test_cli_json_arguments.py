@@ -18,6 +18,7 @@ from knowlume.domain.values import DomainError
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = CliRunner()
 JSON_COMMANDS = (
+    "note new",
     "add",
     "inbox",
     "process",
@@ -167,7 +168,6 @@ def test_help_and_human_usage_remain_compatible(command: str, no_operations: Non
         ["--json", "context", "knowledge"],
         ["source", "unknown", "--json"],
         ["index", "--json"],
-        ["note", "new", "--json"],
         ["source", "open", "--json"],
     ],
 )

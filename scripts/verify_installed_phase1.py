@@ -154,6 +154,52 @@ def main() -> int:
         _run([str(kb), "init", str(vault)], cwd=work)
         shutil.copyfile(SOURCE_FIXTURE, vault / "sources/papers/paper.md")
         base = [str(kb), "--vault", str(vault)]
+        located = _run(
+            [*base, "note", "new", "--type", "idea", "--title", '中文："定位"', "--json"],
+            cwd=work,
+        )
+        document = json.loads(located.stdout)
+        assert located.stderr == "" and document["command"] == "note new"
+        assert document["success"] and set(document["data"]) == {"object_id", "path"}
+        path = document["data"]["path"]
+        assert not Path(path).is_absolute() and "\\" not in path
+        _run(
+            [
+                str(python),
+                "-c",
+                "import sys; from pathlib import Path; "
+                "from knowlume.adapters.contract_v2 import parse_object_document; "
+                "from knowlume.resources import read_asset_text; "
+                "read_asset_text('schemas/interfaces/note-create-result-v1.schema.json'); "
+                "d=parse_object_document(Path(sys.argv[1]).read_text(encoding='utf-8')); "
+                "assert d.object.title == sys.argv[2]",
+                str(vault / path),
+                '中文："定位"',
+            ],
+            cwd=work,
+        )
+        before_invalid = {
+            p.relative_to(vault): p.read_bytes() for p in vault.rglob("*") if p.is_file()
+        }
+        invalid_title = _run_result(
+            [*base, "note", "new", "--type", "idea", "--title", "private\ntext", "--json"],
+            cwd=work,
+        )
+        assert invalid_title.returncode == 2 and invalid_title.stderr == ""
+        assert json.loads(invalid_title.stdout)["errors"][0]["code"] == "NOTE_TITLE_INVALID"
+        assert "private" not in invalid_title.stdout
+        assert before_invalid == {
+            p.relative_to(vault): p.read_bytes() for p in vault.rglob("*") if p.is_file()
+        }
+        demo_script = Path(__file__).with_name("daily_workflow_demo.py")
+        demo = _run(
+            [str(python), str(demo_script), "--kb", str(kb), "--vault", str(root / "daily-demo")],
+            cwd=work,
+        )
+        demo_report = json.loads(demo.stdout)
+        assert demo_report["bilingual_search"] == "passed"
+        assert demo_report["ai_conflict"] == "VAULT_WRITE_CONFLICT"
+        assert demo_report["real_trial"] == "not_run"
         _run([*base, "scan"], cwd=work)
         _run([*base, "status"], cwd=work)
         _run([*base, "lint"], cwd=work)

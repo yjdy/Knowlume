@@ -463,6 +463,7 @@ def test_interface_and_migration_report_contracts(
             "grep-result-v1",
             "index-result-v1",
             "migration-report-v1",
+        "note-create-result-v1",
             "search-result-v1",
         "source-list-result-v1",
         "source-show-result-v1",

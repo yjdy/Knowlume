@@ -55,6 +55,7 @@ removal never migrate or delete a vault.
 | 3 — Projection/search | SQLite rebuild/index, FTS, bilingual normalization, context assembly | deleting SQLite and rebuilding is deterministic; every FTS hit returns to durable segment/section |
 | 4 — Read-only Web | loopback Dashboard, Sources, Notes, Search, health views | Web and CLI share services and business rules; Web has no mutations |
 | 5 — Automation/AI | machine context, AI review/promotion, explicit scopes, doctor | AI cannot cross review, privacy, or provenance boundaries |
+| 科研日用闭环 — after 5, before 6A | titled Note creation with JSON location, body-first read-only Web, stable section links, recovery guidance, synthetic offline workflow | [execution goal](daily-workflow-goal.md) local/distribution/installed and exact-commit remote gates; real Zotero/editor trial recorded separately |
 | 6A — Evolution | merge, supersede, history, backlinks, review/tidy suggestions | IDs, actors, relations, and history remain complete |
 | 6B — Publishing | closure audit, atomic staging, preview/build, Quartz adapter | adversarial private, AI, path, and rights cases fail closed |
 | 7 — Advanced | semantic/hybrid search, MCP, graph, multi-agent workflows | evaluated only after earlier gates remain stable |
@@ -76,6 +77,11 @@ removal never migrate or delete a vault.
 | `publish audit/build/preview` | 6B | complete closure and adversarial staging tests |
 
 This matrix is the only delivery-batch authority.
+
+The supplemental 科研日用闭环 milestone follows accepted [ADR-0019](decisions/0019-research-daily-workflow.md).
+Existing Note and Web commands retain Phase 1 and Phase 4 ownership. Its local engineering gates
+passed; exact-implementation-commit remote gates remain pending. Real Zotero/PDF/editor trial
+is separately not run. The historical review reports remain proposals/evidence, not interface authorities.
 
 ## Phase 2A executable gate
 

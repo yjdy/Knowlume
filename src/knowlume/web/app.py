@@ -18,7 +18,7 @@ from knowlume.application.catalog import CatalogQueryService
 from knowlume.application.query import QueryService
 from knowlume.application.rendering import SafeMarkdownRenderer, safe_external_url
 from knowlume.domain.search import ContextScope, SearchFilters
-from knowlume.domain.values import DomainError
+from knowlume.domain.values import DomainError, ObjectId, SectionId
 from knowlume.ports.vault import Vault
 from knowlume.resources import AssetError, read_asset_bytes, read_asset_text
 
@@ -88,13 +88,24 @@ def _format_value(value: object) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(", ", ": "))
 
 
-def _object_href(value: object) -> str | None:
+def _object_href(value: object, section_id: object = None) -> str | None:
     if not isinstance(value, str):
+        return None
+    try:
+        ObjectId(value)
+    except DomainError:
         return None
     if value.startswith("src_"):
         return f"/sources/{value}"
     if value.startswith("note_"):
-        return f"/notes/{value}"
+        href = f"/notes/{value}"
+        if isinstance(section_id, str):
+            try:
+                SectionId(section_id)
+            except DomainError:
+                return href
+            href += f"#{section_id}"
+        return href
     return None
 
 
@@ -210,11 +221,13 @@ def _domain_web_error(error: DomainError) -> WebHttpError:
     if error.code == "OBJECT_NOT_FOUND":
         return WebHttpError(404, error.code, "对象不存在。")
     recoveries = {
-        "INDEX_NOT_FOUND": "kb index build",
-        "INDEX_SOURCE_CHANGED": "kb index build",
-        "INDEX_SOURCE_INVALID": "kb index build",
-        "INDEX_INCOMPATIBLE": "kb index rebuild",
-        "INDEX_CORRUPT": "kb index rebuild",
+        "INDEX_NOT_FOUND": "kb --vault <VAULT_ROOT> index build",
+        "INDEX_SOURCE_CHANGED": "kb --vault <VAULT_ROOT> index build",
+        "INDEX_SOURCE_INVALID": (
+            "kb --vault <VAULT_ROOT> lint；修正文件后，kb --vault <VAULT_ROOT> index build"
+        ),
+        "INDEX_INCOMPATIBLE": "kb --vault <VAULT_ROOT> index rebuild",
+        "INDEX_CORRUPT": "kb --vault <VAULT_ROOT> index rebuild",
     }
     if recovery := recoveries.get(error.code):
         return WebHttpError(503, error.code, "搜索索引当前不可用。", recovery=recovery)

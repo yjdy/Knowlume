@@ -38,6 +38,7 @@ REQUIRED_ASSETS = (
     "schemas/v2/objects.schema.json",
     "schemas/v2/note-body.schema.json",
     "schemas/interfaces/cli-envelope-v1.schema.json",
+    "schemas/interfaces/note-create-result-v1.schema.json",
     "schemas/interfaces/update-check-result-v1.schema.json",
     "schemas/interfaces/source-list-result-v1.schema.json",
     "schemas/interfaces/source-show-result-v1.schema.json",

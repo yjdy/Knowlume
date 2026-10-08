@@ -42,6 +42,8 @@ of the feature phases. Public command status and verification evidence are track
 | [`phase4-goal.md`](phase4-goal.md) | Phase 4 local read-only Web, security, packaging, browser acceptance, and rollback gates |
 | [`phase5-goal.md`](phase5-goal.md) | Phase 5 local automation, AI review/promotion and doctor probes; review-fix remote gates passed under ADR-0018, completion record effective with its own exact-SHA gates |
 | [`phase5-usage.md`](phase5-usage.md) | Phase 5 synthetic intake example, explicit human review, promotion retries, local script and diagnostic usage |
+| [`daily-workflow-goal.md`](daily-workflow-goal.md) | 科研日用闭环 cross-phase execution goal; local/remote and real integration gates recorded separately |
+| [`daily-workflow-usage.md`](daily-workflow-usage.md) | Chinese offline tutorial for creation, editing, validation, index recovery, reading and synthetic AI review |
 | [`migrations/v1-to-v2.md`](migrations/v1-to-v2.md) | v1-to-v2 migration behavior |
 | [`decisions/`](decisions/) | accepted architecture decisions |
 | [`chapter-map.md`](chapter-map.md) | completed historical design migration audit |

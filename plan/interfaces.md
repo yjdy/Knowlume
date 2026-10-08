@@ -20,7 +20,7 @@ kb status                         kb scan
 kb add INPUT [--type paper|web|book|repo] [--json]
 kb source [list|show|open|sync]
 kb inbox                          kb process SOURCE_ID
-kb note new --type idea|literature|concept|synthesis [--source SOURCE_ID]
+kb note new --type idea|literature|concept|synthesis [--source SOURCE_ID] [--title TITLE] [--json]
 kb note show ID                   kb note evolve ID --to concept
 kb relation add FROM_ID TO_ID --type TYPE [--section SECTION_ID]
 kb relation remove FROM_ID TO_ID --type TYPE [--section SECTION_ID]
@@ -62,6 +62,29 @@ implicitly create a missing candidate. Configuration, discovery, conflict, recov
 diagnostics are frozen by [ADR-0011](decisions/0011-phase1-vault-and-transaction-contracts.md).
 
 ## Capture and mutation behavior
+
+### Note creation — 科研日用闭环
+
+Under [ADR-0019](decisions/0019-research-daily-workflow.md), `note new` keeps its default
+`Untitled TYPE` title and ID-only non-JSON stdout. `--title` trims surrounding whitespace and
+rejects empty titles, line breaks and control characters before scanning or writing, with the
+safe fixed `NOTE_TITLE_INVALID` diagnostic (exit 2). Typed Note serialization handles quoting;
+filenames retain stable IDs. Literature still requires an existing Source and transactional
+Note/relation creation; other types may be source-free.
+
+JSON uses envelope v1, command `note new`, and
+[note-create-result v1](../schemas/interfaces/note-create-result-v1.schema.json). The path is
+the actual write location relative to the selected vault, in POSIX form. Discovery and business
+failures use their existing codes/exit mappings; successful refresh warnings enter the envelope
+without duplicate stderr. Shared JSON argument-error rules apply, bringing the inventory to 19.
+This is additive interface v1; durable Contract v2 and templates are unchanged, with no migration.
+
+Note Web pages prioritize content, roles and citations, then relations, then native collapsible
+audit details. Search links preserve stable section IDs. Relation titles and target section
+existence come from one catalog snapshot; incoming target sections link to the current object.
+CLI `get` is unchanged. Missing/stale indexes require explicit build, incompatible/corrupt ones
+rebuild, invalid source files lint and correction first. Recovery examples use `<VAULT_ROOT>`
+for the same vault selected when starting the server. Page loads remain read-only.
 
 The only public capture surface is `kb add INPUT [--type paper|web|book|repo] [--json]`. It is released in Phase 2B only after all four capture paths pass their gates. Phase 2A delivers the internal paper/Zotero capture service without exposing a partial parent command. CLI type `repo` maps to durable `source_type: oss`.
 

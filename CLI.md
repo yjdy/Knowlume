@@ -68,6 +68,19 @@ Windows、macOS、Linux × Python 3.13/3.14 六种组合的完整测试、Ruff�
 完整测试、Ruff、mypy、安装包命令检查、包生命周期及两项构建/分发审计全部成功；
 两个工作流共 14 个作业、所有步骤均为 success。前述 `49b4155` 链接保留为历史证据。
 
+## 科研日用闭环补充交付（2026-10-08）
+
+范围和门禁见 [执行目标](plan/daily-workflow-goal.md)；既有阶段归属不变。
+`note new` 增加标题与 JSON 实际文件定位，JSON 命令库存由 18 扩至 19。
+本轮状态 `Implemented`：Windows / Python 3.14.6 完整套件 809 passed / 3 skipped，
+Ruff、mypy、文档链接、分发审计、Phase 1–5 隔离安装及包生命周期均通过。
+共享 JSON 参数回归 83 项；新增创建/Web/离线流程回归见
+[`test_daily_workflow_notes.py`](tests/test_daily_workflow_notes.py)、
+[`test_daily_workflow_web.py`](tests/test_daily_workflow_web.py)、
+[`test_daily_workflow_demo.py`](tests/test_daily_workflow_demo.py)。
+收尾无效引用零写入回归已包含在完整复验中；用户已授权提交和推送，实际实现提交远程门禁待执行。
+历史 JSON 修复及审视文档保留，不作为本轮新功能的验收替代。
+
 ## Release foundation
 
 | ID | Command | Description | Implementation plan | Status | Verification |
@@ -84,7 +97,7 @@ Windows、macOS、Linux × Python 3.13/3.14 六种组合的完整测试、Ruff�
 | `scan` | `kb scan` | 扫描并解析 v2 对象、Note body 和 relation shards | Vault discovery、parser、semantic validation、scanner | `Verified` | `tests/test_phase1_scanner_cli.py`; complete suite |
 | `status` | `kb status` | 汇总对象、工作流、健康和可用能力状态 | Scanner 结果上的只读 application service | `Verified` | `tests/test_phase1_scanner_cli.py`; complete suite |
 | `lint` | `kb lint [--strict\|--changed]` | 报告契约、引用、provenance、关系和安全问题 | 类型化 findings；`--changed` 仅过滤完整扫描后的显示结果 | `Verified` | `tests/test_phase1_scanner_cli.py`; complete suite |
-| `note.new` | `kb note new --type idea\|literature\|concept\|synthesis [--source SOURCE_ID]` | 从 v2 模板创建 Note；Literature 显式绑定 Source | Domain factory、稳定 ID/section、冲突安全写入 | `Verified` | `tests/test_phase1_notes_cli.py`; complete suite |
+| `note.new` | `kb note new --type idea\|literature\|concept\|synthesis [--source SOURCE_ID] [--title TITLE] [--json]` | 从 v2 模板创建 Note；Literature 显式绑定 Source；标题与实际文件定位 | Typed serialization、稳定 ID/section、冲突安全写入、note-create-result v1 | `Verified` | `tests/test_phase1_notes_cli.py`; `tests/test_daily_workflow_notes.py`; shared JSON regression; isolated core wheel/demo; complete suite |
 | `note.show` | `kb note show ID` | 按稳定 ID 显示规范化 Note | Object lookup、body parser、人类 renderer | `Verified` | `tests/test_phase1_notes_cli.py`; complete suite |
 | `note.evolve` | `kb note evolve ID --to concept` | 将 Idea 原位演化为 Concept | 保留对象/section ID，追加 `type_history`，原子写入 | `Verified` | `tests/test_phase1_notes_cli.py`; complete suite |
 | `relation.add` | `kb relation add FROM_ID TO_ID --type TYPE [--section SECTION_ID]` | 向来源对象分片增加关系 | 关系矩阵、canonical identity、分片所有权、冲突安全写入 | `Verified` | `tests/test_phase1_relations_cli.py`; complete suite |

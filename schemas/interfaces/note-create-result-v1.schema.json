@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowlume.dev/schemas/interfaces/note-create-result-v1.schema.json",
+  "title": "Knowlume Note creation result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["object_id", "path"],
+  "properties": {
+    "object_id": {"type": "string", "pattern": "^note_[0-9A-HJKMNP-TV-Z]{26}$"},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$)).+"}
+  }
+}

@@ -429,7 +429,7 @@ def test_search_empty_missing_fresh_filters_and_htmx_match_query_service(tmp_pat
         missing = client.get("/search?q=Knowledge")
         assert missing.status_code == 503
         assert "INDEX_NOT_FOUND" in missing.text
-        assert "kb index build" in missing.text
+        assert "kb --vault &lt;VAULT_ROOT&gt; index build" in missing.text
         _assert_security_headers(missing)
 
     store.build(vault, rebuild=True)
@@ -551,7 +551,7 @@ def test_search_stale_incompatible_and_corrupt_recovery_pages(tmp_path: Path) ->
         stale = client.get("/search?q=Knowledge")
         assert stale.status_code == 503
         assert "INDEX_SOURCE_CHANGED" in stale.text
-        assert "kb index build" in stale.text
+        assert "kb --vault &lt;VAULT_ROOT&gt; index build" in stale.text
         _assert_security_headers(stale)
 
     store.build(vault)
@@ -564,7 +564,7 @@ def test_search_stale_incompatible_and_corrupt_recovery_pages(tmp_path: Path) ->
         incompatible = client.get("/search?q=Knowledge")
         assert incompatible.status_code == 503
         assert "INDEX_INCOMPATIBLE" in incompatible.text
-        assert "kb index rebuild" in incompatible.text
+        assert "kb --vault &lt;VAULT_ROOT&gt; index rebuild" in incompatible.text
         _assert_security_headers(incompatible)
 
     store.build(vault, rebuild=True)
@@ -574,7 +574,7 @@ def test_search_stale_incompatible_and_corrupt_recovery_pages(tmp_path: Path) ->
         corrupt = client.get("/search?q=Knowledge")
         assert corrupt.status_code == 503
         assert "INDEX_CORRUPT" in corrupt.text
-        assert "kb index rebuild" in corrupt.text
+        assert "kb --vault &lt;VAULT_ROOT&gt; index rebuild" in corrupt.text
         _assert_security_headers(corrupt)
 
 

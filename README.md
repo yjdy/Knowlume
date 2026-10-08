@@ -38,6 +38,10 @@ Windows/macOS/Linux × Python 3.13/3.14 的
 使用方式见 [Phase 5 工作流](plan/phase5-usage.md)，验收证据见
 [Phase 5 目标](plan/phase5-goal.md)。本阶段不包含模型调用、Web 写入或软件包发布。
 
+科研日用闭环见 [中文使用指南](plan/daily-workflow-usage.md)：创建带标题的 Note、通过 JSON
+定位文件、编辑正文与引用、校验、刷新索引、检索并阅读稳定 section。
+其范围与分开的工程/真实试用门禁见 [执行目标](plan/daily-workflow-goal.md)。
+
 ```text
 Phase 0R  Contract v2                         Complete
 Release   Python package foundation           Implemented

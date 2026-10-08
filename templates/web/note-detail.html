@@ -3,8 +3,6 @@
 {% block content %}
 <article>
   <header class="detail-heading"><p class="eyebrow">NOTE · {{ detail.object.note_type }}</p><h1>{{ detail.object.title }}</h1><p><code>{{ detail.object_id }}</code></p></header>
-  <section class="panel" aria-labelledby="traceability"><h2 id="traceability">可追溯信息</h2><dl class="metadata"><div><dt>path</dt><dd><code>{{ detail.path }}</code></dd></div><div><dt>checksum</dt><dd><code>{{ detail.checksum }}</code></dd></div></dl></section>
-  <section aria-labelledby="note-fields"><h2 id="note-fields">规范化字段</h2>{% with metadata=detail.object, excluded=[] %}{% include "partials/metadata.html" %}{% endwith %}</section>
   <section aria-labelledby="note-sections">
     <h2 id="note-sections">稳定 Sections</h2>
     {% for section in detail.body.sections %}
@@ -22,5 +20,10 @@
     {% endfor %}
   </section>
   {% include "partials/relations.html" %}
+  <details class="panel">
+    <summary>可追溯信息与规范化字段</summary>
+    <section aria-labelledby="traceability"><h2 id="traceability">可追溯信息</h2><dl class="metadata"><div><dt>path</dt><dd><code>{{ detail.path }}</code></dd></div><div><dt>checksum</dt><dd><code>{{ detail.checksum }}</code></dd></div></dl></section>
+    <section aria-labelledby="note-fields"><h2 id="note-fields">规范化字段</h2>{% with metadata=detail.object, excluded=[] %}{% include "partials/metadata.html" %}{% endwith %}</section>
+  </details>
 </article>
 {% endblock %}

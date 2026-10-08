@@ -251,6 +251,14 @@ def main() -> int:
             status, _headers, body = _request(base + "/search?q=Transformer", method="HEAD")
             if status != 200 or body:
                 raise RuntimeError("installed HEAD behavior failed")
+            _status, _headers, body = _request(base + "/search?q=subspaces")
+            section_url = "/notes/note_01JSTAG7N9Q3V5X8Y2Z4A6B8D2#sec_attention_interpretation"
+            if section_url not in body.decode("utf-8"):
+                raise RuntimeError("installed search did not link to stable Note section")
+            _status, _headers, body = _request(base + "/notes/note_01JSTAG7N9Q3V5X8Y2Z4A6B8D2")
+            html = body.decode("utf-8")
+            if not html.index('id="note-sections"') < html.index("<details"):
+                raise RuntimeError("installed Note did not prioritize its body")
             connection = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
             connection.request("GET", "/", headers={"Host": f"evil.example:{port}"})
             rejected = connection.getresponse()

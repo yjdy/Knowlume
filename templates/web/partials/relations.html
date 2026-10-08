@@ -8,9 +8,16 @@
     <li>
       <span class="status">{{ relation.relation_type }}</span>
       {% set related_id = relation.to_id if direction == 'outgoing' else relation.from_id %}
-      {% set href = object_href(related_id) %}
-      {% if href %}<a href="{{ href }}"><code>{{ related_id }}</code></a>{% else %}<code>{{ related_id }}</code>{% endif %}
-      {% if relation.get('to_section_id') %}<code>#{{ relation.to_section_id }}</code>{% endif %}
+      {% set related = detail.related_objects.get(related_id, {}) %}
+      {% set target_section = relation.get('to_section_id') %}
+      {% set outgoing_section = target_section if direction == 'outgoing' and target_section in related.get('section_ids', []) else none %}
+      {% set href = object_href(related_id, outgoing_section) %}
+      {% if href %}<a href="{{ href }}">{{ related.get('title', related_id) }} <code>{{ related_id }}</code></a>{% else %}<span>{{ related.get('title', related_id) }}</span> <code>{{ related_id }}</code>{% endif %}
+      {% if target_section %}
+        {% set current = detail.related_objects.get(detail.object_id, {}) %}
+        {% set section_href = object_href(detail.object_id, target_section) if direction == 'incoming' and target_section in current.get('section_ids', []) else none %}
+        {% if section_href %}<a href="{{ section_href }}"><code>#{{ target_section }}</code></a>{% else %}<code>#{{ target_section }}</code>{% endif %}
+      {% endif %}
       {% if relation.get('locator') %}<span class="meta">{{ relation.locator|display }}</span>{% endif %}
       {% if relation.get('reason') %}<span>{{ relation.reason }}</span>{% endif %}
     </li>

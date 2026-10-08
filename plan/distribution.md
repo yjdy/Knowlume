@@ -48,6 +48,11 @@ The source distribution additionally includes the repository's public `scripts/`
 local workflow example and installed-wheel verifier are required source-distribution members and
 are audited against their source bytes. They are not wheel runtime modules or extra CLI commands.
 
+The 科研日用闭环 [offline tutorial](daily-workflow-usage.md),
+[`daily_workflow_demo.py`](../scripts/daily_workflow_demo.py), and its labelled synthetic Source
+and Artifact fixtures under `tests/fixtures/daily-workflow/` are also required, byte-audited sdist
+members. They are source tooling only; the core wheel retains the existing runtime allowlist.
+
 ## User state and compatibility
 
 `platformdirs` supplies per-user configuration, cache, state, and log directories. These directories contain no durable knowledge. A user-level configuration may point to a default independent vault, but no command implicitly creates or selects a vault when resolution is ambiguous.

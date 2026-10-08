@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
+from unicodedata import category
 
 from knowlume.adapters.contract_v2 import (
     parse_object_document,
@@ -44,6 +45,12 @@ FOLDER_BY_TYPE = {
 }
 
 
+@dataclass(frozen=True)
+class NoteCreationResult:
+    object_id: ObjectId
+    path: str
+
+
 class NoteService:
     def __init__(
         self,
@@ -67,8 +74,35 @@ class NoteService:
         return result
 
     def create(
-        self, vault: Vault, note_type_value: str, *, source_id_value: str | None = None
+        self,
+        vault: Vault,
+        note_type_value: str,
+        *,
+        source_id_value: str | None = None,
+        title: str | None = None,
     ) -> ObjectId:
+        return self.create_with_result(
+            vault, note_type_value, source_id_value=source_id_value, title=title
+        ).object_id
+
+    def create_with_result(
+        self,
+        vault: Vault,
+        note_type_value: str,
+        *,
+        source_id_value: str | None = None,
+        title: str | None = None,
+    ) -> NoteCreationResult:
+        if title is not None:
+            if not title.strip() or any(
+                category(character) == "Cc" or character in "\u2028\u2029"
+                for character in title
+            ):
+                raise DomainError(
+                    "NOTE_TITLE_INVALID",
+                    "title must be non-empty and contain no line breaks or control characters",
+                )
+            title = title.strip()
         note_type = enum_value(NoteType, note_type_value, field="Note type")
         if note_type is NoteType.LITERATURE and source_id_value is None:
             raise DomainError("NOTE_SOURCE_REQUIRED", "Literature Note requires --source SOURCE_ID")
@@ -84,15 +118,18 @@ class NoteService:
                 )
         note_id = ObjectId(f"note_{self._ulid_factory()}")
         today = self._clock().date().isoformat()
-        title = f"Untitled {note_type.value}"
+        default_title = f"Untitled {note_type.value}"
         template = self._template_reader(TEMPLATE_BY_TYPE[note_type])
         rendered = (
             template.replace("note_<ULID>", str(note_id))
-            .replace("<title>", title)
+            .replace("<title>", default_title)
             .replace("<YYYY-MM-DD>", today)
         )
         document = parse_object_document(rendered)
         assert isinstance(document.object, Note)
+        assert isinstance(document.body, NoteBody)
+        if title is not None:
+            document = replace(document, object=replace(document.object, title=title))
         assert isinstance(document.body, NoteBody)
         documents = {object_id: scanned.document for object_id, scanned in current.objects.items()}
         documents[note_id] = document
@@ -151,7 +188,7 @@ class NoteService:
             )
         if not scan_vault(vault).healthy:
             raise DomainError("VAULT_INVALID", "created Note did not pass scanner validation")
-        return note_id
+        return NoteCreationResult(note_id, relative)
 
     def show(self, vault: Vault, object_id_value: str) -> str:
         object_id = ObjectId(object_id_value)

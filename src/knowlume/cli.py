@@ -83,9 +83,11 @@ def main(
     ctx.obj["vault"] = vault
 
 
-def _exit_with_domain_error(error: DomainError) -> NoReturn:
+def _exit_with_domain_error(
+    error: DomainError, *, command: str | None = None, json_output: bool = False
+) -> NoReturn:
     exit_code = 3
-    if error.code == "VAULT_ARGUMENT_CONFLICT":
+    if error.code in {"VAULT_ARGUMENT_CONFLICT", "NOTE_TITLE_INVALID"}:
         exit_code = 2
     elif error.code in {
         "VAULT_WRITE_CONFLICT",
@@ -107,7 +109,15 @@ def _exit_with_domain_error(error: DomainError) -> NoReturn:
         exit_code = 4
     elif error.code == "SEARCH_QUERY_INVALID":
         exit_code = 2
-    typer.echo(f"{error.code}: {error}", err=True)
+    if json_output:
+        assert command is not None
+        typer.echo(
+            render_json(
+                error_envelope(command, exit_code=exit_code, code=error.code, message=str(error))
+            )
+        )
+    else:
+        typer.echo(f"{error.code}: {error}", err=True)
     raise typer.Exit(exit_code)
 
 
@@ -393,7 +403,7 @@ def _render_relation(relation: ListedRelation) -> str:
     return f"{relation.direction} {relation.relation_type.value} {relation.from_id} -> {target}"
 
 
-@note_app.command("new")
+@note_app.command("new", cls=JSONCommand)
 def note_new(
     ctx: typer.Context,
     note_type: Annotated[
@@ -404,16 +414,30 @@ def note_new(
         str | None,
         typer.Option("--source", help="Existing Source ID required for a Literature Note."),
     ] = None,
+    title: Annotated[str | None, typer.Option("--title", help="Title for the new Note.")] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Emit one machine-readable JSON document.")
+    ] = False,
 ) -> None:
     """Create a private Note from a bundled Contract v2 template."""
 
     try:
-        vault = _resolved_vault(ctx)
-        object_id = _note_service().create(vault, note_type, source_id_value=source)
+        vault = VaultService(FilesystemVault()).discover(explicit=ctx.obj.get("vault"))
+        result = _note_service().create_with_result(
+            vault, note_type, source_id_value=source, title=title
+        )
     except DomainError as error:
-        _exit_with_domain_error(error)
-    typer.echo(str(object_id))
-    _render_warnings(_refresh_warning(vault))
+        _exit_with_domain_error(error, command="note new", json_output=json_output)
+    warnings = _refresh_warning(vault)
+    if json_output:
+        typer.echo(
+            _success_with_warnings(
+                "note new", {"object_id": str(result.object_id), "path": result.path}, warnings
+            )
+        )
+        return
+    typer.echo(str(result.object_id))
+    _render_warnings(warnings)
 
 
 @note_app.command("show")

@@ -56,6 +56,7 @@ def _copy_vault_fixtures(vault: Path) -> None:
 def _verify_json_arguments(kb: Path, work: Path) -> None:
     # These must work in a core-only installation with no vault or optional adapters.
     commands = (
+        "note new",
         "add",
         "inbox",
         "process",
