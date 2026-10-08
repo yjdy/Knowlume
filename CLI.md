@@ -2,7 +2,7 @@
 
 本文档记录所有已规划 `kb` 命令的用途、交付阶段、实现方案、当前状态和验证证据，用于每次 CLI 变更后的对比与验收。
 
-> Last synchronized: 2026-09-14
+> Last synchronized: 2026-10-04
 > Contract baseline: Contract v2 / machine interface v1  
 > Current delivery state: Phase 4 Complete; Phase 5 Verified including review fixes; completion record subject to its exact-SHA gate
 
@@ -25,6 +25,30 @@
 | `Implemented` | 功能已实现，验证证据尚不完整 |
 | `Verified` | 命令级测试和完整仓库测试均通过 |
 | `Deferred` | 已明确后置，当前阶段不实现 |
+
+## Shared JSON argument-error verification
+
+2026-10-04 补齐现有 18 个 JSON 命令的参数错误输出，接口决定见
+[`interfaces — JSON argument failures`](plan/interfaces.md#json-argument-failures-2026-10-04-clarification)。
+命令清单、阶段和既有业务结果版本不变；AI/doctor 保留现有诊断码。
+
+以下命令行的验证证据共同补充为 [`test_cli_json_arguments.py`](tests/test_cli_json_arguments.py)：
+`add`、`inbox`、`process`、`source list/show/sync`、`grep`、`get`、`search`、`context`、
+`index build/rebuild/status`、`ai list/review/promote`、`doctor`（含 probes）、`update-check`。
+该测试通过真实 CLI 注册入口逐命令校验 envelope schema、规范命令名、退出码、单文档 stdout、
+空 stderr、安全消息和未调用业务操作；另覆盖帮助、非 JSON、终止符、显式值、被消费的标志、
+业务/内部异常不被重新分类，以及写入命令失败前后的 vault 快照。
+[`verify_installed_phase3.py`](scripts/verify_installed_phase3.py) 补充全部 18 个命令的
+core-only 隔离安装参数错误检查，并复验原始 context 缺少 scope 案例。
+
+本次本地验收（Windows / Python 3.14.6）：新增回归 75 项通过；完整套件
+`755 passed, 3 skipped`（平台条件跳过，另有既有 Starlette/httpx 弃用提示）；
+Ruff、mypy、内部文档链接、wheel/sdist 分发审计均通过。
+`verify_installed_phase1.py`（含 Phase 2A/2B）、`verify_installed_phase3.py`、
+`verify_installed_phase4.py`、`verify_installed_phase5.py` 及 `verify_install_lifecycle.py`
+全部通过，覆盖源码目录外 core-only/可选依赖和 vault 不受安装生命周期影响。
+此处既有远程链接只支持其对应历史提交，不作为本次修复的远程证据；
+本次未触发远程工作流，其他平台及 Python 3.13 的新修复结果尚未核验。
 
 ## Release foundation
 
@@ -186,6 +210,7 @@ required revision tokens and explicit human decisions.
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-10-04 | 统一现有 18 个 JSON 命令的参数错误输出 | 共享命令层处理解析错误和误消费标志；interface v1、AI/doctor 诊断码、业务行为及阶段归属不变；新增命令级与 core-only 安装回归，完整验收结果见上方共享记录 |
 | 2026-09-14 | 修复 Phase 5 审查发现的三项问题并重新验收 | `1cf410cf9e7168394e907424732ed8c860964d4d` 的 [CI](https://github.com/yjdy/Knowlume/actions/runs/34797875616) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/34797875619) 全部通过；Snippet Source 纳入审核证据，doctor 发现失败保持聚合，具体 probes 经 port 注入；完成记录须通过自身相同门禁 |
 | 2026-09-12 | 完成 Phase 5 local automation and auditable AI review/promotion | P5-C1～C9 feature `3c03ccf8b13d2e484635ffa5cd4a02e9820f2f8a` 通过六种平台/Python 组合的 [CI](https://github.com/yjdy/Knowlume/actions/runs/34683929401) 与 [package smoke](https://github.com/yjdy/Knowlume/actions/runs/34683929402)；AI 命令和 doctor probes 标记 Verified；P5-C10 完成记录另须自身同矩阵通过，不包含 PR/合并/tag/发布 |
 | 2026-09-05 | 完成 Phase 4 local read-only Web | Feature commit `7fdf1bb08b784ac6d5d0b3caad86ba0508cfdb38` 通过 Windows/macOS/Linux × Python 3.13/3.14 [CI](https://github.com/yjdy/Knowlume/actions/runs/33882303896) 与 core/Web [package smoke](https://github.com/yjdy/Knowlume/actions/runs/33882303627)；`kb serve` 标记为 `Verified`；未创建 tag、上传包或创建 GitHub Release |

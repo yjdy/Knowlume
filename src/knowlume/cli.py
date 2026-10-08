@@ -21,7 +21,7 @@ from knowlume.application.scanning import Finding, changed_paths, scan_vault
 from knowlume.application.sources import SourceService
 from knowlume.application.vault import VaultService
 from knowlume.cli_ai import ai_app
-from knowlume.cli_errors import DoctorCommand
+from knowlume.cli_errors import DoctorCommand, JSONCommand
 from knowlume.doctor import doctor_report
 from knowlume.domain.search import ContextScope, SearchFilters
 from knowlume.domain.values import DomainError
@@ -356,7 +356,7 @@ def _exit_add_error(error: DomainError, *, json_output: bool) -> NoReturn:
     raise typer.Exit(exit_code)
 
 
-@app.command("add")
+@app.command("add", cls=JSONCommand)
 def add_command(
     ctx: typer.Context,
     value: Annotated[str, typer.Argument(help="DOI, arXiv, ISBN, Web URL, or repository URL")],
@@ -518,7 +518,7 @@ def relation_list(
     typer.echo(f"{len(relations)} relation(s).")
 
 
-@source_app.command("list")
+@source_app.command("list", cls=JSONCommand)
 def source_list(
     ctx: typer.Context,
     source_type: Annotated[
@@ -556,7 +556,7 @@ def source_list(
     typer.echo(f"{result['count']} source(s).")
 
 
-@source_app.command("show")
+@source_app.command("show", cls=JSONCommand)
 def source_show(
     ctx: typer.Context,
     source_id: Annotated[str, typer.Argument(help="Source ID")],
@@ -594,7 +594,7 @@ def source_open(
     typer.echo(f"Opened primary attachment for {source_id}.")
 
 
-@source_app.command("sync")
+@source_app.command("sync", cls=JSONCommand)
 def source_sync(
     ctx: typer.Context,
     source_id: Annotated[str, typer.Argument(help="Source ID")],
@@ -634,7 +634,7 @@ def source_sync(
     _render_warnings(warnings)
 
 
-@app.command("inbox")
+@app.command("inbox", cls=JSONCommand)
 def inbox_command(
     ctx: typer.Context,
     json_output: Annotated[
@@ -655,7 +655,7 @@ def inbox_command(
     typer.echo(f"{result['count']} inbox source(s).")
 
 
-@app.command("process")
+@app.command("process", cls=JSONCommand)
 def process_command(
     ctx: typer.Context,
     source_id: Annotated[str, typer.Argument(help="Source ID")],
@@ -684,7 +684,7 @@ def process_command(
     _render_warnings(warnings)
 
 
-@app.command("grep")
+@app.command("grep", cls=JSONCommand)
 def grep_command(
     ctx: typer.Context,
     query: Annotated[str, typer.Argument(help="Literal text to find in durable files")],
@@ -707,7 +707,7 @@ def grep_command(
     typer.echo(f"{result['count']} hit(s).")
 
 
-@app.command("get")
+@app.command("get", cls=JSONCommand)
 def get_command(
     ctx: typer.Context,
     object_id: Annotated[str, typer.Argument(help="Permanent object ID")],
@@ -751,7 +751,7 @@ def _run_index(ctx: typer.Context, operation: str, json_output: bool) -> None:
         typer.echo(f"{len(changed)} changed path(s).")
 
 
-@index_app.command("build")
+@index_app.command("build", cls=JSONCommand)
 def index_build(
     ctx: typer.Context,
     json_output: Annotated[
@@ -763,7 +763,7 @@ def index_build(
     _run_index(ctx, "build", json_output)
 
 
-@index_app.command("rebuild")
+@index_app.command("rebuild", cls=JSONCommand)
 def index_rebuild(
     ctx: typer.Context,
     json_output: Annotated[
@@ -775,7 +775,7 @@ def index_rebuild(
     _run_index(ctx, "rebuild", json_output)
 
 
-@index_app.command("status")
+@index_app.command("status", cls=JSONCommand)
 def index_status(
     ctx: typer.Context,
     json_output: Annotated[
@@ -787,7 +787,7 @@ def index_status(
     _run_index(ctx, "status", json_output)
 
 
-@app.command("search")
+@app.command("search", cls=JSONCommand)
 def search_command(
     ctx: typer.Context,
     query: Annotated[str, typer.Argument(help="Literal bilingual search query")],
@@ -845,7 +845,7 @@ def search_command(
     typer.echo(f"{result['count']} hit(s).")
 
 
-@app.command("context")
+@app.command("context", cls=JSONCommand)
 def context_command(
     ctx: typer.Context,
     query: Annotated[str, typer.Argument(help="Literal bilingual context query")],
@@ -997,7 +997,7 @@ def _exit_with_update_error(error: UpdateCheckError, json_output: bool) -> NoRet
     raise typer.Exit(5)
 
 
-@app.command("update-check")
+@app.command("update-check", cls=JSONCommand)
 def update_check(
     include_prereleases: Annotated[
         bool,
@@ -1037,7 +1037,6 @@ def doctor(
 ) -> None:
     """Check the installed runtime and bundled release assets."""
 
-    json_output = json_output or bool(ctx.meta.get("doctor_json_requested"))
     if probes:
         from knowlume.adapters.diagnostic_probes import LocalDiagnosticProbes
         from knowlume.application.diagnostics import diagnostic_report

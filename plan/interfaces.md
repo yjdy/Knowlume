@@ -222,6 +222,37 @@ excludes unsafe candidates with typed reasons, and is not a Phase 6B publish cer
 
 CLI stdout and stderr use UTF-8 on every supported platform. Commands that support JSON emit exactly one document matching the [CLI envelope v1 schema](../schemas/interfaces/cli-envelope-v1.schema.json) to stdout; diagnostics go to stderr. `interface_version` is independent from object, locator, relation, projection, and parser/tokenizer versions.
 
+### JSON argument failures (2026-10-04 clarification)
+
+For a resolved command that already supports `--json`, argument parsing failures also emit one
+failure envelope to stdout, with empty stderr, `success: false`, `exit_code: 2`, `data: null`,
+empty warnings and one diagnostic. `command` is the canonical command path without the executable
+name (for example `context` or `source show`). New parser diagnostics use `CLI_ARGUMENT_INVALID`
+and the fixed message `invalid command arguments; consult command help`. AI and doctor retain
+`AI_ARGUMENT_INVALID` and `DOCTOR_ARGUMENT_INVALID` and their existing safe messages. Raw parser
+exceptions and user argument values must not appear in these JSON diagnostics.
+
+An independent `--json` token before the first `--` terminator requests this behavior. Tokens after
+the terminator and values supplied as `--option=--json` do not request it. A requested `--json`
+consumed as another option's value is rejected before any business operation, even when another
+`--json` flag is present. Explicit help keeps the framework's existing output and exit behavior;
+without JSON intent, ordinary text usage errors remain unchanged.
+
+This applies to `add`, `inbox`, `process`, `source list/show/sync`, `grep`, `get`, `search`,
+`context`, `index build/rebuild/status`, `ai list/review/promote`, `doctor`, and `update-check`.
+It does not add a global JSON flag or JSON support to other commands, root parsing errors or
+unresolved command groups. The AI group's pre-existing JSON usage handling remains compatible.
+Business diagnostics and successful result schemas are unchanged; context still requires an
+explicit scope and argument failures cannot discover/mutate a Vault, refresh an index or contact
+an external system.
+
+Version decision: this repairs missing output under the existing machine-interface promise.
+CLI envelope v1 already permits the new diagnostic code; its structure and `interface_version`
+remain unchanged. No object, parser, projection, configuration or transaction version changes,
+template changes or durable-data migration are required.
+
+### Result and exit contracts
+
 Successful `kb add --json` data matches the [add result v1 schema](../schemas/interfaces/add-result-v1.schema.json). `requested_type` records the explicit override or `null`; `detected_type` is the effective CLI type after applying that override. The result always records the corresponding durable `source_type`, canonical identity, Source ID, and whether a new Source was created.
 
 Exit codes are frozen as:

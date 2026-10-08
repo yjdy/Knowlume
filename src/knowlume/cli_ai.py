@@ -11,7 +11,7 @@ from knowlume.adapters.sqlite_projection import SQLiteProjection
 from knowlume.application.ai import AIService
 from knowlume.application.indexing import IndexRefreshService
 from knowlume.application.vault import VaultService
-from knowlume.cli_errors import UsageError
+from knowlume.cli_errors import AICommand, UsageError, json_requested, usage_error
 from knowlume.domain.values import DomainError
 from knowlume.envelope import error_envelope, render_json, success_envelope
 from knowlume.ports.vault import Vault
@@ -51,8 +51,7 @@ class AIGroup(TyperGroup):
     """Keep Click's usage errors inside the machine envelope for AI commands."""
 
     def parse_args(self, ctx: Any, args: list[str]) -> list[str]:
-        options = args[: args.index("--")] if "--" in args else args
-        ctx.meta["ai_json"] = "--json" in options
+        ctx.meta["ai_json"] = json_requested(args)
         ctx.meta["ai_command"] = (
             f"ai {args[0]}" if args and args[0] in {"list", "review", "promote"} else "ai"
         )
@@ -61,12 +60,10 @@ class AIGroup(TyperGroup):
         except UsageError:
             if not ctx.meta["ai_json"]:
                 raise
-            _failure(
+            usage_error(
                 ctx.meta["ai_command"],
-                DomainError(
-                    "AI_ARGUMENT_INVALID", "invalid AI command arguments; consult command help"
-                ),
-                True,
+                code="AI_ARGUMENT_INVALID",
+                message="invalid AI command arguments; consult command help",
             )
 
     def invoke(self, ctx: Any) -> Any:
@@ -75,12 +72,10 @@ class AIGroup(TyperGroup):
         except UsageError:
             if not ctx.meta.get("ai_json"):
                 raise
-            _failure(
+            usage_error(
                 ctx.meta["ai_command"],
-                DomainError(
-                    "AI_ARGUMENT_INVALID", "invalid AI command arguments; consult command help"
-                ),
-                True,
+                code="AI_ARGUMENT_INVALID",
+                message="invalid AI command arguments; consult command help",
             )
 
 
@@ -95,12 +90,6 @@ def _run(
     json_output: bool,
     operation: Callable[[Vault], dict[str, Any]],
 ) -> None:
-    if ctx.meta.get("ai_json") and not json_output:
-        _failure(
-            command,
-            DomainError("AI_ARGUMENT_INVALID", "--json cannot replace a required option value"),
-            True,
-        )
     try:
         vault = VaultService(FilesystemVault()).discover(explicit=ctx.find_root().obj.get("vault"))
         result = operation(vault)
@@ -146,7 +135,7 @@ def _run(
             typer.echo(f"WARNING {warning}", err=True)
 
 
-@ai_app.command("list")
+@ai_app.command("list", cls=AICommand)
 def list_artifacts(
     ctx: typer.Context,
     review_status: Annotated[str, typer.Option("--review-status")] = "unreviewed",
@@ -172,7 +161,7 @@ def list_artifacts(
     )
 
 
-@ai_app.command("review")
+@ai_app.command("review", cls=AICommand)
 def review_artifact(
     ctx: typer.Context,
     artifact_id: Annotated[str, typer.Argument()],
@@ -196,7 +185,7 @@ def review_artifact(
     )
 
 
-@ai_app.command("promote")
+@ai_app.command("promote", cls=AICommand)
 def promote_artifact(
     ctx: typer.Context,
     artifact_id: Annotated[str, typer.Argument()],

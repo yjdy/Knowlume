@@ -53,6 +53,58 @@ def _copy_vault_fixtures(vault: Path) -> None:
     shutil.copyfile(relation, vault / "relations" / relation.name)
 
 
+def _verify_json_arguments(kb: Path, work: Path) -> None:
+    # These must work in a core-only installation with no vault or optional adapters.
+    commands = (
+        "add",
+        "inbox",
+        "process",
+        "source list",
+        "source show",
+        "source sync",
+        "grep",
+        "get",
+        "search",
+        "context",
+        "index build",
+        "index rebuild",
+        "index status",
+        "ai list",
+        "ai review",
+        "ai promote",
+        "doctor",
+        "update-check",
+    )
+    cases = [(command, ["--synthetic-private-input", "--json"]) for command in commands]
+    cases.extend(
+        [
+            ("context", ["knowledge", "--json"]),
+            ("context", ["knowledge", "--scope", "--json", "--json"]),
+            ("search", ["knowledge", "--limit", "synthetic-private-input", "--json"]),
+            ("source show", ["--json"]),
+            ("doctor", ["--probe", "--json", "--json"]),
+        ]
+    )
+    before = sorted(work.rglob("*"))
+    for command, arguments in cases:
+        result = _run([str(kb), *command.split(), *arguments], cwd=work, check=False)
+        assert result.returncode == 2 and result.stderr == "", result
+        document = json.loads(result.stdout)
+        code = (
+            "AI_ARGUMENT_INVALID"
+            if command.startswith("ai ")
+            else "DOCTOR_ARGUMENT_INVALID"
+            if command == "doctor"
+            else "CLI_ARGUMENT_INVALID"
+        )
+        assert document["interface_version"] == 1 and document["command"] == command
+        assert document["success"] is False and document["exit_code"] == 2
+        assert document["data"] is None and document["warnings"] == []
+        assert len(document["errors"]) == 1 and document["errors"][0]["code"] == code
+        assert "synthetic-private-input" not in result.stdout
+    assert sorted(work.rglob("*")) == before
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("wheel", type=Path)
@@ -83,6 +135,8 @@ def main() -> int:
         )
         if probe.returncode != 0:
             raise RuntimeError("core wheel or SQLite FTS5 capability is unavailable")
+
+        _verify_json_arguments(kb, work)
 
         for command in (
             ["grep", "--help"],
