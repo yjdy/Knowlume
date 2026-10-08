@@ -61,8 +61,12 @@ Windows、macOS、Linux × Python 3.13/3.14 六种组合的完整测试、Ruff�
 `762 passed, 3 skipped`（另有既有 Starlette/httpx 弃用提示），Ruff、mypy、
 内部文档链接、wheel/sdist 分发审计均通过。源码目录外的 Phase 1–5 安装检查
 及包安装生命周期检查全部通过，测试 vault 在安装、升级、降级、卸载后保持不变。
-前述远程成功结果仅对应 `49b4155`，不覆盖这项尚未提交的修复；
-本次修复的其他平台及 Python 3.13 结果仍待远程核验。
+本次修复的远程核验对应 `246bbbdcd51a9114fdddcbe6d1119f10cdc6f388`：
+[CI](https://github.com/yjdy/Knowlume/actions/runs/37772982239) 与
+[Package smoke](https://github.com/yjdy/Knowlume/actions/runs/37772982284)
+在 Windows、macOS、Linux × Python 3.13/3.14 六种组合全部通过。
+完整测试、Ruff、mypy、安装包命令检查、包生命周期及两项构建/分发审计全部成功；
+两个工作流共 14 个作业、所有步骤均为 success。前述 `49b4155` 链接保留为历史证据。
 
 ## Release foundation
 
@@ -224,6 +228,7 @@ required revision tokens and explicit human decisions.
 
 | Date | Change | Comparison result |
 |---|---|---|
+| 2026-10-08 | 终止符修复提交的远程验收 | `246bbbdcd51a9114fdddcbe6d1119f10cdc6f388` 的 CI 与 Package smoke 六种组合、14 个作业及所有步骤通过；证据见上方共享记录 |
 | 2026-10-08 | 修复选项值 `--` 被误判为参数终止符 | JSON 意图与误消费判断先按选项 arity 跳过值，再识别实际终止符；新增参数失败、业务零调用、显式值和实际终止符回归；本地完整套件、静态检查、分发及隔离安装验收通过，远程记录仍对应 `49b4155` |
 | 2026-10-08 | 核验 JSON 修复提交的跨平台 CI 与安装门禁 | `49b415558c033b8f527060a240e15f3654362940` 的 CI/Package smoke 六种组合、14 个作业及全部步骤通过；证据见上方共享记录；该提交仍含审查发现的 P2 终止符误判 |
 | 2026-10-04 | 统一现有 18 个 JSON 命令的参数错误输出 | 共享命令层处理解析错误和误消费标志；interface v1、AI/doctor 诊断码、业务行为及阶段归属不变；新增命令级与 core-only 安装回归，完整验收结果见上方共享记录 |
