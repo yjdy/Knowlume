@@ -1,6 +1,6 @@
 # 科研日用闭环执行目标
 
-> Status: Implemented — local engineering verified; exact-commit remote gate pending
+> Status: Engineering complete — implementation remote gates passed; final record effective with its own gates
 > Baseline: `13d24131874dd694e6a2124bcde9a7d4eea6ab0a`, clean workspace
 > Decision: [ADR-0019](decisions/0019-research-daily-workflow.md)
 
@@ -35,7 +35,7 @@ Web 安全边界沿用 [ADR-0017](decisions/0017-phase4-local-read-only-applicat
 ## 验收记录
 
 - 本地工程：2026-10-08，Windows / Python 3.14.6 通过；证据如下。
-- 远程平台：待用户提交并推送实际实现；不以旧提交成功替代。
+- 远程平台：实现提交 `7a6c68fc7620557ecbe6b26e091befef62cfbd5f` 的六组合与构建门禁全部通过，见下节；完成记录自身仍须准确 SHA 验收。
 - 真实 Zotero/PDF/编辑器试用：未完成，未提供测试条件；不等同于模拟适配器验证。
 
 ### 本地证据矩阵
@@ -57,10 +57,41 @@ Web 安全边界沿用 [ADR-0017](decisions/0017-phase4-local-read-only-applicat
 durable schemas/v2、templates/v2、公共业务规则、CLI get 结果、包版本/依赖及远程工作流配置
 均未改变。两份历史审视报告未修改；没有操作个人 vault、调用模型或发布。
 开发及本地验收期间未提交、推送；2026-10-08 用户明确授权提交本轮改动至 `origin/Phase5`
-并核对远程 CI 与 Package smoke。远程结果尚待实际执行。
+并核对远程 CI 与 Package smoke。实现提交的远程结果见下节。
 更改只补标题和创建定位、只读阅读、使用说明及其验收，既有命令阶段归属保留。
 
-当前实现等待提交后的远程验收，**不宣告整个里程碑远程完成**。
-提交并推送后，应在这里记录实际完整 SHA、CI 与 Package smoke 链接及
-Windows/macOS/Linux × Python 3.13/3.14 六组合结果；不可沿用前置 JSON 修复的旧 SHA。
+实现提交已通过本地和准确 SHA 的远程工程门禁；真实试用仍独立标记未完成。
 真实试用按 [指南第 7 节](daily-workflow-usage.md#7-真实试用清单当前未完成)另记。
+
+### 远程工程验收与完成记录
+
+2026-10-08：实现提交 `7a6c68fc7620557ecbe6b26e091befef62cfbd5f`
+（`实现科研日用闭环：笔记定位、只读阅读与离线指南`）已推送至 `origin/Phase5`。
+以下两个工作流的 head_sha 均逐一核对为该完整 SHA：
+
+- [CI 37779075572](https://github.com/yjdy/Knowlume/actions/runs/37779075572)：
+  六种组合的完整 pytest、Ruff 和 mypy 全部成功，build 的 wheel/sdist 与分发审计成功。
+- [Package smoke 37779075918](https://github.com/yjdy/Knowlume/actions/runs/37779075918)：
+  build 与六种安装组合全部成功，uv tool、pipx、Phase 1/2B、3、4、5 安装检查和保留
+  vault 的生命周期步骤全部成功；新标题/JSON、19 命令参数错误、源码目录外离线闭环、
+  Web 正文优先和稳定 section 跳转均包含在对应安装检查中。
+
+| 平台 | Python | CI | Package smoke |
+|---|---|---|---|
+| Windows | 3.13 | success | success |
+| Windows | 3.14 | success | success |
+| macOS | 3.13 | success | success |
+| macOS | 3.14 | success | success |
+| Linux | 3.13 | success | success |
+| Linux | 3.14 | success | success |
+
+两项 workflow 均 completed/success；各 7 个 job，共 14 个 job、177 个步骤全部 success，
+没有必需步骤被跳过。只以新实现 SHA 的证据认定本轮工程门禁，不复用旧 JSON 修复结果。
+真实 Zotero/PDF/编辑器试用未执行，不能由模拟适配器或跨平台检查推断通过。
+
+本完成记录是上述实现提交的直接后继，主题为
+`docs: record research daily workflow acceptance`，只更新本目标、CLI 账本和正式路线图。
+**记录生效条件：** 该完成记录的自身 CI 与 Package smoke 必须同样 completed/success，
+六组合、两个 build 及全部必需步骤成功；本地 `Phase5`、`origin/Phase5` 和实际远端指向
+同一完整 SHA，工作区干净。不预填自指 SHA 或尚未产生的运行编号，最终回执提供永久链接。
+本次授权不包含 PR、合并、删除分支、tag、软件包发布或 Phase 6 开发。

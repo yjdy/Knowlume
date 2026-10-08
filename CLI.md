@@ -72,13 +72,20 @@ Windows、macOS、Linux × Python 3.13/3.14 六种组合的完整测试、Ruff�
 
 范围和门禁见 [执行目标](plan/daily-workflow-goal.md)；既有阶段归属不变。
 `note new` 增加标题与 JSON 实际文件定位，JSON 命令库存由 18 扩至 19。
-本轮状态 `Implemented`：Windows / Python 3.14.6 完整套件 809 passed / 3 skipped，
+本轮状态 `Verified`：Windows / Python 3.14.6 完整套件 809 passed / 3 skipped，
 Ruff、mypy、文档链接、分发审计、Phase 1–5 隔离安装及包生命周期均通过。
 共享 JSON 参数回归 83 项；新增创建/Web/离线流程回归见
 [`test_daily_workflow_notes.py`](tests/test_daily_workflow_notes.py)、
 [`test_daily_workflow_web.py`](tests/test_daily_workflow_web.py)、
 [`test_daily_workflow_demo.py`](tests/test_daily_workflow_demo.py)。
-收尾无效引用零写入回归已包含在完整复验中；用户已授权提交和推送，实际实现提交远程门禁待执行。
+收尾无效引用零写入回归已包含在完整复验中。实现提交
+`7a6c68fc7620557ecbe6b26e091befef62cfbd5f` 已推送并通过
+[CI](https://github.com/yjdy/Knowlume/actions/runs/37779075572) 和
+[Package smoke](https://github.com/yjdy/Knowlume/actions/runs/37779075918)。
+Windows/macOS/Linux × Python 3.13/3.14 六组合、两个 build、全部 14 个 job 和 177 个步骤
+均 success；包括完整测试、Ruff、mypy、分发、uv tool/pipx、Phase 1–5 安装和生命周期。
+完成记录自身准确 SHA 门禁见 [执行目标](plan/daily-workflow-goal.md#远程工程验收与完成记录)。
+真实 Zotero/PDF/编辑器试用仍未完成，独立于工程门禁。
 历史 JSON 修复及审视文档保留，不作为本轮新功能的验收替代。
 
 ## Release foundation

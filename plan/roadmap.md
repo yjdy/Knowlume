@@ -79,9 +79,13 @@ removal never migrate or delete a vault.
 This matrix is the only delivery-batch authority.
 
 The supplemental 科研日用闭环 milestone follows accepted [ADR-0019](decisions/0019-research-daily-workflow.md).
-Existing Note and Web commands retain Phase 1 and Phase 4 ownership. Its local engineering gates
-passed; exact-implementation-commit remote gates remain pending. Real Zotero/PDF/editor trial
-is separately not run. The historical review reports remain proposals/evidence, not interface authorities.
+Existing Note and Web commands retain Phase 1 and Phase 4 ownership. Implementation commit
+`7a6c68fc7620557ecbe6b26e091befef62cfbd5f` passed local gates and all six supported combinations in
+[CI](https://github.com/yjdy/Knowlume/actions/runs/37779075572) and
+[Package smoke](https://github.com/yjdy/Knowlume/actions/runs/37779075918).
+Engineering completion takes effect when the [final record's own gates](daily-workflow-goal.md#远程工程验收与完成记录)
+also pass. Real Zotero/PDF/editor trial is separately not run. The historical review reports
+remain proposals/evidence, not interface authorities. This record does not start Phase 6A work.
 
 ## Phase 2A executable gate
 
